@@ -20,61 +20,7 @@
   font-size: 14px;
 }
 
-/* 核心卡片悬浮效果 */
-.searchCard {
-  margin: -40px 12px 0 12px;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  position: relative;
-  z-index: 10;
-}
-
-.inputItem {
-  border-bottom: 1px solid #eeeeee;
-  padding: 12px 0;
-}
-
-.label {
-  font-size: 12px;
-  color: #999999;
-  margin-bottom: 4px;
-}
-
-.value, .dateValue {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333333;
-}
-
-.dateRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.nightCount {
-  font-size: 12px;
-  color: #666666;
-  border: 1px solid #eeeeee;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-
-.textRight {
-  text-align: right;
-}
-
-.btnWrapper {
-  margin-top: 20px;
-}
-
-.searchBtn {
-  --background-color: #FF9A14; /* 携程橙 */
-  border-radius: 25px;
-  font-weight: bold;
-}
+.searchCardContainer { margin-top: -40px; }
 
 /* 补充金刚区样式 */
 .gridContainer {

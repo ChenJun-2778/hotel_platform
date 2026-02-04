@@ -1,0 +1,50 @@
+.searchCard {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  /* 仅保留核心视觉：投影和内衬 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.inputItem {
+  padding: 12px 0;
+  /* 使用简写属性 */
+  border-bottom: 1px solid #eee;
+}
+
+/* 合并相似的字体样式 */
+.label {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.value, .dateValue {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.dateRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nightCount {
+  font-size: 12px;
+  color: #666;
+  border: 1px solid #eee;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* 按钮样式精简 */
+.searchBtn {
+   /* 这样能直接覆盖 antd-mobile 的组件颜色 */
+  /* --adm-color-primary: #FF9A14; */
+  height: 48px;
+  border-radius: 24px;
+  font-weight: 600;
+  margin-top: 20px;
+}

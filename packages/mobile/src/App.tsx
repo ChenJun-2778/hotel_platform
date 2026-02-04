@@ -3,6 +3,9 @@ import Home from '@/pages/Home/index'
 import List from '@/pages/List';
 import Detail from '@/pages/Detail';
 import Domestic from '@/pages/Home/Domestic';
+import Overseas from '@/pages/Home/Overseas';
+import Hourly from '@/pages/Home/Hourly'
+import Inn from '@/pages/Home/Inn'
 function App() {
   return (
     <BrowserRouter>
@@ -11,6 +14,9 @@ function App() {
         <Route path="/" element={<Home />} >
           <Route index element={<Navigate to="domestic" replace />} />
           <Route path="domestic" element={<Domestic />} />
+          <Route path="overseas" element={<Overseas />} />
+          <Route path="hourly" element={<Hourly />} />
+          <Route path="inn" element={<Inn />} />
         </Route>
 
         {/* 2. 预留列表页和详情页占位，方便后续扩展 */}

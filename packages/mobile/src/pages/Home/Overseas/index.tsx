@@ -1,8 +1,8 @@
 import SearchBase from '../components/SearchBase';
 import { useNavigate } from 'react-router-dom';
 
-const Domestic = () => {
+const Overseas = () => {
   const navigate = useNavigate();
-  return <SearchBase type="domestic" onSearch={() => navigate('/list?type=1')} />;
+  return <SearchBase type="overseas" onSearch={() => navigate('/list?type=2')} />;
 };
-export default Domestic;
+export default Overseas;
