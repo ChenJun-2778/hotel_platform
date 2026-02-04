@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavBar } from 'antd-mobile';
+// 引入跳转钩子
 import { useNavigate } from 'react-router-dom';
 
 const List: React.FC = () => {

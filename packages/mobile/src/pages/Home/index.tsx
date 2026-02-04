@@ -2,8 +2,14 @@ import React from 'react';
 import { Button, NavBar, TabBar } from 'antd-mobile';
 import { AppOutline, UnorderedListOutline, UserOutline } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
+// 引入跳转钩子
+import { useNavigate } from 'react-router-dom';
+
 
 const Home: React.FC = () => {
+  const navigate = useNavigate()
+  // 跳转到list页面
+  const goList = () => navigate('/list')
   return (
     <div className={styles.homeContainer}>
       <NavBar back={null} className={styles.navBar}>易宿酒店预订</NavBar>
@@ -32,7 +38,14 @@ const Home: React.FC = () => {
           </div>
         </div>
         <div className={styles.btnWrapper}>
-          <Button block color='primary' size='large' className={styles.searchBtn}>查询酒店</Button>
+          <Button
+            block color='primary'
+            size='large'
+            onClick={goList}
+            className={styles.searchBtn}
+            >
+            查询酒店
+          </Button>
         </div>
       </div>
 
