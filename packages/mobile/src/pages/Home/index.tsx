@@ -1,15 +1,19 @@
 import React from 'react';
-import { Button, NavBar, TabBar } from 'antd-mobile';
+import { Button, CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
 import { AppOutline, UnorderedListOutline, UserOutline } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
 // 引入跳转钩子
-import { useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 
-const Home: React.FC = () => {
+const Home = () => {
   const navigate = useNavigate()
   // 跳转到list页面
-  const goList = () => navigate('/list')
+  // const goList = () => navigate('/list')
+  const location = useLocation();
+
+  // 根据当前路由确定激活哪个 Tab
+  const activeKey = location.pathname.split('/').pop() || 'domestic';
   return (
     <div className={styles.homeContainer}>
       <NavBar back={null} className={styles.navBar}>易宿酒店预订</NavBar>
@@ -41,7 +45,7 @@ const Home: React.FC = () => {
           <Button
             block color='primary'
             size='large'
-            onClick={goList}
+            // onClick={goList}
             className={styles.searchBtn}
             >
             查询酒店

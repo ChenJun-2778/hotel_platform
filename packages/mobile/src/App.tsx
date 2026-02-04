@@ -2,12 +2,16 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Home from '@/pages/Home/index'
 import List from '@/pages/List';
 import Detail from '@/pages/Detail';
+import Domestic from '@/pages/Home/Domestic';
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* 1. 配置首页路由 */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home />} >
+          <Route index element={<Navigate to="domestic" replace />} />
+          <Route path="domestic" element={<Domestic />} />
+        </Route>
 
         {/* 2. 预留列表页和详情页占位，方便后续扩展 */}
         <Route path="/list" element={<List />} />
