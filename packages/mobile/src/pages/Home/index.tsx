@@ -21,9 +21,28 @@ const Home = () => {
       <div className={styles.banner}>
         <div className={styles.bannerTag}>携程在手，说走就走</div>
       </div>
+       {/* 1. 业务类型切换 Tab */}
+
+      <div className={styles.tabWrapper}>
+
+        <CapsuleTabs 
+          activeKey={activeKey} 
+          onChange={key => navigate(key)}
+
+        >
+          <CapsuleTabs.Tab title='国内' key='domestic' />
+          <CapsuleTabs.Tab title='海外' key='overseas' />
+          <CapsuleTabs.Tab title='钟点房' key='hourly' />
+          <CapsuleTabs.Tab title='民宿' key='inn' />
+        </CapsuleTabs>
+      </div>
+      {/* 2. 子路由占位符：这里会根据路由显示 Domestic/Overseas/etc. */}
+      <div className={styles.searchCardWrapper}>
+        <Outlet />
+      </div>
 
       {/* 搜索卡片 */}
-      <div className={styles.searchCard}>
+      {/* <div className={styles.searchCard}>
         <div className={styles.inputItem}>
           <div className={styles.label}>目的地</div>
           <div className={styles.value}>上海</div>
@@ -51,7 +70,7 @@ const Home = () => {
             查询酒店
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* 4. 快捷入口金刚区 (静态展示) */}
       <div className={styles.gridContainer}>
