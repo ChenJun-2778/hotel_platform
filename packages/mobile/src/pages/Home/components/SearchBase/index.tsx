@@ -8,7 +8,7 @@ import DateRangePicker from '../DateRangePicker/index'
 
 interface SearchBaseProps {
   type: 'domestic' | 'overseas' | 'hourly' | 'inn';
-  onSearch: () => void;
+  onSearch: (params?: any) => void;
   showNightCount?: boolean; // 是否显示“几晚”
 }
 
@@ -20,6 +20,19 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, onSearch, showNightCount 
     new Date(),
     dayjs().add(1, 'day').toDate()
   ]);
+
+  // 跳转List
+  const goList = () => {
+    // 设置打包的静态数据
+    const params = {
+      type,
+      city: '上海', // 后续如果你接入了城市选择，这里就是动态的
+      // 关键：将 Date 对象转为字符串，否则 URL 识别不了对象
+      beginDate: dayjs(dateRange?.[0]).format('YYYY-MM-DD'),
+      endDate: dayjs(dateRange?.[1]).format('YYYY-MM-DD'),
+    }
+    onSearch(params)
+  }
   return (
     <div className={styles.searchCard}>
       {/* 目的地 */}
@@ -49,8 +62,9 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, onSearch, showNightCount 
         </div>
       </div>
 
+      {/* 查询酒店 */}
       <div className={styles.btnWrapper}>
-        <Button block color='primary' size='large' onClick={onSearch} className={styles.searchBtn}>
+        <Button block color='primary' size='large' onClick={goList} className={styles.searchBtn}>
           查询酒店
         </Button>
       </div>
