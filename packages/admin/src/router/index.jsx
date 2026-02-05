@@ -4,7 +4,6 @@ import Home from '../pages/Home';
 import HotelList from '../pages/HotelList';
 import HotelDetail from '../pages/HotelDetail';
 import Login from '../pages/Login';
-import Register from '../pages/Register';
 import HotelManage from '../pages/HotelManage';
 import HotelAudit from '../pages/HotelAudit';
 
@@ -16,10 +15,6 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
-  },
-  {
-    path: '/register',
-    element: <Register />,
   },
   {
     path: '/home',

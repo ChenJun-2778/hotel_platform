@@ -1,52 +1,282 @@
-.login-page {
+.auth-page {
   width: 100%;
   height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  justify-content: center;
+  background-image: url('../assets/登录页.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  padding: 0;
+  margin: 0;
 }
 
-.login-container {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  width: 400px;
-  text-align: center;
+.auth-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.2);
 }
 
-.login-container h1 {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.login-container h2 {
-  font-size: 20px;
-  color: #666;
-  margin-bottom: 30px;
-}
-
-.login-form {
-  margin-top: 20px;
-}
-
-.login-actions {
-  margin-top: 20px;
+.auth-left {
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 60px 80px;
+  position: relative;
+  z-index: 1;
 }
 
-.register-link,
-.skip-link {
-  color: #667eea;
-  text-decoration: none;
+.brand-info {
+  max-width: 600px;
+  color: white;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.logo-icon {
+  background: #667eea;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.logo-text {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.slogan {
+  font-size: 36px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.description {
+  font-size: 16px;
+  line-height: 1.8;
+  opacity: 0.9;
+}
+
+.auth-right {
+  width: auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 50px;
+  margin-right: 120px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-container {
+  width: 340px;
+}
+
+/* Ant Design Tabs 样式覆盖 */
+.auth-tabs {
+  margin-bottom: 24px;
+}
+
+.auth-tabs .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+.auth-tabs .ant-tabs-tab {
+  padding: 10px 16px;
+  font-size: 15px;
+}
+
+.auth-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.auth-tabs .ant-tabs-ink-bar {
+  background: #1890ff;
+}
+
+/* Form 样式 */
+.ant-form-item {
+  margin-bottom: 16px;
+}
+
+.ant-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.ant-input-affix-wrapper,
+.ant-input {
+  border-radius: 4px;
+}
+
+.ant-input-affix-wrapper:hover,
+.ant-input:hover {
+  border-color: #40a9ff;
+}
+
+.ant-input-affix-wrapper-focused,
+.ant-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+  height: 40px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.ant-btn-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.ant-btn-primary:active {
+  background: #096dd9;
+  border-color: #096dd9;
+}
+
+/* 验证码链接 */
+.send-code-link {
+  color: #1890ff;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: color 0.2s;
+}
+
+.send-code-link:hover {
+  color: #40a9ff;
+}
+
+.send-code-link.disabled {
+  color: rgba(0, 0, 0, 0.25);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 手机号前缀 +86 */
+.ant-input-group-addon {
+  background-color: #fafafa;
+  border-color: #d9d9d9;
+  color: #666;
   font-size: 14px;
+  padding: 0 11px;
 }
 
-.register-link:hover,
-.skip-link:hover {
-  text-decoration: underline;
+.ant-input-group-wrapper:hover .ant-input-group-addon {
+  border-color: #40a9ff;
+}
+
+.ant-input-group-wrapper-focused .ant-input-group-addon {
+  border-color: #1890ff;
+}
+
+/* 表单底部 */
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.forgot-link {
+  color: #1890ff;
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.forgot-link:hover {
+  color: #40a9ff;
+}
+
+/* 注册提示 */
+.register-tip {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #666;
+}
+
+.register-link {
+  padding: 0;
+  height: auto;
+  font-size: 13px;
+  margin-left: 4px;
+}
+
+.register-link:hover {
+  color: #40a9ff;
+}
+
+/* 注册表单头部 */
+.register-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.register-header h2 {
+  font-size: 18px;
+  color: #333;
+  margin: 0;
+  font-weight: 600;
+}
+
+.back-button {
+  padding: 0;
+  height: auto;
+  font-size: 13px;
+}
+
+.back-button:hover {
+  color: #40a9ff;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .auth-left {
+    display: none;
+  }
+  
+  .auth-right {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-right {
+    padding: 30px 20px;
+    margin: 20px;
+    width: calc(100% - 40px);
+  }
+  
+  .auth-container {
+    width: 100%;
+  }
 }
