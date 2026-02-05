@@ -1,5 +1,5 @@
 // import React from 'react';
-import { Button, CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
+import { CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
 import { AppOutline, UnorderedListOutline, UserOutline } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
 // 引入跳转钩子
@@ -21,10 +21,10 @@ const Home = () => {
       <div className={styles.banner}>
         <div className={styles.bannerTag}>携程在手，说走就走</div>
       </div>
-       {/* 1. 业务类型切换 Tab */}
+      {/* 1. 业务类型切换 Tab */}
       <div className={styles.tabWrapper}>
-        <CapsuleTabs 
-          activeKey={activeKey} 
+        <CapsuleTabs
+          activeKey={activeKey}
           onChange={key => navigate(key)}
         >
           <CapsuleTabs.Tab title='国内' key='domestic' />
