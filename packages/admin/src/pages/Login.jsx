@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Tabs, message } from 'antd';
-import { UserOutlined, LockOutlined, MobileOutlined, MailOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Tabs, message, Select } from 'antd';
+import { UserOutlined, LockOutlined, MobileOutlined, MailOutlined, TeamOutlined } from '@ant-design/icons';
+import { useAuth } from '../contexts/AuthContext';
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [showRegister, setShowRegister] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -16,24 +18,62 @@ const Login = () => {
   // 账号登录
   const handleAccountLogin = (values) => {
     console.log('账号登录:', values);
+    
+    // 模拟登录，实际应该调用API
+    const userData = {
+      username: values.username,
+      role: values.username === 'admin' ? 'admin' : 'merchant', // 简单模拟
+      email: 'user@example.com',
+    };
+    
+    login(userData);
     message.success('登录成功！');
-    navigate('/home');
+    
+    // 根据角色跳转
+    if (userData.role === 'admin') {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/merchant/dashboard');
+    }
   };
 
   // 验证码登录
   const handlePhoneLogin = (values) => {
     console.log('验证码登录:', values);
+    
+    // 模拟登录
+    const userData = {
+      username: values.phone,
+      role: 'merchant', // 手机号登录默认为商户
+      phone: values.phone,
+    };
+    
+    login(userData);
     message.success('登录成功！');
-    navigate('/home');
+    navigate('/merchant/dashboard');
   };
 
   // 注册
   const handleRegister = (values) => {
     console.log('注册:', values);
+    
+    // 模拟注册成功后自动登录
+    const userData = {
+      username: values.username,
+      role: values.role,
+      email: values.email,
+      phone: values.phone,
+    };
+    
+    login(userData);
     message.success('注册成功！');
-    setShowRegister(false);
-    setActiveTab('account');
-    registerForm.resetFields();
+    
+    // 根据角色跳转
+    if (userData.role === 'admin') {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/merchant/dashboard');
+    }
   };
 
   // 发送验证码
@@ -226,7 +266,7 @@ const Login = () => {
           ) : (
             <>
               <div className="register-header">
-                <h2>注册新账号</h2>
+                <h2>创建新账号</h2>
                 <Button type="link" onClick={() => setShowRegister(false)} className="back-button">
                   返回登录
                 </Button>
@@ -237,8 +277,27 @@ const Login = () => {
                 onFinish={handleRegister}
                 autoComplete="off"
                 size="large"
+                layout="vertical"
               >
                 <Form.Item
+                  label="角色类型"
+                  name="role"
+                  rules={[
+                    { required: true, message: '请选择角色类型' }
+                  ]}
+                >
+                  <Select
+                    placeholder="选择您的角色"
+                    suffixIcon={<TeamOutlined />}
+                    options={[
+                      { value: 'admin', label: '管理员' },
+                      { value: 'merchant', label: '商户' }
+                    ]}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="用户名"
                   name="username"
                   rules={[
                     { required: true, message: '请输入用户名' },
@@ -255,6 +314,7 @@ const Login = () => {
                 </Form.Item>
 
                 <Form.Item
+                  label="邮箱"
                   name="email"
                   rules={[
                     { required: true, message: '请输入邮箱' },
@@ -268,6 +328,7 @@ const Login = () => {
                 </Form.Item>
 
                 <Form.Item
+                  label="手机号"
                   name="phone"
                   rules={[
                     { required: true, message: '请输入手机号' },
@@ -282,6 +343,7 @@ const Login = () => {
                 </Form.Item>
 
                 <Form.Item
+                  label="密码"
                   name="password"
                   rules={[
                     { required: true, message: '请输入密码' },
@@ -298,6 +360,7 @@ const Login = () => {
                 </Form.Item>
 
                 <Form.Item
+                  label="确认密码"
                   name="confirmPassword"
                   dependencies={['password']}
                   rules={[
@@ -318,9 +381,9 @@ const Login = () => {
                   />
                 </Form.Item>
 
-                <Form.Item>
-                  <Button type="primary" htmlType="submit" block>
-                    注册
+                <Form.Item style={{ marginTop: '24px', marginBottom: '0' }}>
+                  <Button type="primary" htmlType="submit" block size="large">
+                    立即注册
                   </Button>
                 </Form.Item>
               </Form>

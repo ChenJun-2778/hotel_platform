@@ -74,26 +74,26 @@
 
 .auth-right {
   width: auto;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 50px;
+  padding: 45px 55px;
   margin-right: 120px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18);
   position: relative;
   z-index: 1;
 }
 
 .auth-container {
-  width: 340px;
+  width: 360px;
 }
 
 /* Ant Design Tabs 样式覆盖 */
 .auth-tabs {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .auth-tabs .ant-tabs-nav {
@@ -101,8 +101,13 @@
 }
 
 .auth-tabs .ant-tabs-tab {
-  padding: 10px 16px;
+  padding: 12px 20px;
   font-size: 15px;
+  color: #666;
+}
+
+.auth-tabs .ant-tabs-tab:hover {
+  color: #40a9ff;
 }
 
 .auth-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
@@ -111,50 +116,100 @@
 }
 
 .auth-tabs .ant-tabs-ink-bar {
-  background: #1890ff;
+  background: linear-gradient(90deg, #1890ff, #40a9ff);
+  height: 3px;
 }
 
 /* Form 样式 */
 .ant-form-item {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .ant-form-item:last-child {
   margin-bottom: 0;
 }
 
+/* Form Label 样式 */
+.ant-form-item-label > label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  height: 28px;
+}
+
+.ant-form-item-label > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+  color: #ff4d4f;
+}
+
+/* Input 样式优化 */
 .ant-input-affix-wrapper,
-.ant-input {
-  border-radius: 4px;
+.ant-input,
+.ant-select-selector {
+  border-radius: 6px;
+  border: 1.5px solid #e0e0e0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ant-input-affix-wrapper:hover,
-.ant-input:hover {
+.ant-input:hover,
+.ant-select:hover .ant-select-selector {
   border-color: #40a9ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.08);
 }
 
 .ant-input-affix-wrapper-focused,
-.ant-input:focus {
+.ant-input:focus,
+.ant-select-focused .ant-select-selector {
   border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.12);
 }
 
+.ant-input-affix-wrapper .ant-input-prefix,
+.ant-input-prefix {
+  color: #8c8c8c;
+  font-size: 16px;
+}
+
+/* Select 下拉框样式 */
+.ant-select-selector {
+  height: 40px !important;
+  padding: 0 11px !important;
+}
+
+.ant-select-selection-item {
+  line-height: 38px !important;
+}
+
+.ant-select-selection-placeholder {
+  line-height: 38px !important;
+  color: #bfbfbf;
+}
+
+.ant-select-arrow {
+  color: #8c8c8c;
+}
+
+/* Button 样式优化 */
 .ant-btn-primary {
-  background: #1890ff;
-  border-color: #1890ff;
-  height: 40px;
-  font-size: 15px;
-  font-weight: 500;
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  border: none;
+  height: 44px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ant-btn-primary:hover {
-  background: #40a9ff;
-  border-color: #40a9ff;
+  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+  transform: translateY(-2px);
 }
 
 .ant-btn-primary:active {
-  background: #096dd9;
-  border-color: #096dd9;
+  background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);
+  transform: translateY(0);
 }
 
 /* 验证码链接 */
@@ -179,11 +234,14 @@
 
 /* 手机号前缀 +86 */
 .ant-input-group-addon {
-  background-color: #fafafa;
-  border-color: #d9d9d9;
-  color: #666;
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+  border-color: #e0e0e0;
+  border-width: 1.5px;
+  color: #595959;
   font-size: 14px;
-  padding: 0 11px;
+  font-weight: 500;
+  padding: 0 12px;
+  border-radius: 6px 0 0 6px;
 }
 
 .ant-input-group-wrapper:hover .ant-input-group-addon {
@@ -236,22 +294,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 12px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
   border-bottom: 2px solid #f0f0f0;
 }
 
 .register-header h2 {
-  font-size: 18px;
-  color: #333;
+  font-size: 20px;
+  color: #262626;
   margin: 0;
   font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .back-button {
   padding: 0;
   height: auto;
-  font-size: 13px;
+  font-size: 14px;
+  color: #1890ff;
+  font-weight: 500;
 }
 
 .back-button:hover {
