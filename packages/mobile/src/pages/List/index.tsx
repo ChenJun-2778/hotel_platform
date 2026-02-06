@@ -4,6 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { EnvironmentOutline, SearchOutline } from 'antd-mobile-icons';
 import styles from './index.module.css';
+// 导入酒店卡牌组件
+import HotelCard from '@/components/HotelCard';
+import type { HotelList } from '@/components/HotelCard/type'
 
 const List: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -32,6 +35,39 @@ const List: React.FC = () => {
       <span>地图</span>
     </div>
   );
+
+  // 酒店的mock数据
+  const HOTELS: HotelList = [
+  {
+    id: '1',
+    name: '上海陆家嘴禧玥酒店',
+    image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_LSZ9S8H9S0.jpg',
+    score: 4.8,
+    scoreText: '超棒',
+    commentCount: 4695,
+    collectCount: '6.3万',
+    position: '近外滩 · 东方明珠',
+    recommend: 'BOSS:25楼是沪上知名米其林新荣记',
+    tags: ['免费升房', '新中式风', '免费停车', '一线江景'],
+    rank: '上海美景酒店榜 No.16',
+    price: 936,
+    star: 5
+  },
+  {
+    id: '2',
+    name: '艺龙安悦酒店(上海浦东大道歌德路地铁站店)',
+    image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_1g9Y9Y9Y9Y.jpg',
+    score: 4.7,
+    scoreText: '超棒',
+    commentCount: 6729,
+    collectCount: '4.5万',
+    position: '近歌德路地铁站 · LCM置汇旭辉广场',
+    recommend: '临滨江步道可欣赏陆家嘴夜景',
+    tags: ['免费停车', '免费洗衣服务', '机器人服务', '自助早餐'],
+    price: 199,
+    star: 3
+  }
+];
 
   return (
     <div className={styles.listContainer}>
@@ -86,6 +122,7 @@ const List: React.FC = () => {
       {/* 3. 酒店列表区域 (目前是白的，马上填) */}
       <div className={styles.listContent}>
          {/* 稍后在这里放 HotelCard */}
+         <HotelCard hotel={HOTELS[0]}></HotelCard>
       </div>
     </div>
   );
