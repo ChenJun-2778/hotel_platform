@@ -29,9 +29,14 @@ export const useGoList = () => {
 export const useGoCities = () => {
   const navigate = useNavigate();
   // 城市页面的跳转
-  const goCities = (type: number = 1) => {
+  const goCities = (type: number = 1, city: string) => {
     // 携带当前业务类型跳转，方便城市页展示对应的热门城市
-    navigate(`/city-select?type=${type}`);
+    // 防止中文乱码
+    const searchParams = new URLSearchParams({
+      type: String(type),
+      current: city
+    });
+    navigate(`/city-select?${searchParams.toString()}`);
   }
   return {goCities}
 }

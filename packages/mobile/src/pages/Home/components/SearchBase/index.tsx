@@ -34,13 +34,15 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true }) 
   const currentTypeId = TYPE_MAP[type] || 1;
 
   // 跳转城市选择页面
+  const [city, setCity] = useState('上海')
   const { goCities } = useGoCities()
   const handleCityClick = () => {
     // 根据当前组件的 props.type 找到对应的数字 type，默认为 1
     // const targetType = TYPE_MAP[type] || 1;
     // 调用 hook 里的函数并传参
-    goCities(currentTypeId);
+    goCities(currentTypeId, city);
   } 
+  // 监听从城市的回传逻辑
 
   // 跳转List
   const { goList } = useGoList();
