@@ -1,6 +1,6 @@
 // 数据库配置
 module.exports = {
-  host: 'localhost',
+  host: '47.99.56.81',
   port: 3306,
   user: 'root',
   password: '1234',
