@@ -1,0 +1,144 @@
+.listContainer {
+  background-color: #f7f8fa;
+  min-height: 100vh;
+}
+
+.headerSticky {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+}
+
+/* --- NavBar 深度重写 --- */
+.customNav {
+  --height: 54px;
+  background: #fff;
+  /* 移除 NavBar 默认的内边距，方便手动控制 */
+  padding: 0 8px;
+}
+
+/* 1. 强制覆盖：让左侧返回按钮区域宽度固定，不占多余空间 */
+.customNav :global(.adm-nav-bar-left) {
+  flex: 0 0 auto;
+}
+
+/* 2. 关键修复：强制让中间标题区域占满所有剩余空间 */
+.customNav :global(.adm-nav-bar-title) {
+  flex: 1 1 auto; /* 强制生长 */
+  margin: 0 8px;  /* 控制胶囊与两侧按钮的间距 */
+  max-width: none; /* 取消 antd 默认的 max-width */
+  padding: 0;
+}
+
+/* 3. 强制覆盖：让右侧区域固定在最右边 */
+.customNav :global(.adm-nav-bar-right) {
+  flex: 0 0 auto;
+  margin-left: 0;
+}
+
+/* --- 中间灰色搜索胶囊 (现在它会随父级撑开了) --- */
+.searchBox {
+  display: flex;
+  align-items: center;
+  background: #f2f4f6;
+  border-radius: 100px;
+  padding: 0 12px;
+  height: 36px;
+  width: 100%; /* 这里的 100% 现在生效了 */
+  box-sizing: border-box;
+}
+
+.cityText {
+  font-weight: 600;
+  font-size: 14px;
+  color: #0086F6;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.dateRange {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 9px;
+  color: #333;
+  line-height: 1.1;
+  padding-right: 8px;
+  border-right: 1px solid #ddd;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.nightBadge {
+  font-size: 10px;
+  color: #0086F6;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* 搜索词占位：让它占据胶囊内剩余的所有空间 */
+.inputMock {
+  flex: 1; 
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 12px;
+  overflow: hidden;
+  min-width: 0; /* 允许在 flex 容器中收缩 */
+}
+
+.placeholder {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 右侧地图图标样式 */
+.mapIcon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #333;
+  line-height: 1.2;
+}
+
+/* --- 筛选区核心修复 --- */
+.filterSection {
+  background: #fff;
+  padding-bottom: 4px;
+  width: 100%; /* 确保容器撑满 */
+}
+
+.filterRow {
+  display: flex;
+  justify-content: space-between; /* 均匀分布 */
+  align-items: center;
+  padding: 8px 12px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-wrap: nowrap; /* 强制不换行，防止变成一列 */
+}
+
+.filterItem {
+  font-size: 13px;
+  color: #333;
+  white-space: nowrap; /* 强制文字不换行 */
+  flex: 1; /* 每个项目平分空间 */
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 调整快速标签容器，确保它也能横向滚动而不换行 */
+.quickTags {
+  width: 100%;
+  overflow: hidden;
+}
+
+.quickTags :global(.adm-capsule-tabs-header) {
+  padding: 0 8px;
+}
