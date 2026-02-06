@@ -9,7 +9,7 @@ const DEV_MODE = true; // 开发时设为 true，生产时设为 false
 // 开发模式下的模拟用户
 const DEV_USER = {
   username: 'dev_admin',
-  role: 'merchant', // 可以改为 'merchant' 测试商户页面
+  role: 'admin', // 可以改为 'merchant' 测试商户页面
   email: 'dev@example.com',
 };
 

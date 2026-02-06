@@ -86,14 +86,9 @@ app.use((err, req, res, next) => {
 });
 
 // 启动服务器
-app.listen(PORT, "127.0.0.1", async () => {
+app.listen(PORT, "0.0.0.0", async () => {
   console.log(`========================================`);
-  console.log(`🚀 服务器已启动！`);
-  console.log(`📍 地址: http://127.0.0.1:${PORT}`);
-  console.log(`📋 API文档: http://127.0.0.1:${PORT}`);
-  console.log(`🏨 酒店搜索: http://127.0.0.1:${PORT}/api/hotels/search`);
-  console.log(`⏰ 启动时间: ${new Date().toLocaleString("zh-CN")}`);
-  console.log(`========================================`);
+  console.log(`🚀 服务器已启动！`)
   
   // 测试数据库连接
   console.log('\n🔍 检查数据库连接...');
