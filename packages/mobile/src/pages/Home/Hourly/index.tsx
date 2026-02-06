@@ -1,8 +1,8 @@
 import SearchBase from '../components/SearchBase';
-import { useNavigate } from 'react-router-dom';
+import { useGoList } from '@/utils/routerUtils'
 
 const Hourly = () => {
-  const navigate = useNavigate();
-  return <SearchBase type="hourly" showNightCount={false} onSearch={() => navigate('/list?type=3')} />;
+  const { goList } = useGoList()
+  return <SearchBase type="hourly" showNightCount={false} onSearch={goList} />;
 };
 export default Hourly;

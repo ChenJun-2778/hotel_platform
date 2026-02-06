@@ -1,8 +1,8 @@
 import SearchBase from '../components/SearchBase';
-import { useNavigate } from 'react-router-dom';
+import { useGoList } from '@/utils/routerUtils'
 
 const Inn = () => {
-  const navigate = useNavigate();
-  return <SearchBase type="inn" onSearch={() => navigate('/list?type=4')} />;
+  const { goList } = useGoList()
+  return <SearchBase type="inn" onSearch={goList} />;
 };
 export default Inn;
