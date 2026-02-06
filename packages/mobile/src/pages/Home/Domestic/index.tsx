@@ -1,6 +1,6 @@
 import SearchBase from '../components/SearchBase';
 // import { useNavigate } from 'react-router-dom';
-import { useGoList } from '@/utils/routerUtils'
+// import { useGoList } from '@/utils/routerUtils'
 
 const Domestic = () => {
   // const navigate = useNavigate();
@@ -10,7 +10,7 @@ const Domestic = () => {
   //   const query = new URLSearchParams({...params, type: 1}).toString()
   //   navigate(`/list?${query}`)
   // }
-  const { goList } = useGoList();
-  return <SearchBase type="domestic" onSearch={goList} />;
+  // const { goList } = useGoList();
+  return <SearchBase type="domestic"/>;
 };
 export default Domestic;
