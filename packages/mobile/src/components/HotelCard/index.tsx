@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './index.module.css'
-import type {HotelList} from './type'
-const HotelCard: React.FC<{ hotel: HotelList[0] }> = ({ hotel }) => {
+import type {Hotel} from './type'
+const HotelCard: React.FC<{ hotel: Hotel }> = ({ hotel }) => {
   return (
     <div className={styles.hotelCard}>
       {/* 左侧图片区 */}

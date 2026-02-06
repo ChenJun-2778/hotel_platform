@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 // import { data } from 'react-router-dom';
 // 导入日历组件
 import DateRangePicker from '../DateRangePicker/index'
+import {useGoCities} from '@/utils/routerUtils'
 
 interface SearchBaseProps {
   type: 'domestic' | 'overseas' | 'hourly' | 'inn';
@@ -21,8 +22,24 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, onSearch, showNightCount 
     dayjs().add(1, 'day').toDate()
   ]);
 
+  // 跳转城市选择页面
+  // 2. 定义类型映射字典 (放在组件外面即可，避免重复创建)
+  const TYPE_MAP: Record<string, number> = {
+    'domestic': 1,
+    'overseas': 2,
+    'hourly': 3,
+    'inn': 4
+  };
+  const { goCities } = useGoCities()
+  const handleCityClick = () => {
+    // 根据当前组件的 props.type 找到对应的数字 type，默认为 1
+    const targetType = TYPE_MAP[type] || 1;
+    // 调用 hook 里的函数并传参
+    goCities(targetType);
+  } 
+
   // 跳转List
-  const goList = () => {
+  const handelGoList = () => {
     // 设置打包的静态数据
     const params = {
       type,
@@ -36,7 +53,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, onSearch, showNightCount 
   return (
     <div className={styles.searchCard}>
       {/* 目的地 */}
-      <div className={styles.inputItem}>
+      <div className={styles.inputItem} onClick={handleCityClick}>
         <div className={styles.label}>{type === 'overseas' ? '目的地 (英文/拼音)' : '目的地'}</div>
         <div className={styles.value}>{type === 'overseas' ? 'Singapore' : '上海'}</div>
       </div>
@@ -64,7 +81,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, onSearch, showNightCount 
 
       {/* 查询酒店 */}
       <div className={styles.btnWrapper}>
-        <Button block color='primary' size='large' onClick={goList} className={styles.searchBtn}>
+        <Button block color='primary' size='large' onClick={handelGoList} className={styles.searchBtn}>
           查询酒店
         </Button>
       </div>

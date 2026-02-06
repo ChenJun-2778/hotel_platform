@@ -122,7 +122,8 @@ const List: React.FC = () => {
       {/* 3. 酒店列表区域 (目前是白的，马上填) */}
       <div className={styles.listContent}>
          {/* 稍后在这里放 HotelCard */}
-         <HotelCard hotel={HOTELS[0]}></HotelCard>
+         {/* <HotelCard hotel={HOTELS[0]}></HotelCard> */}
+         {HOTELS.map(item => <HotelCard hotel={item} key={item.id}></HotelCard>)}
       </div>
     </div>
   );

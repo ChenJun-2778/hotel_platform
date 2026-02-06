@@ -25,3 +25,13 @@ export const useGoList = () => {
 
   return { goList };
 };
+
+export const useGoCities = () => {
+  const navigate = useNavigate();
+  // 城市页面的跳转
+  const goCities = (type: number = 1) => {
+    // 携带当前业务类型跳转，方便城市页展示对应的热门城市
+    navigate(`/city-select?type=${type}`);
+  }
+  return {goCities}
+}
