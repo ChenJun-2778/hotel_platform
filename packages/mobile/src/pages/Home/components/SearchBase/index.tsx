@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from 'antd-mobile';
 import styles from '../SearchBase/index.module.css'
 import dayjs from 'dayjs';
@@ -56,12 +56,39 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true }) 
     }
     goList(params, currentTypeId)
   }
+  // 接收城市
+  useEffect(() => {
+    // 定义一个检查函数
+    const checkSelectedCity = () => {
+      // 去“邮箱”里看看有没有信
+      const selected = localStorage.getItem('selectedCity');
+      if (selected) {
+        setCity(selected); // 有信！更新 UI
+        localStorage.removeItem('selectedCity'); // 读完把信撕了，防止下次重复读
+      }
+    };
+
+    // 情况 A：从子页面返回时触发 (针对大部分浏览器)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkSelectedCity();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // 情况 B：组件重新挂载时触发 (针对 React 路由切换机制)
+    checkSelectedCity();
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
   return (
     <div className={styles.searchCard}>
       {/* 目的地 */}
       <div className={styles.inputItem} onClick={handleCityClick}>
         <div className={styles.label}>{type === 'overseas' ? '目的地 (英文/拼音)' : '目的地'}</div>
-        <div className={styles.value}>{type === 'overseas' ? 'Singapore' : '上海'}</div>
+        <div className={styles.value}>{city}</div>
       </div>
 
       {/* 日期选择 */}
