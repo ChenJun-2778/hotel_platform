@@ -29,6 +29,10 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true }) 
     new Date(),
     dayjs().add(1, 'day').toDate()
   ]);
+  //  dayjs().diff(date, 'day') 用来计算两个时间相差的天数
+  const nightCount = dateRange && dateRange[0] && dateRange[1]
+    ? dayjs(dateRange[1]).diff(dayjs(dateRange[0]), 'day')
+    : 0;
 
   // 计算当前卡片的typeId
   const currentTypeId = TYPE_MAP[type] || 1;
@@ -101,7 +105,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true }) 
             </div>
           </div>
 
-          {showNightCount && <div className={styles.nightCount}>1晚</div>}
+          {showNightCount && <div className={styles.nightCount}>{nightCount}晚</div>}
 
           {showNightCount && <div className={`${styles.dateBlock} ${styles.textRight}`}>
             <div className={styles.label}>离店</div>
