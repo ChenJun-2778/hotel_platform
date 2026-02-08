@@ -3,6 +3,7 @@ import { Popup, Calendar, Button } from 'antd-mobile';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 
+// 校验类型
 interface Props {
   visible: boolean;
   onClose: () => void;
@@ -28,6 +29,7 @@ const DateRangePicker: React.FC<Props> = ({ visible, onClose, value, onChange })
   // 4. 提交逻辑：点击确认按钮
   const handleConfirm = () => {
     if (isCompleted) {
+      // 这是父组件传的onChange，和下面的onChange作用域不同
       onChange(selection); // 把草稿提交给父组件
       onClose(); // 关闭窗口
     }
@@ -35,12 +37,24 @@ const DateRangePicker: React.FC<Props> = ({ visible, onClose, value, onChange })
 
   // 计算几晚 (用于按钮显示优化)
   const nightCount = isCompleted ? dayjs(selection[1]).diff(dayjs(selection[0]), 'day') : 0;
+  // ✅ 核心逻辑：渲染“入住”和“离店”标签
+  const renderLabel = (date: Date) => {
+    if (!selection) return null;
+    const [start, end] = selection;
 
+    // 只有在开始日期和结束日期，才渲染这个 div
+    if (start && dayjs(date).isSame(start, 'day')) {
+      return <div className={styles.topLabel}>入住</div>;
+    }
+    if (end && dayjs(date).isSame(end, 'day')) {
+      return <div className={styles.topLabel}>离店</div>;
+    }
+    return null;
+  };
   return (
     <Popup
       visible={visible}
       onMaskClick={onClose} // 点击遮罩层直接关闭，相当于“取消”
-      bodyStyle={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', height: '80vh' }}
     >
       <div className={styles.container}>
         {/* 标题栏 */}
@@ -54,9 +68,14 @@ const DateRangePicker: React.FC<Props> = ({ visible, onClose, value, onChange })
           <Calendar
             selectionMode='range'
             value={selection} // 绑定草稿
+            // 这里是Calendar内置的事件，通过绑定一个响应值使得页面变化
             onChange={(val) => setSelection(val)} // 只更新草稿
             min={new Date()} // 禁止选过去的时间
             weekStartsOn='Monday'
+            // ✅ 新增：绑定渲染函数
+            renderLabel={renderLabel}
+            // ✅ 优化：强制让整个日历撑满宽度，防止某些情况下样式不对齐
+            style={{ '--cell-height': '60px' } as React.CSSProperties}
           />
         </div>
 
