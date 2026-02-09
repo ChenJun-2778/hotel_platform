@@ -30,7 +30,7 @@ function App() {
         {/* 城市选择页面 */}
         <Route path="/city-select" element={<CitySelect />} />
 
-        <Route path="/order" element={<OrderFill />} />
+        <Route path="/order/:id" element={<OrderFill />} />
 
         {/* 3. 容错处理：输入不存在的地址时重定向回首页 */}
         <Route path="*" element={<Navigate to="/" replace />} />

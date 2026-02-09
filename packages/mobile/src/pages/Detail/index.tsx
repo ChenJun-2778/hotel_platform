@@ -141,10 +141,7 @@ const HotelDetail: React.FC = () => {
                         <div 
                             className={styles.bookBtn} 
                             onClick={() => {
-                                Toast.show({
-                                    icon: 'success',
-                                    content: `预订 ${room.name} 成功！`,
-                                })
+                              navigate(`/order/${room.id}?roomName=${room.name}&price=${room.price}`)
                             }}
                         >
                             预订
