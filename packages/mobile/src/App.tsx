@@ -6,6 +6,8 @@ import Domestic from '@/pages/Home/Domestic';
 import Overseas from '@/pages/Home/Overseas';
 import Hourly from '@/pages/Home/Hourly'
 import Inn from '@/pages/Home/Inn'
+import CitySelect from '@/pages/CitySelect';
+
 function App() {
   return (
     <BrowserRouter>
@@ -20,8 +22,12 @@ function App() {
         </Route>
 
         {/* 2. 预留列表页和详情页占位，方便后续扩展 */}
+        {/* 搜索list页面 */}
         <Route path="/list" element={<List />} />
+        {/* 详情页面 */}
         <Route path="/detail/:id?" element={<Detail />} />
+        {/* 城市选择页面 */}
+        <Route path="/city-select" element={<CitySelect />} />
 
         {/* 3. 容错处理：输入不存在的地址时重定向回首页 */}
         <Route path="*" element={<Navigate to="/" replace />} />
