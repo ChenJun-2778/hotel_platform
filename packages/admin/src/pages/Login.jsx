@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Tabs, message, Select } from 'antd';
 import { UserOutlined, LockOutlined, MobileOutlined, MailOutlined, TeamOutlined } from '@ant-design/icons';
-import { useAuth } from '../contexts/AuthContext';
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [showRegister, setShowRegister] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -15,67 +13,37 @@ const Login = () => {
   const [phoneForm] = Form.useForm();
   const [registerForm] = Form.useForm();
 
+  // TODO: 后续实现真实的登录逻辑
   // 账号登录
   const handleAccountLogin = (values) => {
     console.log('账号登录:', values);
-    
-    // 模拟登录，实际应该调用API
-    const userData = {
-      username: values.username,
-      role: values.username === 'admin' ? 'admin' : 'merchant', // 简单模拟
-      email: 'user@example.com',
-    };
-    
-    login(userData);
     message.success('登录成功！');
-    
-    // 根据角色跳转
-    if (userData.role === 'admin') {
-      navigate('/admin/dashboard');
-    } else {
-      navigate('/merchant/dashboard');
-    }
+    navigate('/admin/dashboard');
   };
 
+  // TODO: 后续实现真实的验证码登录逻辑
   // 验证码登录
   const handlePhoneLogin = (values) => {
     console.log('验证码登录:', values);
-    
-    // 模拟登录
-    const userData = {
-      username: values.phone,
-      role: 'merchant', // 手机号登录默认为商户
-      phone: values.phone,
-    };
-    
-    login(userData);
     message.success('登录成功！');
     navigate('/merchant/dashboard');
   };
 
+  // TODO: 后续实现真实的注册逻辑
   // 注册
   const handleRegister = (values) => {
     console.log('注册:', values);
-    
-    // 模拟注册成功后自动登录
-    const userData = {
-      username: values.username,
-      role: values.role,
-      email: values.email,
-      phone: values.phone,
-    };
-    
-    login(userData);
     message.success('注册成功！');
     
     // 根据角色跳转
-    if (userData.role === 'admin') {
+    if (values.role === 'admin') {
       navigate('/admin/dashboard');
     } else {
       navigate('/merchant/dashboard');
     }
   };
 
+  // TODO: 后续实现真实的发送验证码逻辑
   // 发送验证码
   const handleSendCode = async () => {
     try {

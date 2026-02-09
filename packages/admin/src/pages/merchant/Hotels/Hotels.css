@@ -1,0 +1,157 @@
+/* 表格行悬停效果 */
+.hotel-table-row {
+  transition: all 0.3s ease;
+}
+
+.hotel-table-row:hover {
+  background-color: #fafafa !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+/* 表格样式优化 */
+.ant-table-thead > tr > th {
+  background: #fafafa !important;
+  font-weight: 600;
+  color: #262626;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.ant-table-tbody > tr > td {
+  padding: 16px;
+}
+
+/* 按钮悬停效果 */
+.ant-btn-link:hover {
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+/* 分页样式 */
+.ant-pagination {
+  margin-top: 24px;
+}
+
+.ant-pagination-item-active {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+
+/* 标签样式优化 */
+.ant-tag {
+  border-radius: 4px;
+  padding: 2px 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 卡片标题样式 */
+.ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 20px 24px;
+}
+
+/* Modal 样式优化 */
+.ant-modal-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 20px 24px;
+}
+
+.ant-modal-body {
+  padding: 24px;
+}
+
+/* 表单样式优化 */
+.ant-form-item-label > label {
+  font-weight: 500;
+  color: #262626;
+}
+
+/* 输入框聚焦效果 */
+.ant-input:focus,
+.ant-input-number:focus,
+.ant-select-focused .ant-select-selector {
+  border-color: #40a9ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+/* 上传组件样式 */
+.ant-upload-list-picture-card-container {
+  transition: all 0.3s ease;
+}
+
+.ant-upload-list-picture-card-container:hover {
+  transform: scale(1.02);
+}
+
+/* 描述列表样式 */
+.ant-descriptions-item-label {
+  font-weight: 500;
+  color: #595959;
+  background: #fafafa;
+}
+
+.ant-descriptions-item-content {
+  color: #262626;
+}
+
+/* 图片预览优化 */
+.ant-image {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.ant-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 空状态样式 */
+.ant-empty-description {
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+/* 加载动画优化 */
+.ant-spin-dot-item {
+  background-color: #1890ff;
+}
+
+/* 时间选择器样式 */
+.ant-picker:hover {
+  border-color: #40a9ff;
+}
+
+/* 选择器下拉样式 */
+.ant-select-dropdown {
+  border-radius: 8px;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08);
+}
+
+/* 按钮组样式 */
+.ant-space-item .ant-btn {
+  transition: all 0.3s ease;
+}
+
+/* 卡片内嵌样式 */
+.ant-card-type-inner {
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.ant-card-type-inner .ant-card-head {
+  background: transparent;
+  padding: 16px;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .ant-card-head {
+    padding: 16px;
+  }
+  
+  .ant-table-tbody > tr > td {
+    padding: 12px 8px;
+  }
+}

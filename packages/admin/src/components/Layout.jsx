@@ -1,9 +1,8 @@
 import React from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout as AntLayout, Menu, Button, Dropdown, Avatar } from 'antd';
+import { Layout as AntLayout, Menu, Dropdown, Avatar } from 'antd';
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
-import { useAuth } from '../contexts/AuthContext';
-import { getMenusByRole } from '../config/menus';
+import { adminMenus, merchantMenus } from '../config/menus';
 import './Layout.css';
 
 const { Header, Sider, Content } = AntLayout;
@@ -11,14 +10,16 @@ const { Header, Sider, Content } = AntLayout;
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
 
-  // 根据用户角色获取菜单
-  const menus = getMenusByRole(user?.role);
+  // TODO: 后续根据用户角色动态获取菜单
+  // 暂时根据路径判断使用哪个菜单
+  const isAdmin = location.pathname.startsWith('/admin');
+  const menus = isAdmin ? adminMenus : merchantMenus;
+  const roleText = isAdmin ? '管理端' : '商户端';
 
   // 处理登出
   const handleLogout = () => {
-    logout();
+    // TODO: 后续添加登出逻辑
     navigate('/login');
   };
 
@@ -63,7 +64,7 @@ const Layout = () => {
       >
         <div className="logo">
           <h2>易宿酒店</h2>
-          <p>{user?.role === 'admin' ? '管理端' : '商户端'}</p>
+          <p>{roleText}</p>
         </div>
         <Menu
           theme="dark"
@@ -87,7 +88,7 @@ const Layout = () => {
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Avatar icon={<UserOutlined />} />
-              <span>{user?.username}</span>
+              <span>开发模式</span>
             </div>
           </Dropdown>
         </Header>

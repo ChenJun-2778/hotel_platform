@@ -31,7 +31,7 @@ const merchantOrders = () => import('../pages/merchant/Orders');
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <Navigate to="/admin/dashboard" replace />,
   },
   {
     path: '/login',
@@ -45,7 +45,7 @@ const router = createBrowserRouter([
   {
     path: '/admin',
     element: (
-      <ProtectedRoute requiredRole="admin">
+      <ProtectedRoute>
         <Layout />
       </ProtectedRoute>
     ),
@@ -76,7 +76,7 @@ const router = createBrowserRouter([
   {
     path: '/merchant',
     element: (
-      <ProtectedRoute requiredRole="merchant">
+      <ProtectedRoute>
         <Layout />
       </ProtectedRoute>
     ),

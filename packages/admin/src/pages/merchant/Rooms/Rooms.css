@@ -1,0 +1,99 @@
+/* 房间管理页面样式 */
+.rooms-page {
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+/* Card 样式优化 */
+.rooms-page .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+}
+
+.rooms-page .ant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* 按钮样式优化 */
+.rooms-page .ant-btn {
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.rooms-page .ant-btn-primary {
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.rooms-page .ant-btn-primary:hover {
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+}
+
+/* 输入框聚焦效果 */
+.rooms-page .ant-input:focus,
+.rooms-page .ant-input-number:focus,
+.rooms-page .ant-select-focused .ant-select-selector {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* 图片上传区域优化 */
+.rooms-page .ant-upload-list-picture-card-container {
+  transition: all 0.3s;
+}
+
+.rooms-page .ant-upload-list-picture-card-container:hover {
+  transform: scale(1.02);
+}
+
+/* Modal 样式优化 */
+.rooms-page .ant-modal-content {
+  border-radius: 12px;
+}
+
+.rooms-page .ant-modal-header {
+  border-radius: 12px 12px 0 0;
+}
+
+/* 表单内部 Card 样式 */
+.rooms-page .ant-card-type-inner {
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.rooms-page .ant-card-type-inner:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Select 下拉框样式 */
+.rooms-page .ant-select-selector {
+  border-radius: 6px !important;
+}
+
+/* 统计面板样式 */
+.rooms-page .stats-panel {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #fafafa;
+  border-radius: 8px;
+}
+
+/* 房间网格样式 */
+.rooms-page .room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .rooms-page {
+    padding: 12px;
+  }
+
+  .rooms-page .room-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+  }
+}

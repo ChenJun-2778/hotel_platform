@@ -1,132 +1,50 @@
-# 易宿酒店预订平台
+# 易宿酒店预订平台 - 管理后台
 
-## 2026年2月5日 工作内容
+## 开发日志
 
-### 完成的工作
+### 2月9日
+- 重构了rooms模块，把代码拆分了一下，之前一个文件太长了
+- 实现了房间的查看、编辑、删除功能，左键点击查看详情，右键弹出菜单
+- 修复了房间状态显示的bug，现在颜色能正常显示了
+- 写了个代码分析报告，看了下复用情况还不错
 
-1. **权限管理架构搭建**
-   - 创建 AuthContext 认证上下文
-   - 创建 usePermission 权限检查 Hook
-   - 创建 ProtectedRoute 路由守卫组件
-   - 实现基于角色的权限控制
+### 2月8日
+- 优化了hotels页面的样式，加了些hover效果
+- 把hotels模块的代码重构了，拆成了好几个小组件
+- 抽取了一些通用组件像FormSection、ImageUploader这些
 
-2. **管理员功能页面**
-   - 管理员控制台（Dashboard）
-   - 用户管理（Users）
-   - 酒店审核（HotelAudit）
-   - 数据统计（Statistics）
+### 2月7日
+- 对接了后端接口，不过后端有点问题，先用假数据测试
+- 实现了酒店的增删改查功能
+- 加了图片上传功能，用的阿里云oss
 
-3. **商户功能页面**
-   - 商户控制台（Dashboard）
-   - 我的酒店（Hotels）
-   - 房间管理（Rooms）
-   - 订单管理（Orders）
+### 2月6日
+- 完成了酒店管理和房间管理的表单设计
+- 房间管理用了门的样式，不同颜色代表不同状态
+- 加了一些表单验证
 
-4. **路由优化**
-   - 使用 React.lazy 实现代码分割
-   - 按角色分离路由（/admin/* 和 /merchant/*）
-   - 添加路由守卫，无权限自动跳转403
-   - 添加 Suspense 加载状态
+### 2月5日
+- 搭建了项目基础框架，用的react+vite
+- 做了登录页面，左右分栏布局
+- 实现了权限管理，分管理员和商户两个角色
+- 创建了各个页面的框架，用了懒加载优化性能
+- 配置了路由，按角色分了admin和merchant两个路径
 
-5. **菜单系统**
-   - 创建菜单配置文件（menus.js）
-   - 根据用户角色动态显示菜单
-   - 使用 Ant Design Menu 组件
-   - 支持图标和路由跳转
+## 技术栈
+react、antd、vite、react-router
 
-6. **Layout 组件重构**
-   - 使用 Ant Design Layout 组件
-   - 动态渲染侧边栏菜单
-   - 添加用户信息下拉菜单
-   - 添加登出功能
-   - 响应式设计
-
-7. **登录功能增强**
-   - 登录后根据角色自动跳转
-   - 用户信息存储到 localStorage
-   - 页面刷新后自动恢复登录状态
-
-8. **性能优化**
-   - 代码分割：管理员和商户页面分别打包
-   - 懒加载：页面按需加载
-   - 避免不必要的重渲染
-
-### 技术栈
-
-- React 19.2.0
-- React Router DOM 7.13.0
-- Ant Design 6.2.3
-- @ant-design/icons 6.1.0
-- Context API（状态管理）
-- React.lazy + Suspense（代码分割）
-
-### 项目结构
-
-```
-src/
-├── contexts/
-│   └── AuthContext.jsx          # 认证上下文
-├── hooks/
-│   └── usePermission.js         # 权限检查 Hook
-├── components/
-│   ├── Layout.jsx               # 主布局
-│   ├── ProtectedRoute.jsx       # 路由守卫
-│   └── PageLoading.jsx          # 加载组件
-├── config/
-│   └── menus.js                 # 菜单配置
-├── pages/
-│   ├── Login.jsx                # 登录页
-│   ├── Forbidden.jsx            # 403页面
-│   ├── admin/                   # 管理员页面
-│   │   ├── Dashboard.jsx        # 控制台
-│   │   ├── Users.jsx            # 用户管理
-│   │   ├── HotelAudit.jsx       # 酒店审核
-│   │   └── Statistics.jsx       # 数据统计
-│   └── merchant/                # 商户页面
-│       ├── Dashboard.jsx        # 控制台
-│       ├── Hotels.jsx           # 我的酒店
-│       ├── Rooms.jsx            # 房间管理
-│       └── Orders.jsx           # 订单管理
-└── router/
-    └── index.jsx                # 路由配置
-```
-
-### 角色权限说明
-
-**管理员（admin）**
-- ✅ 控制台
-- ✅ 用户管理
-- ✅ 酒店审核
-- ✅ 数据统计
-
-**商户（merchant）**
-- ✅ 控制台
-- ✅ 我的酒店
-- ✅ 房间管理
-- ✅ 订单管理
-
-### 项目启动
-
+## 启动
 ```bash
-cd hotel_platform/packages/admin
 pnpm install
 pnpm dev
 ```
 
-### 测试账号
-
-**管理员登录**
-- 用户名：admin
-- 密码：任意（符合规则即可）
-
-**商户登录**
-- 用户名：merchant（或其他非admin的用户名）
-- 密码：任意（符合规则即可）
-
-### 备注
-
-- 所有页面框架已搭建完成
-- 权限管理系统已实现
-- 代码分割和懒加载已优化
-- 具体业务逻辑待后续实现
-- 后端API接口待对接
+## 目录结构
+```
+src/
+├── components/     # 组件
+├── pages/         # 页面
+├── hooks/         # 自定义hooks
+├── utils/         # 工具函数
+└── config/        # 配置文件
+```
