@@ -7,6 +7,7 @@ import Overseas from '@/pages/Home/Overseas';
 import Hourly from '@/pages/Home/Hourly'
 import Inn from '@/pages/Home/Inn'
 import CitySelect from '@/pages/CitySelect';
+import OrderFill from '@/pages/OrderFill';
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
         <Route path="/detail/:id?" element={<Detail />} />
         {/* 城市选择页面 */}
         <Route path="/city-select" element={<CitySelect />} />
+
+        <Route path="/order" element={<OrderFill />} />
 
         {/* 3. 容错处理：输入不存在的地址时重定向回首页 */}
         <Route path="*" element={<Navigate to="/" replace />} />
