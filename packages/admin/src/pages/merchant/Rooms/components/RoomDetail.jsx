@@ -18,7 +18,7 @@ const RoomDetail = ({ visible, room, onClose }) => {
       footer={null}
       width={800}
     >
-      <Descriptions bordered column={2}>
+      <Descriptions variant="bordered" column={2}>
         <Descriptions.Item label="房间号">
           {room.room_number || room.roomNumber}
         </Descriptions.Item>

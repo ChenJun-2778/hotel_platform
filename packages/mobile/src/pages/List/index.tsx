@@ -19,14 +19,19 @@ const List: React.FC = () => {
   const endDate = searchParams.get('endDate');
   const nightCount = beginDate && endDate ? dayjs(endDate).diff(dayjs(beginDate), 'day') : 1;
 
+  // const handleBack = () => {
+  //   if (window.history.length > 1) {
+  //     navigate(-1);
+  //     return;
+  //   }
+  //   const pathMap: Record<string, string> = { '2': '/overseas', '3': '/hourly', '4': '/inn' };
+  //   navigate(pathMap[type || ''] || '/');
+  // };
   const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
+    // 直接根据 type 决定回哪个首页 tab，简单粗暴且安全
     const pathMap: Record<string, string> = { '2': '/overseas', '3': '/hourly', '4': '/inn' };
     navigate(pathMap[type || ''] || '/');
-  };
+  }
 
   // 1. 定义右侧地图按钮 (单独提取，布局更稳)
   const renderRight = (
@@ -123,7 +128,9 @@ const List: React.FC = () => {
       <div className={styles.listContent}>
          {/* 稍后在这里放 HotelCard */}
          {/* <HotelCard hotel={HOTELS[0]}></HotelCard> */}
-         {HOTELS.map(item => <HotelCard hotel={item} key={item.id}></HotelCard>)}
+         {HOTELS.map(item => <div key={item.id} onClick={() => navigate(`/detail/${item.id}`)}>
+          <HotelCard hotel={item}></HotelCard>
+         </div> )}
       </div>
     </div>
   );

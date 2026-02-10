@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { createHotel, getHotelList, updateHotel } from '../../../../services/hotelService';
+import { createHotel, getHotelList, updateHotel, updateHotelStatus } from '../../../../services/hotelService';
 import { HOTEL_STATUS } from '../../../../constants/hotelStatus';
 
 /**
@@ -15,8 +15,20 @@ const useHotelList = () => {
     setLoading(true);
     try {
       const response = await getHotelList();
-      const hotels = response.data || response || [];
-      setHotelList(Array.isArray(hotels) ? hotels : []);
+      console.log('后端返回的原始数据:', response);
+      
+      // 后端返回格式：{ data: { list: [], pagination: {} }, success: true, message: '' }
+      const hotels = response.data?.list || response.list || response.data || response || [];
+      console.log('解析后的酒店列表:', hotels);
+      
+      // 确保每条数据都有唯一的 id
+      const hotelsWithId = Array.isArray(hotels) 
+        ? hotels.map((hotel, index) => ({
+            ...hotel,
+            id: hotel.id || hotel._id || hotel.hotel_id || `hotel-${index}-${Date.now()}`
+          }))
+        : [];
+      setHotelList(hotelsWithId);
       
       // 假数据（已注释）
       // const mockHotels = [
@@ -136,6 +148,31 @@ const useHotelList = () => {
     }
   };
 
+  // 更新酒店状态（上架/下架）
+  const toggleHotelStatus = async (id, currentStatus) => {
+    try {
+      // 只允许在营业中(1)和已下架(0)之间切换
+      let newStatus;
+      if (currentStatus === HOTEL_STATUS.ONLINE) {
+        newStatus = HOTEL_STATUS.OFFLINE; // 下架
+      } else if (currentStatus === HOTEL_STATUS.OFFLINE) {
+        newStatus = HOTEL_STATUS.ONLINE; // 上架
+      } else {
+        message.warning('当前状态不允许上架/下架操作');
+        return false;
+      }
+
+      await updateHotelStatus(id, newStatus);
+      message.success(newStatus === HOTEL_STATUS.ONLINE ? '酒店已上架' : '酒店已下架');
+      await loadHotelList(); // 重新加载列表
+      return true;
+    } catch (error) {
+      console.error('更新酒店状态失败:', error);
+      message.error('更新酒店状态失败，请重试');
+      return false;
+    }
+  };
+
   // 组件加载时获取列表
   useEffect(() => {
     loadHotelList();
@@ -147,6 +184,7 @@ const useHotelList = () => {
     loadHotelList,
     addHotel,
     updateHotelData,
+    toggleHotelStatus,
   };
 };
 

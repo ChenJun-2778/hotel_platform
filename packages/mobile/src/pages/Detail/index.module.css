@@ -1,0 +1,240 @@
+/* src/pages/Detail/index.module.css */
+
+.container {
+    background-color: #f5f7fa;
+    min-height: 100vh;
+  }
+  
+  /* 顶部浮动导航 */
+  .navBarWrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    height: 44px;
+    /* 渐变背景，防止白色图片导致返回按钮看不清 */
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent);
+    pointer-events: none; /* 让点击穿透，不影响轮播图点击 */
+  }
+  
+  .backBtn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto; /* 恢复按钮点击 */
+    cursor: pointer;
+  }
+  
+  /* 轮播图区域 */
+  .swiperWrapper {
+    position: relative;
+    height: 220px; /* 大图高度 */
+  }
+  
+  .imageContainer {
+    height: 220px;
+    width: 100%;
+  }
+  
+  .heroImage {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .imageCount {
+    position: absolute;
+    bottom: 25px; /* 留出位置给 InfoCard 遮挡 */
+    right: 12px;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  /* --- 核心信息卡片 (向上浮动) --- */
+  .infoCard {
+    position: relative;
+    margin: -15px 12px 0 12px; /* 负 Margin 实现上浮覆盖 */
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    z-index: 20;
+  }
+  
+  .hotelTitle {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .starBadge {
+    font-size: 10px;
+    color: #666;
+    background: #f0f0f0;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-left: 8px;
+    font-weight: normal;
+  }
+  
+  .scoreRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  
+  .scoreBlock {
+    display: flex;
+    align-items: baseline;
+  }
+  
+  .score {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1677ff;
+    font-family: DINAlternate-Bold, sans-serif;
+    margin-right: 4px;
+  }
+  
+  .scoreText {
+    font-size: 12px;
+    color: #1677ff;
+    font-weight: bold;
+  }
+  
+  .commentSummary {
+    font-size: 12px;
+    color: #666;
+    flex: 1;
+    margin-left: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .mapLink {
+    font-size: 12px;
+    color: #1677ff;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  
+  .addressRow {
+    font-size: 12px;
+    color: #666;
+    padding-top: 10px;
+    border-top: 1px solid #f5f5f5;
+  }
+  
+  /* --- 房型列表 --- */
+  .roomListWrapper {
+    padding: 20px 12px;
+  }
+  
+  .sectionTitle {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #333;
+  }
+  
+  .roomCard {
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  }
+  
+  .roomImgBox {
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  
+  .roomImg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .roomInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .roomName {
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  
+  .roomDesc {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 6px;
+  }
+  
+  .tagRow {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  
+  .miniTag {
+    font-size: 10px;
+    color: #1677ff;
+    border: 1px solid rgba(22, 119, 255, 0.2);
+    padding: 0 3px;
+    border-radius: 2px;
+  }
+  
+  .priceRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+  }
+  
+  .priceBlock {
+    color: #ff4040;
+  }
+  
+  .currency {
+    font-size: 11px;
+    font-weight: bold;
+  }
+  
+  .price {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .bookBtn {
+    background: #1677ff; /* 若要更像 OTA，可以用橙色 #ff6a00 */
+    color: #fff;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 6px 16px;
+    border-radius: 4px;
+  }

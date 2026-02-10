@@ -13,6 +13,7 @@
     "@ant-design/icons": "^6.1.0",
     "ali-oss": "^6.23.0",
     "antd": "^6.2.3",
+    "china-division": "^2.7.0",
     "dayjs": "^1.11.19",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

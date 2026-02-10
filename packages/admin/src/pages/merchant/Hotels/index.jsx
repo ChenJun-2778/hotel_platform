@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { Card, Button, Modal, Form } from 'antd';
+import { useState } from 'react';
+import { Modal, Form, message, Card, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import SearchBar from '../../../components/common/SearchBar';
 import HotelTable from './components/HotelTable';
 import HotelForm from './components/HotelForm';
 import HotelDetail from './components/HotelDetail';
 import useHotelList from './hooks/useHotelList';
+import { getHotelDetail } from '../../../services/hotelService';
+import { HOTEL_STATUS } from '../../../constants/hotelStatus';
 import './Hotels.css';
 
 const Hotels = () => {
@@ -24,7 +27,7 @@ const Hotels = () => {
   const [imageFileList, setImageFileList] = useState([]);
   
   // 使用自定义 Hook
-  const { hotelList, loading, addHotel, updateHotelData } = useHotelList();
+  const { hotelList, loading, addHotel, updateHotelData, toggleHotelStatus } = useHotelList();
 
   // 打开添加弹窗
   const showModal = () => {
@@ -45,19 +48,86 @@ const Hotels = () => {
 
   // 提交表单
   const handleSubmit = async (values) => {
-    const coverImage = coverFileList[0]?.response?.url || coverFileList[0]?.url || '';
-    const images = imageFileList.map(file => file.response?.url || file.url).filter(Boolean);
-
-    const submitData = {
-      ...values,
-      cover_image: coverImage,
-      images: images,
-      check_in_time: values.check_in_time?.format('HH:mm'),
-      check_out_time: values.check_out_time?.format('HH:mm'),
-    };
-
     setSubmitting(true);
+    
     try {
+      // 1. 检查封面图片
+      if (coverFileList.length === 0) {
+        message.error('请上传封面图片');
+        return;
+      }
+
+      // 2. 上传封面图片到OSS
+      let coverImage = '';
+      const coverFile = coverFileList[0];
+      
+      if (coverFile.originFileObj) {
+        // 新上传的文件，需要上传到OSS
+        message.loading({ content: '正在上传封面图片...', key: 'uploadCover' });
+        const { uploadToOss } = await import('../../../utils/oss');
+        coverImage = await uploadToOss(coverFile.originFileObj, 'hotels');
+        message.success({ content: '封面图片上传成功', key: 'uploadCover' });
+      } else if (coverFile.url) {
+        // 已有的图片URL（编辑时）
+        coverImage = coverFile.url;
+      }
+
+      if (!coverImage) {
+        message.error('封面图片上传失败');
+        return;
+      }
+
+      // 3. 上传酒店图片到OSS
+      const images = [];
+      if (imageFileList.length > 0) {
+        message.loading({ content: '正在上传酒店图片...', key: 'uploadImages' });
+        
+        for (let i = 0; i < imageFileList.length; i++) {
+          const file = imageFileList[i];
+          if (file.originFileObj) {
+            // 新上传的文件
+            const { uploadToOss } = await import('../../../utils/oss');
+            const url = await uploadToOss(file.originFileObj, 'hotels');
+            images.push(url);
+          } else if (file.url) {
+            // 已有的图片URL
+            images.push(file.url);
+          }
+        }
+        
+        message.success({ content: '酒店图片上传成功', key: 'uploadImages' });
+      }
+
+      // 4. 处理省市区数据
+      const [province = '', city = '', district = ''] = values.area || [];
+      const location = values.area ? values.area.join('') : '';
+
+      // 5. 构建提交数据
+      const submitData = {
+        name: values.name,
+        english_name: values.english_name,
+        brand: values.brand,
+        star_rating: Number(values.star_rating) || 3,
+        room_number: Number(values.room_number) || 0,
+        location: location,
+        country: '中国',
+        province,
+        city,
+        district,
+        address: values.address,
+        hotel_phone: values.hotel_phone,
+        contact: values.contact,
+        contact_phone: values.contact_phone,
+        hotel_facilities: values.hotel_facilities?.join(',') || '',
+        check_in_time: values.check_in_time?.format('YYYY-MM-DD HH:mm:ss'),
+        check_out_time: values.check_out_time?.format('YYYY-MM-DD HH:mm:ss'),
+        description: values.description,
+        cover_image: coverImage,
+        images: JSON.stringify(images),
+        ...(!isEditMode && { status: HOTEL_STATUS.PENDING }),
+      };
+
+      // 6. 提交到后端
       let success;
       if (isEditMode && editingHotelId) {
         success = await updateHotelData(editingHotelId, submitData);
@@ -73,6 +143,9 @@ const Hotels = () => {
         setCoverFileList([]);
         setImageFileList([]);
       }
+    } catch (error) {
+      console.error('提交失败:', error);
+      message.error('操作失败，请重试');
     } finally {
       setSubmitting(false);
     }
@@ -83,13 +156,12 @@ const Hotels = () => {
     setDetailLoading(true);
     setIsDetailModalOpen(true);
     try {
-      // TODO: 后续连接真实后端接口
-      // const response = await getHotelDetail(record.id);
-      // setCurrentHotel(response.data || response);
-      
-      setCurrentHotel(record);
+      const response = await getHotelDetail(record.id);
+      const hotelData = response.data || response;
+      setCurrentHotel(hotelData);
     } catch (error) {
       console.error('获取酒店详情失败:', error);
+      message.error('获取酒店详情失败，请重试');
       setIsDetailModalOpen(false);
     } finally {
       setDetailLoading(false);
@@ -102,77 +174,117 @@ const Hotels = () => {
     setCurrentHotel(null);
   };
 
+  // 切换酒店状态（上架/下架）
+  const handleToggleStatus = async (record) => {
+    await toggleHotelStatus(record.id, record.status);
+  };
+
+  // 搜索酒店（暂未实现）
+  const handleSearch = (keyword) => {
+    console.log('搜索关键词:', keyword);
+    message.info(`搜索功能开发中，关键词：${keyword}`);
+    // TODO: 实现搜索逻辑
+  };
+
   // 编辑酒店
-  const handleEdit = (record) => {
+  const handleEdit = async (record) => {
     setIsEditMode(true);
     setEditingHotelId(record.id);
     setIsModalOpen(true);
     
-    // 填充表单数据
-    form.setFieldsValue({
-      name: record.name,
-      name_en: record.name_en,
-      brand: record.brand,
-      star_level: record.star_level,
-      total_rooms: record.total_rooms,
-      country: record.country,
-      province: record.province,
-      city: record.city,
-      district: record.district,
-      address: record.address,
-      phone: record.phone,
-      contact_person: record.contact_person,
-      contact_phone: record.contact_phone,
-      facilities: record.facilities,
-      check_in_time: record.check_in_time ? dayjs(record.check_in_time, 'HH:mm') : null,
-      check_out_time: record.check_out_time ? dayjs(record.check_out_time, 'HH:mm') : null,
-      description: record.description,
-    });
-    
-    // 设置封面图片
-    if (record.cover_image) {
-      setCoverFileList([{
-        uid: '-1',
-        name: 'cover.jpg',
-        status: 'done',
-        url: record.cover_image,
-      }]);
-    }
-    
-    // 设置酒店图片
-    if (record.images && record.images.length > 0) {
-      setImageFileList(record.images.map((url, index) => ({
-        uid: `-${index + 2}`,
-        name: `image${index + 1}.jpg`,
-        status: 'done',
-        url: url,
-      })));
+    try {
+      // 从后端获取完整的酒店数据
+      const response = await getHotelDetail(record.id);
+      const hotelData = response.data || response;
+      
+      console.log('编辑酒店 - 完整数据:', hotelData);
+      
+      // 构建省市区数组
+      const area = [hotelData.province, hotelData.city, hotelData.district].filter(Boolean);
+      console.log('省市区数组:', area);
+      
+      // 解析设施
+      const facilities = hotelData.hotel_facilities 
+        ? (typeof hotelData.hotel_facilities === 'string' 
+            ? hotelData.hotel_facilities.split(',').filter(Boolean)
+            : hotelData.hotel_facilities)
+        : [];
+      console.log('设施列表:', facilities);
+      
+      // 填充表单数据
+      const formData = {
+        name: hotelData.name,
+        english_name: hotelData.english_name,
+        brand: hotelData.brand,
+        star_rating: hotelData.star_rating,
+        room_number: hotelData.room_number,
+        area: area.length > 0 ? area : undefined,
+        address: hotelData.address,
+        hotel_phone: hotelData.hotel_phone,
+        contact: hotelData.contact,
+        contact_phone: hotelData.contact_phone,
+        hotel_facilities: facilities,
+        check_in_time: hotelData.check_in_time ? dayjs(hotelData.check_in_time) : null,
+        check_out_time: hotelData.check_out_time ? dayjs(hotelData.check_out_time) : null,
+        description: hotelData.description,
+      };
+      
+      console.log('表单数据:', formData);
+      form.setFieldsValue(formData);
+      
+      // 设置封面图片
+      if (hotelData.cover_image) {
+        const coverFile = {
+          uid: '-1',
+          name: 'cover.jpg',
+          status: 'done',
+          url: hotelData.cover_image,
+        };
+        console.log('封面图片:', coverFile);
+        setCoverFileList([coverFile]);
+      } else {
+        setCoverFileList([]);
+      }
+      
+      // 设置酒店图片
+      const imageList = typeof hotelData.images === 'string' 
+        ? JSON.parse(hotelData.images || '[]') 
+        : hotelData.images || [];
+      
+      console.log('图片列表:', imageList);
+      
+      if (imageList.length > 0) {
+        const imageFiles = imageList.map((url, index) => ({
+          uid: `-${index + 2}`,
+          name: `image${index + 1}.jpg`,
+          status: 'done',
+          url: url,
+        }));
+        console.log('图片文件列表:', imageFiles);
+        setImageFileList(imageFiles);
+      } else {
+        setImageFileList([]);
+      }
+    } catch (error) {
+      console.error('获取酒店数据失败:', error);
+      message.error('获取酒店数据失败，请重试');
+      setIsModalOpen(false);
+      setIsEditMode(false);
+      setEditingHotelId(null);
     }
   };
 
   return (
-    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: 'calc(100vh - 64px)', position: 'relative' }}>
       <Card 
-        title={
-          <div style={{ fontSize: 18, fontWeight: 600 }}>
-            我的酒店
-          </div>
-        }
+        title={<div style={{ fontSize: 18, fontWeight: 600 }}>我的酒店</div>}
         extra={
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={showModal}
-            size="large"
-            style={{
-              borderRadius: 8,
-              boxShadow: '0 2px 8px rgba(24, 144, 255, 0.2)',
-            }}
-          >
-            添加酒店
-          </Button>
+          <SearchBar
+            placeholder="搜索酒店名称、地址"
+            onSearch={handleSearch}
+            loading={loading}
+          />
         }
-        bordered={false}
         style={{
           borderRadius: 12,
           boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)',
@@ -183,8 +295,32 @@ const Hotels = () => {
           loading={loading}
           onView={handleViewDetail}
           onEdit={handleEdit}
+          onToggleStatus={handleToggleStatus}
         />
       </Card>
+
+      {/* 悬浮添加按钮 */}
+      <Button
+        type="primary"
+        shape="circle"
+        icon={<PlusOutlined style={{ fontSize: 24 }} />}
+        size="large"
+        onClick={showModal}
+        style={{
+          position: 'fixed',
+          right: 48,
+          bottom: 48,
+          width: 64,
+          height: 64,
+          fontSize: 24,
+          boxShadow: '0 4px 12px rgba(24, 144, 255, 0.4)',
+          zIndex: 999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      />
+      
 
       {/* 添加/编辑酒店 Modal */}
       <Modal
@@ -194,10 +330,11 @@ const Hotels = () => {
         width={800}
         footer={null}
         style={{ top: 20 }}
-        bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', overflowX: 'hidden' }}
+        styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <HotelForm
           form={form}
+          mode={isEditMode ? 'edit' : 'add'}
           onFinish={handleSubmit}
           onCancel={handleCancel}
           submitting={submitting}
@@ -214,11 +351,9 @@ const Hotels = () => {
         open={isDetailModalOpen}
         onCancel={handleDetailModalClose}
         width={900}
-        footer={[
-          <Button key="close" onClick={handleDetailModalClose}>
-            关闭
-          </Button>
-        ]}
+        footer={null}
+        style={{ top: 20 }}
+        styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' } }}
       >
         <HotelDetail hotel={currentHotel} loading={detailLoading} />
       </Modal>

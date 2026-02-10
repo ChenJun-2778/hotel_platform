@@ -10,6 +10,7 @@ const createOssClient = () => {
     accessKeyId: ossConfig.accessKeyId,
     accessKeySecret: ossConfig.accessKeySecret,
     bucket: ossConfig.bucket,
+    secure: true, // 强制使用 HTTPS
   });
 };
 
@@ -38,8 +39,11 @@ export const uploadToOss = async (file, folder = 'uploads', onProgress) => {
     const client = createOssClient();
     const fileName = generateFileName(file.name, folder);
     
-    // 上传文件
+    // 上传文件，设置为公共读
     const result = await client.put(fileName, file, {
+      headers: {
+        'x-oss-object-acl': 'public-read', // 设置文件为公共读
+      },
       progress: (p) => {
         if (onProgress) {
           onProgress(p);
