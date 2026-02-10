@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavBar, CapsuleTabs } from 'antd-mobile';
+import React, { useState, useEffect } from 'react';
+import { NavBar, CapsuleTabs, DotLoading } from 'antd-mobile';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { EnvironmentOutline, SearchOutline } from 'antd-mobile-icons';
@@ -7,6 +7,8 @@ import styles from './index.module.css';
 // 导入酒店卡牌组件
 import HotelCard from '@/components/HotelCard';
 import type { HotelList } from '@/components/HotelCard/type'
+// 导入请求api
+import { apiGetHotelList } from '@/api/hotel'
 
 const List: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -73,6 +75,26 @@ const List: React.FC = () => {
     star: 3
   }
 ];
+const [hotelList, setHotelList] = useState<any[]>([]); // 存放列表数据
+const [loading, setLoading] = useState(true); // 控制 Loading 显示
+useEffect(() => {
+  // 设置请求方法
+  const getHotelList = async () => {
+    setLoading(true)
+    try {
+      const res: any = await apiGetHotelList({ city, beginDate, endDate } as any)
+      if (res && res.code === 200) {
+        setHotelList(res.data);
+      }
+    } catch (error) {
+      
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  getHotelList()
+}, [city])
 
   return (
     <div className={styles.listContainer}>
@@ -128,9 +150,21 @@ const List: React.FC = () => {
       <div className={styles.listContent}>
          {/* 稍后在这里放 HotelCard */}
          {/* <HotelCard hotel={HOTELS[0]}></HotelCard> */}
-         {HOTELS.map(item => <div key={item.id} onClick={() => navigate(`/detail/${item.id}`)}>
-          <HotelCard hotel={item}></HotelCard>
-         </div> )}
+         {loading ? (
+           <div className={styles.loadingWrapper}>
+             <DotLoading color='primary' /> 正在寻找酒店...
+           </div>
+         ) : (
+           hotelList.map(item => (
+             <div key={item.id} onClick={() => navigate(`/detail/${item.id}`)}>
+               <HotelCard hotel={item} />
+             </div>
+           ))
+         )}
+         
+         {!loading && hotelList.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>暂无数据</div>
+         )}
       </div>
     </div>
   );
