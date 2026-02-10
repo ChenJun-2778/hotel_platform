@@ -7,6 +7,7 @@ export const HOTEL_API = {
   LIST: `${API_BASE_URL}/hotels/list`,          // GET - 获取酒店列表
   DETAIL: (id) => `${API_BASE_URL}/hotels/${id}`, // GET - 获取酒店详情
   UPDATE: (id) => `${API_BASE_URL}/hotels/${id}`, // PUT - 更新酒店信息
+  UPDATE_STATUS: (id) => `${API_BASE_URL}/hotels/${id}/status`, // PUT - 更新酒店状态
 };
 
 // 房间相关接口（预留）

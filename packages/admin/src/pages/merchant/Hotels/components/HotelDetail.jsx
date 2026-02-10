@@ -1,10 +1,9 @@
 import React from 'react';
-import { Descriptions, Tag, Space, Image } from 'antd';
-import { HOTEL_STATUS_MAP } from '../../../../constants/hotelStatus';
-import StatusTag from '../../../../components/common/StatusTag';
+import { Card, Row, Col, Space, Image, Tag, Divider, Descriptions } from 'antd';
+import { EnvironmentOutlined, PhoneOutlined, UserOutlined, ClockCircleOutlined, StarFilled } from '@ant-design/icons';
 
 /**
- * 酒店详情组件
+ * 酒店详情组件 - 优化展示样式
  */
 const HotelDetail = ({ hotel, loading }) => {
   if (loading) {
@@ -15,86 +14,214 @@ const HotelDetail = ({ hotel, loading }) => {
     return null;
   }
 
+  // 解析图片列表
+  const imageList = typeof hotel.images === 'string' 
+    ? JSON.parse(hotel.images || '[]') 
+    : hotel.images || [];
+
   return (
-    <div>
-      <Descriptions title="基本信息" bordered column={2}>
-        <Descriptions.Item label="酒店名称">{hotel.name}</Descriptions.Item>
-        <Descriptions.Item label="英文名称">{hotel.name_en || '-'}</Descriptions.Item>
-        <Descriptions.Item label="品牌">{hotel.brand || '-'}</Descriptions.Item>
-        <Descriptions.Item label="星级">
-          {hotel.star_level ? `${hotel.star_level}星级` : '-'}
-        </Descriptions.Item>
-        <Descriptions.Item label="房间数">{hotel.total_rooms || '-'}</Descriptions.Item>
-        <Descriptions.Item label="状态">
-          <StatusTag status={hotel.status} statusMap={HOTEL_STATUS_MAP} />
-        </Descriptions.Item>
-      </Descriptions>
-
-      <Descriptions title="位置信息" bordered column={2} style={{ marginTop: 24 }}>
-        <Descriptions.Item label="国家">{hotel.country || '-'}</Descriptions.Item>
-        <Descriptions.Item label="省份">{hotel.province || '-'}</Descriptions.Item>
-        <Descriptions.Item label="城市">{hotel.city || '-'}</Descriptions.Item>
-        <Descriptions.Item label="区县">{hotel.district || '-'}</Descriptions.Item>
-        <Descriptions.Item label="详细地址" span={2}>
-          {hotel.address || '-'}
-        </Descriptions.Item>
-      </Descriptions>
-
-      <Descriptions title="联系方式" bordered column={2} style={{ marginTop: 24 }}>
-        <Descriptions.Item label="酒店电话">{hotel.phone || '-'}</Descriptions.Item>
-        <Descriptions.Item label="联系人">{hotel.contact_person || '-'}</Descriptions.Item>
-        <Descriptions.Item label="联系电话" span={2}>
-          {hotel.contact_phone || '-'}
-        </Descriptions.Item>
-      </Descriptions>
-
-      <Descriptions title="酒店设施" bordered column={1} style={{ marginTop: 24 }}>
-        <Descriptions.Item label="设施">
-          {hotel.facilities && hotel.facilities.length > 0 ? (
-            <Space wrap>
-              {hotel.facilities.map((facility, index) => (
-                <Tag key={index} color="blue">{facility}</Tag>
-              ))}
+    <div style={{ padding: '8px 0' }}>
+      {/* 酒店头部信息 */}
+      <Card 
+        bordered={false}
+        style={{ 
+          marginBottom: 16,
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: '#fff'
+        }}
+      >
+        <Row gutter={16} align="middle">
+          <Col flex="auto">
+            <div style={{ fontSize: 24, fontWeight: 600, marginBottom: 8 }}>
+              {hotel.name}
+            </div>
+            {hotel.english_name && (
+              <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 12 }}>
+                {hotel.english_name}
+              </div>
+            )}
+            <Space size="large">
+              <Space>
+                <StarFilled style={{ color: '#ffd700' }} />
+                <span>{hotel.star_rating}星级</span>
+              </Space>
+              {hotel.brand && (
+                <Tag color="purple" style={{ margin: 0 }}>{hotel.brand}</Tag>
+              )}
             </Space>
-          ) : '-'}
-        </Descriptions.Item>
-      </Descriptions>
+          </Col>
+          <Col>
+            <div style={{ textAlign: 'center', padding: '12px 24px', background: 'rgba(255,255,255,0.2)', borderRadius: 8 }}>
+              <div style={{ fontSize: 32, fontWeight: 600 }}>{hotel.room_number || 0}</div>
+              <div style={{ fontSize: 12, opacity: 0.9 }}>房间数</div>
+            </div>
+          </Col>
+        </Row>
+      </Card>
 
-      <Descriptions title="入住信息" bordered column={2} style={{ marginTop: 24 }}>
-        <Descriptions.Item label="入住时间">{hotel.check_in_time || '-'}</Descriptions.Item>
-        <Descriptions.Item label="退房时间">{hotel.check_out_time || '-'}</Descriptions.Item>
-        <Descriptions.Item label="酒店描述" span={2}>
-          {hotel.description || '-'}
-        </Descriptions.Item>
-      </Descriptions>
+      {/* 位置信息 */}
+      <Card 
+        title={<><EnvironmentOutlined /> 位置信息</>}
+        bordered={false}
+        style={{ marginBottom: 16 }}
+      >
+        <Descriptions column={1}>
+          <Descriptions.Item label="所在区域">
+            <span style={{ fontSize: 15, color: '#262626' }}>
+              {hotel.location || '-'}
+            </span>
+          </Descriptions.Item>
+          <Descriptions.Item label="详细地址">
+            <span style={{ fontSize: 15, color: '#262626' }}>
+              {hotel.address || '-'}
+            </span>
+          </Descriptions.Item>
+        </Descriptions>
+      </Card>
 
-      <Descriptions title="酒店图片" bordered column={1} style={{ marginTop: 24 }}>
-        <Descriptions.Item label="封面图片">
-          {hotel.cover_image ? (
+      {/* 联系方式 */}
+      <Card 
+        title={<><PhoneOutlined /> 联系方式</>}
+        bordered={false}
+        style={{ marginBottom: 16 }}
+      >
+        <Row gutter={[16, 16]}>
+          <Col span={12}>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>酒店电话</div>
+            <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
+              {hotel.hotel_phone || '-'}
+            </div>
+          </Col>
+          <Col span={12}>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>联系人</div>
+            <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
+              <UserOutlined style={{ marginRight: 6 }} />
+              {hotel.contact || '-'}
+            </div>
+          </Col>
+          <Col span={12}>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>联系电话</div>
+            <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
+              {hotel.contact_phone || '-'}
+            </div>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 酒店设施 */}
+      {hotel.hotel_facilities && (
+        <Card 
+          title="酒店设施"
+          bordered={false}
+          style={{ marginBottom: 16 }}
+        >
+          <Space wrap size={[8, 8]}>
+            {hotel.hotel_facilities.split(',').filter(Boolean).map((facility, index) => (
+              <Tag 
+                key={index} 
+                color="blue"
+                style={{ 
+                  padding: '4px 12px',
+                  fontSize: 13,
+                  borderRadius: 4
+                }}
+              >
+                {facility}
+              </Tag>
+            ))}
+          </Space>
+        </Card>
+      )}
+
+      {/* 入住信息 */}
+      <Card 
+        title={<><ClockCircleOutlined /> 入住信息</>}
+        bordered={false}
+        style={{ marginBottom: 16 }}
+      >
+        <Row gutter={[16, 16]}>
+          <Col span={12}>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>入住时间</div>
+            <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
+              {hotel.check_in_time || '-'}
+            </div>
+          </Col>
+          <Col span={12}>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>退房时间</div>
+            <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
+              {hotel.check_out_time || '-'}
+            </div>
+          </Col>
+        </Row>
+        {hotel.description && (
+          <>
+            <Divider style={{ margin: '16px 0' }} />
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>酒店描述</div>
+            <div style={{ 
+              fontSize: 14, 
+              color: '#595959', 
+              lineHeight: 1.8,
+              padding: '12px',
+              background: '#fafafa',
+              borderRadius: 4
+            }}>
+              {hotel.description}
+            </div>
+          </>
+        )}
+      </Card>
+
+      {/* 酒店图片 */}
+      <Card 
+        title="酒店图片"
+        bordered={false}
+      >
+        {hotel.cover_image && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>封面图片</div>
             <Image
-              width={200}
+              width="100%"
+              height={300}
               src={hotel.cover_image}
               alt="封面图片"
+              style={{ 
+                objectFit: 'cover',
+                borderRadius: 8
+              }}
             />
-          ) : '-'}
-        </Descriptions.Item>
-        <Descriptions.Item label="酒店图片">
-          {hotel.images && hotel.images.length > 0 ? (
+          </div>
+        )}
+        
+        {imageList.length > 0 && (
+          <div>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>酒店图片</div>
             <Image.PreviewGroup>
-              <Space wrap>
-                {hotel.images.map((img, index) => (
-                  <Image
-                    key={index}
-                    width={150}
-                    src={img}
-                    alt={`酒店图片${index + 1}`}
-                  />
+              <Row gutter={[8, 8]}>
+                {imageList.map((img, index) => (
+                  <Col span={6} key={index}>
+                    <Image
+                      width="100%"
+                      height={120}
+                      src={img}
+                      alt={`酒店图片${index + 1}`}
+                      style={{ 
+                        objectFit: 'cover',
+                        borderRadius: 8
+                      }}
+                    />
+                  </Col>
                 ))}
-              </Space>
+              </Row>
             </Image.PreviewGroup>
-          ) : '-'}
-        </Descriptions.Item>
-      </Descriptions>
+          </div>
+        )}
+        
+        {!hotel.cover_image && imageList.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+            暂无图片
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

@@ -91,6 +91,7 @@ export const get = (url, params) => {
  * POST 请求
  */
 export const post = (url, data) => {
+  console.log('POST 数据:', data);
   return request(url, {
     method: 'POST',
     body: JSON.stringify(data),

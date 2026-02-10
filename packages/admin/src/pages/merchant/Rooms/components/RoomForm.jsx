@@ -26,7 +26,6 @@ const RoomForm = ({
       initialValues={{
         bed_type: '大床',
         max_occupancy: 2,
-        status: 'available',
       }}
     >
       {/* 基本信息 */}
@@ -191,20 +190,6 @@ const RoomForm = ({
             rows={3}
             placeholder="请输入房间描述，如房间特色、景观等"
           />
-        </Form.Item>
-      </FormSection>
-
-      {/* 房间状态 */}
-      <FormSection title="房间状态">
-        <Form.Item
-          label="状态"
-          name="status"
-          rules={[{ required: true, message: '请选择房间状态' }]}
-        >
-          <Select>
-            <Option value="available">可预订</Option>
-            <Option value="unavailable">不可预订</Option>
-          </Select>
         </Form.Item>
       </FormSection>
 

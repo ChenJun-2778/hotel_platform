@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Card, Select, Space, Button, Modal, Form } from 'antd';
-import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import { Select, Modal, Form } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
+import PageContainer from '../../../components/common/PageContainer';
 import useRoomList from './hooks/useRoomList';
 import RoomStatsPanel from './components/RoomStatsPanel';
 import RoomGrid from './components/RoomGrid';
@@ -25,6 +26,14 @@ const Rooms = () => {
   // 获取当前酒店的房间列表
   const currentRooms = getRoomsByHotel(selectedHotel);
   const stats = calculateStats(currentRooms);
+
+  /**
+   * 搜索房间
+   */
+  const handleSearch = (keyword) => {
+    console.log('搜索房间:', keyword);
+    // TODO: 实现搜索逻辑
+  };
 
   /**
    * 打开添加房间弹窗
@@ -156,36 +165,32 @@ const Rooms = () => {
   };
 
   return (
-    <div className="rooms-page">
-      <Card
-        title={
-          <Space>
-            <span>房间管理</span>
-            <Select
-              value={selectedHotel}
-              onChange={setSelectedHotel}
-              style={{ width: 200 }}
-              options={hotels}
-            />
-          </Space>
-        }
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={showAddModal}>
-            添加房间
-          </Button>
-        }
-      >
-        {/* 统计面板 */}
-        <RoomStatsPanel stats={stats} />
-
-        {/* 房间网格 */}
-        <RoomGrid 
-          rooms={currentRooms} 
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+    <PageContainer
+      title="房间管理"
+      titleExtra={
+        <Select
+          value={selectedHotel}
+          onChange={setSelectedHotel}
+          style={{ width: 200 }}
+          options={hotels}
         />
-      </Card>
+      }
+      showSearch={true}
+      searchPlaceholder="搜索房间号、类型"
+      onSearch={handleSearch}
+      showAddButton={true}
+      onAdd={showAddModal}
+    >
+      {/* 统计面板 */}
+      <RoomStatsPanel stats={stats} />
+
+      {/* 房间网格 */}
+      <RoomGrid 
+        rooms={currentRooms} 
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
       {/* 添加房间弹窗 */}
       <Modal
@@ -195,7 +200,7 @@ const Rooms = () => {
         width={700}
         footer={null}
         style={{ top: 20 }}
-        bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', overflowX: 'hidden' }}
+        styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <RoomForm
           form={form}
@@ -215,7 +220,7 @@ const Rooms = () => {
         width={700}
         footer={null}
         style={{ top: 20 }}
-        bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', overflowX: 'hidden' }}
+        styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', overflowX: 'hidden' } }}
       >
         <RoomForm
           form={form}
@@ -234,7 +239,7 @@ const Rooms = () => {
         room={currentRoom}
         onClose={handleDetailClose}
       />
-    </div>
+    </PageContainer>
   );
 };
 

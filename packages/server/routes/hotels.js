@@ -170,6 +170,7 @@ router.post('/create', async (req, res) => {
  * - pageSize: 每页条数（可选，默认10）
  * 
  * 返回字段：
+ * - id: 酒店ID
  * - name: 酒店名称
  * - location: 酒店地点/城市
  * - address: 详细地址
@@ -196,6 +197,7 @@ router.get('/list', async (req, res) => {
     // 查询酒店列表 - 直接使用整数值而不是占位符，因为LIMIT子句在某些MySQL版本的预处理语句中有问题
     const sql = `
       SELECT 
+        id,
         name,
         location,
         address,
