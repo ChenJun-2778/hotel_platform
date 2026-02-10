@@ -9,9 +9,10 @@ const HotelTable = ({
   dataSource, 
   loading, 
   onView, 
-  onEdit 
+  onEdit,
+  onToggleStatus,
 }) => {
-  const columns = getHotelTableColumns(onView, onEdit);
+  const columns = getHotelTableColumns(onView, onEdit, onToggleStatus);
 
   return (
     <Table 
@@ -19,7 +20,7 @@ const HotelTable = ({
       dataSource={dataSource}
       loading={loading}
       rowKey="id"
-      scroll={{ x: 1200 }}
+      scroll={{ x: 'max-content' }}
       pagination={{
         pageSize: 10,
         showTotal: (total) => `共 ${total} 条`,

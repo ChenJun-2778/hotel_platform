@@ -37,3 +37,13 @@ export const getHotelDetail = (id) => {
 export const updateHotel = (id, hotelData) => {
   return put(HOTEL_API.UPDATE(id), hotelData);
 };
+
+/**
+ * 更新酒店状态
+ * @param {string|number} id - 酒店ID
+ * @param {number} status - 状态值
+ * @returns {Promise}
+ */
+export const updateHotelStatus = (id, status) => {
+  return put(HOTEL_API.UPDATE_STATUS(id), { status });
+};
