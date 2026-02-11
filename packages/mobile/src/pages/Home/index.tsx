@@ -1,9 +1,12 @@
 // import React from 'react';
 import { CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
-import { AppOutline, UnorderedListOutline, UserOutline } from 'antd-mobile-icons'; // 需要安装图标库
+import { AppOutline, UnorderedListOutline, UserOutline, FireFill } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
 // 引入跳转钩子
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+// 引入组件
+import HotelCard from '@/components/HotelCard';
+import { MOCK_HOTEL_LIST } from '@/mock/data'
 
 
 const Home = () => {
@@ -14,6 +17,14 @@ const Home = () => {
 
   // 根据当前路由确定激活哪个 Tab
   const activeKey = location.pathname.split('/').pop() || 'domestic';
+
+  // 制作假数据
+  const recommendList = [
+    ...MOCK_HOTEL_LIST,
+    ...MOCK_HOTEL_LIST,
+    ...MOCK_HOTEL_LIST,
+    ...MOCK_HOTEL_LIST
+  ]
   return (
     <div className={styles.homeContainer}>
       <NavBar back={null} className={styles.navBar}>易宿酒店预订</NavBar>
@@ -46,6 +57,27 @@ const Home = () => {
             <div className={styles.gridLabel}>{item}</div>
           </div>
         ))}
+      </div>
+
+      {/* ✅ 3. 新增：猜你喜欢 / 推荐列表 */}
+      <div className={styles.recommendSection}>
+        <div className={styles.sectionTitle}>
+           <FireFill color='#ff3141' /> 猜你喜欢
+        </div>
+        
+        <div className={styles.cardList}>
+          {recommendList.map((item, index) => (
+            // 注意：因为数据是重复的，key 不能只用 item.id，要加上 index 避免重复报错
+            <div 
+                key={`${item.id}-${index}`} 
+                className={styles.cardWrapper}
+                onClick={() => navigate(`/detail/${item.id}`)}
+            >
+              {/* 直接复用你之前写的卡片 */}
+              <HotelCard hotel={item} />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* 5. 底部固定导航 (TabBar) */}
