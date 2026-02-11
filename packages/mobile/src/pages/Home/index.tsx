@@ -38,37 +38,6 @@ const Home = () => {
         <Outlet />
       </div>
 
-      {/* 搜索卡片 */}
-      {/* <div className={styles.searchCard}>
-        <div className={styles.inputItem}>
-          <div className={styles.label}>目的地</div>
-          <div className={styles.value}>上海</div>
-        </div>
-        <div className={styles.inputItem}>
-          <div className={styles.dateRow}>
-            <div className={styles.dateBlock}>
-              <div className={styles.label}>入住</div>
-              <div className={styles.dateValue}>01月30日</div>
-            </div>
-            <div className={styles.nightCount}>1晚</div>
-            <div className={`${styles.dateBlock} ${styles.textRight}`}>
-              <div className={styles.label}>离店</div>
-              <div className={styles.dateValue}>01月31日</div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.btnWrapper}>
-          <Button
-            block color='primary'
-            size='large'
-            // onClick={goList}
-            className={styles.searchBtn}
-            >
-            查询酒店
-          </Button>
-        </div>
-      </div> */}
-
       {/* 4. 快捷入口金刚区 (静态展示) */}
       <div className={styles.gridContainer}>
         {['特价酒店', '民宿客栈', '钟点房', '滑雪季'].map(item => (

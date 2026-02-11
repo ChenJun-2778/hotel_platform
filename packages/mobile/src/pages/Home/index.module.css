@@ -4,8 +4,27 @@
 }
 
 .navBar {
-  background-color: #0086F6;
-  --text-color: #ffffff;
+  /* 1. 背景设为透明或品牌蓝（取决于你的 Banner 是否延伸到了顶部） */
+  /* 如果 Banner 在顶部，这里设为 transparent；如果是独立导航栏，设为 #1677ff */
+  background-color: #1677ff; 
+  
+  /* 2. 移除默认的边框线，显得更沉浸 */
+  --border-bottom: none;
+}
+
+/* 专门针对标题文字的优化 */
+.navBar :global(.adm-nav-bar-title) {
+  /* 字体设置 */
+  font-family: "PingFang SC", "Helvetica Neue", sans-serif; /* 确保用无衬线体 */
+  font-size: 18px;       /* 稍微大一点，更有分量 */
+  font-weight: 600;      /* 半粗体，既清晰又不显得笨重 */
+  letter-spacing: 2px;   /* 关键点：增加字间距，显得大气、高级 */
+  
+  /* 颜色设置 */
+  color: #ffffff;        /* 纯白文字 */
+  
+  /* 阴影效果：让文字在蓝色背景上更立体，有浮起感 */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
 }
 
 .banner {
