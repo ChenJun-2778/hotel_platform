@@ -65,3 +65,5 @@ export const MOCK_HOTEL_LIST = [
       }
     ]
   };
+
+  
