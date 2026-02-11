@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { NavBar, CapsuleTabs, DotLoading } from 'antd-mobile';
+import React, { useState, useEffect, useRef  } from 'react';
+import { NavBar, CapsuleTabs, DotLoading, Dropdown, Radio, Space, Button } from 'antd-mobile';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { EnvironmentOutline, SearchOutline } from 'antd-mobile-icons';
 import styles from './index.module.css';
 // 导入酒店卡牌组件
 import HotelCard from '@/components/HotelCard';
-import type { HotelList } from '@/components/HotelCard/type'
+// import type { HotelList } from '@/components/HotelCard/type'
 // 导入请求api
 import { apiGetHotelList } from '@/api/hotel'
 
@@ -20,15 +20,14 @@ const List: React.FC = () => {
   const beginDate = searchParams.get('beginDate');
   const endDate = searchParams.get('endDate');
   const nightCount = beginDate && endDate ? dayjs(endDate).diff(dayjs(beginDate), 'day') : 1;
+  
+  // 新增状态：控制排序
+  // def = 默认, price_asc = 价格低到高, score_desc = 评分高到低
+  const [sortType, setSortType] = useState<string>('def'); 
 
-  // const handleBack = () => {
-  //   if (window.history.length > 1) {
-  //     navigate(-1);
-  //     return;
-  //   }
-  //   const pathMap: Record<string, string> = { '2': '/overseas', '3': '/hourly', '4': '/inn' };
-  //   navigate(pathMap[type || ''] || '/');
-  // };
+  // 新增引用：用来手动控制 Dropdown 关闭
+  const dropdownRef = useRef<any>(null);
+  // 返回逻辑
   const handleBack = () => {
     // 直接根据 type 决定回哪个首页 tab，简单粗暴且安全
     const pathMap: Record<string, string> = { '2': '/overseas', '3': '/hourly', '4': '/inn' };
@@ -43,58 +42,33 @@ const List: React.FC = () => {
     </div>
   );
 
-  // 酒店的mock数据
-//   const HOTELS: HotelList = [
-//   {
-//     id: '1',
-//     name: '上海陆家嘴禧玥酒店',
-//     image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_LSZ9S8H9S0.jpg',
-//     score: 4.8,
-//     scoreText: '超棒',
-//     commentCount: 4695,
-//     collectCount: '6.3万',
-//     position: '近外滩 · 东方明珠',
-//     recommend: 'BOSS:25楼是沪上知名米其林新荣记',
-//     tags: ['免费升房', '新中式风', '免费停车', '一线江景'],
-//     rank: '上海美景酒店榜 No.16',
-//     price: 936,
-//     star: 5
-//   },
-//   {
-//     id: '2',
-//     name: '艺龙安悦酒店(上海浦东大道歌德路地铁站店)',
-//     image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_1g9Y9Y9Y9Y.jpg',
-//     score: 4.7,
-//     scoreText: '超棒',
-//     commentCount: 6729,
-//     collectCount: '4.5万',
-//     position: '近歌德路地铁站 · LCM置汇旭辉广场',
-//     recommend: '临滨江步道可欣赏陆家嘴夜景',
-//     tags: ['免费停车', '免费洗衣服务', '机器人服务', '自助早餐'],
-//     price: 199,
-//     star: 3
-//   }
-// ];
-const [hotelList, setHotelList] = useState<any[]>([]); // 存放列表数据
-const [loading, setLoading] = useState(true); // 控制 Loading 显示
-useEffect(() => {
-  // 设置请求方法
-  const getHotelList = async () => {
-    setLoading(true)
-    try {
-      const res: any = await apiGetHotelList({ city, beginDate, endDate } as any)
-      if (res && res.code === 200) {
-        setHotelList(res.data);
+  const [hotelList, setHotelList] = useState<any[]>([]); // 存放列表数据
+  const [loading, setLoading] = useState(true); // 控制 Loading 显示
+  useEffect(() => {
+    // 设置请求方法
+    const getHotelList = async () => {
+      setLoading(true)
+      try {
+        // ✅ 把 sortType 传给 API
+        const res: any = await apiGetHotelList({ 
+          city, 
+          beginDate, 
+          endDate, 
+          type,
+          sortType // <--- 关键：传给后端
+      });
+        if (res && res.code === 200) {
+          setHotelList(res.data);
+        }
+      } catch (error) {
+        
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      
-    } finally {
-      setLoading(false)
     }
-  }
 
-  getHotelList()
-}, [city])
+    getHotelList()
+  }, [city, type, beginDate, endDate, sortType])
 
   return (
     <div className={styles.listContainer}>
@@ -128,21 +102,71 @@ useEffect(() => {
         </NavBar>
 
         {/* 筛选区 */}
-        <div className={styles.filterSection}>
-          <div className={styles.filterRow}>
-             <div className={styles.filterItem}>欢迎度排序 ▼</div>
-             <div className={styles.filterItem}>位置距离 ▼</div>
-             <div className={styles.filterItem}>价格/星级 ▼</div>
-             <div className={styles.filterItem}>筛选 ▼</div>
-          </div>
-          <div className={styles.quickTags}>
+        {/* ✅ 核心修改区域：使用 Dropdown 替换原来的静态 div */}
+        <div className={styles.dropdownWrapper}>
+          <Dropdown ref={dropdownRef}>
+            {/* 第一项：排序 */}
+            <Dropdown.Item key='sort' title={
+                sortType === 'def' ? '欢迎度排序' : 
+                sortType === 'price_asc' ? '价格低到高' : '高分优先'
+            }>
+              <div style={{ padding: 12 }}>
+                <Radio.Group 
+                    value={sortType} 
+                    onChange={(val) => {
+                        setSortType(val as string);
+                        dropdownRef.current?.close(); // 选中后自动关闭菜单
+                    }}
+                >
+                  <Space direction='vertical' block>
+                    <Radio block value='def'>欢迎度排序 (默认)</Radio>
+                    <Radio block value='price_asc'>价格从低到高</Radio>
+                    <Radio block value='score_desc'>评分从高到低</Radio>
+                  </Space>
+                </Radio.Group>
+              </div>
+            </Dropdown.Item>
+
+            {/* 第二项：位置 (这里仅做演示，暂时放个空内容) */}
+            <Dropdown.Item key='position' title='位置距离'>
+              <div style={{ padding: 12, height: 200 }}>
+                 这里可以放商圈/地铁站选择组件...
+              </div>
+            </Dropdown.Item>
+
+            {/* 第三项：价格星级 */}
+            <Dropdown.Item key='price' title='价格/星级'>
+               <div style={{ padding: 12 }}>
+                  <h3>价格区间</h3>
+                  <div style={{display: 'flex', gap: 10, marginBottom: 20}}>
+                      <Button size='mini'>0-150</Button>
+                      <Button size='mini'>150-300</Button>
+                      <Button size='mini'>300-600</Button>
+                  </div>
+                  <h3>星级</h3>
+                  <div style={{display: 'flex', gap: 10}}>
+                      <Button size='mini'>三星</Button>
+                      <Button size='mini'>四星</Button>
+                      <Button size='mini'>五星</Button>
+                  </div>
+               </div>
+            </Dropdown.Item>
+            
+            {/* 第四项：筛选 */}
+            <Dropdown.Item key='more' title='筛选'>
+               <div style={{ padding: 12 }}>更多筛选条件...</div>
+            </Dropdown.Item>
+          </Dropdown>
+        </div>
+
+        {/* 胶囊标签 (保持不变) */}
+        <div className={styles.quickTags}>
              <CapsuleTabs defaultActiveKey='1'>
                 <CapsuleTabs.Tab title='外滩' key='1' />
                 <CapsuleTabs.Tab title='双床房' key='2' />
                 <CapsuleTabs.Tab title='含早餐' key='3' />
                 <CapsuleTabs.Tab title='免费兑早餐' key='4' />
              </CapsuleTabs>
-          </div>
         </div>
       </div>
 
