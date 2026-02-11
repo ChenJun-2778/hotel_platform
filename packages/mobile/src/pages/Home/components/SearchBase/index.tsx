@@ -4,7 +4,7 @@ import styles from '../SearchBase/index.module.css'
 import dayjs from 'dayjs';
 // import { data } from 'react-router-dom';
 // 导入日历组件
-import DateRangePicker from '../DateRangePicker/index'
+import DateRangePicker from '@/components/DateRangePicker/index'
 import {useGoCities, useGoList} from '@/utils/routerUtils'
 
 interface SearchBaseProps {

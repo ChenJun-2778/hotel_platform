@@ -1,0 +1,72 @@
+/* src/pages/List/components/SearchPanel/index.module.css */
+
+.container {
+    /* 这里不需要写 border-radius，因为 Popup 自带 bodyStyle 控制了 */
+  }
+  
+  /* 通用行样式 */
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+  }
+  
+  .cityText {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  /* 日期行特定样式 */
+  .dateRow {
+    display: flex;
+    flex: 1;
+  }
+  
+  .dateBlock {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .dateLabel {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+  }
+  
+  .dateValue {
+    font-size: 17px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .spacer {
+    width: 30px;
+  }
+  
+  .nightTag {
+    font-size: 12px;
+    color: #333;
+    border: 1px solid #eee;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  
+  /* 人数行 */
+  .guestText {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  /* 按钮样式 */
+  .confirmBtn {
+    margin-top: 24px;
+    border-radius: 22px;
+    font-weight: bold;
+    background-color: #0052d9;
+    border: none;
+  }
