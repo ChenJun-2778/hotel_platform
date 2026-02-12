@@ -8,7 +8,11 @@ import 'dayjs/locale/zh-cn';
 dayjs.locale('zh-cn');
 // 引入组件
 import HotelCard from '@/components/HotelCard';
+// 下拉弹框
 import SearchPanel from './components/SearchPanel';
+// 日历组件
+import DateRangePicker from '@/components/DateRangePicker';
+// 引入api
 import { apiGetHotelList } from '@/api/hotel';
 
 const List: React.FC = () => {
@@ -41,29 +45,42 @@ const List: React.FC = () => {
     e.stopPropagation(); 
     setShowSearchPanel(true);
   };
+  const urlBeginDate = searchParams.get('beginDate') || dayjs().format('YYYY-MM-DD');
+  const urlEndDate = searchParams.get('endDate') || dayjs().add(1, 'day').format('YYYY-MM-DD');
+
+  // 1. 控制日历显示的状态
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  // 2. 临时日期状态 (用户在 SearchPanel/日历 里选的，还没确认的)
+  const [tempDates, setTempDates] = useState<[string, string]>([urlBeginDate, urlEndDate]);
   // 右侧：去搜索页
   const handleRightClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setTempDates([urlBeginDate, urlEndDate]); // 重置
     console.log('去搜索页');
+  };
+  // 3. 点击 SearchPanel 里的日期 -> 打开日历
+  const handleDateClick = () => {
+    setShowCalendar(true);
+  };
+  // 4. 日历选好了 -> 更新临时日期 -> 关闭日历
+  const handleCalendarConfirm = (start: Date, end: Date) => {
+    const newBegin = dayjs(start).format('YYYY-MM-DD');
+    const newEnd = dayjs(end).format('YYYY-MM-DD');
+    setTempDates([newBegin, newEnd]); // SearchPanel 上的数字会立马变
+    setShowCalendar(false); // 关日历，回到 SearchPanel
   };
 
   // 下拉编辑面板确认逻辑
   const handleConfirm = () => {
     setShowSearchPanel(false);
-    
-    // 模拟数据更新：这里暂时只是提示
-    // 如果想要真的更新列表，你需要在这里调用 setSearchParams
-    // 例如：
-    /*
     setSearchParams({
         ...Object.fromEntries(searchParams),
-        city: city, // 这里应该是 SearchPanel 传回来的新城市
-        beginDate: safeBeginDate, // 这里应该是 SearchPanel 传回来的新日期
-        endDate: safeEndDate
+        city,
+        beginDate: tempDates[0],
+        endDate: tempDates[1]
     });
-    */
-    
-    Toast.show({ content: '模拟更新成功', position: 'bottom' });
+    Toast.show({ content: '搜索已更新', position: 'bottom' });
   };
    // 返回逻辑
   const handleBack = () => {
@@ -206,14 +223,24 @@ const List: React.FC = () => {
 
       {/* 下拉编辑框 */}
       <SearchPanel 
-        visible={showSearchPanel}
-        onClose={() => setShowSearchPanel(false)}
-        city={city}
-        beginDate={safeBeginDate} // ✅ 传 safeBeginDate (string)
-        endDate={safeEndDate}     // ✅ 传 safeEndDate (string)
-        nightCount={nightCount}
-        onConfirm={handleConfirm}
-      />
+         visible={showSearchPanel}
+         onClose={() => setShowSearchPanel(false)}
+         city={city}
+         // ✅ 这里传 tempDates，这样选完日历后这里会变
+         beginDate={tempDates[0]}
+         endDate={tempDates[1]}
+         nightCount={dayjs(tempDates[1]).diff(dayjs(tempDates[0]), 'day')}
+         onConfirm={handleConfirm}
+         onDateClick={handleDateClick} // ✅ 传进去
+       />
+       {/* ✅ DateRangePicker 放在最下面 */}
+       <DateRangePicker 
+         visible={showCalendar}
+         onClose={() => setShowCalendar(false)}
+         // 把字符串转回 Date 对象传给日历做回显
+         defaultDate={[new Date(tempDates[0]), new Date(tempDates[1])]}
+         onConfirm={handleCalendarConfirm}
+       />
     </div>
   );
 };
