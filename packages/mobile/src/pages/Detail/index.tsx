@@ -176,8 +176,6 @@ const HotelDetail: React.FC = () => {
                   onClick={() => {
                     navigate(
                       `/order/${room.id}?` +
-                      `roomName=${room.name}&` +
-                      `price=${room.price}&` +
                       `beginDate=${beginDate}&` +
                       `endDate=${endDate}`
                     )

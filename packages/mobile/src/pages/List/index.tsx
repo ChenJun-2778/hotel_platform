@@ -6,6 +6,8 @@ import { EnvironmentOutline, SearchOutline } from 'antd-mobile-icons';
 import styles from './index.module.css';
 import 'dayjs/locale/zh-cn';
 dayjs.locale('zh-cn');
+// 自定义路由跳转钩子
+import { useGoCities } from '@/utils/routerUtils';
 // 引入组件
 import HotelCard from '@/components/HotelCard';
 // 下拉弹框
@@ -15,6 +17,12 @@ import DateRangePicker from '@/components/DateRangePicker';
 // 引入api
 import { apiGetHotelList } from '@/api/hotel';
 
+const TYPE_MAP_STR_TO_NUM: Record<string, number> = {
+  'domestic': 1,
+  'overseas': 2,
+  'hourly': 3,
+  'inn': 4
+};
 const List: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams(); // ✅ 这里需要 setSearchParams
   const navigate = useNavigate();
@@ -22,11 +30,11 @@ const List: React.FC = () => {
   // --- 1. 参数提取与默认值处理  ---
   const type = searchParams.get('type');
   const city = searchParams.get('city') || '上海';
-  
+  const { goCities } = useGoCities(); // 获取城市跳转方法
   // 确保 beginDate 和 endDate 永远是字符串
   const rawBegin = searchParams.get('beginDate');
   const rawEnd = searchParams.get('endDate');
-  
+  // 设置安全值
   const safeBeginDate = rawBegin || dayjs().format('YYYY-MM-DD'); // 默认今天
   const safeEndDate = rawEnd || dayjs().add(1, 'day').format('YYYY-MM-DD'); // 默认明天
   
@@ -40,6 +48,17 @@ const List: React.FC = () => {
 
   // 控制弹窗显示
   const [showSearchPanel, setShowSearchPanel] = useState(false);
+  // 城市跳转方法
+  const handleCityClick = () => {
+    // 把 URL 里的 'domestic' 转成 1，默认 1
+    const targetTypeId = TYPE_MAP_STR_TO_NUM[type || 'domestic'] || 1;
+    
+    // 关闭下拉面板 (为了体验好，跳走前先关掉)
+    setShowSearchPanel(false);
+    
+    // 跳转
+    goCities(targetTypeId, city);
+  };
   // 左侧：打开弹窗
   const handleLeftClick = (e: React.MouseEvent) => {
     e.stopPropagation(); 
@@ -50,9 +69,11 @@ const List: React.FC = () => {
 
   // 1. 控制日历显示的状态
   const [showCalendar, setShowCalendar] = useState(false);
-
+  // 定义中间量
   // 2. 临时日期状态 (用户在 SearchPanel/日历 里选的，还没确认的)
   const [tempDates, setTempDates] = useState<[string, string]>([urlBeginDate, urlEndDate]);
+  // 城市草稿
+  const [tempCity, setTempCity] = useState<string>(city)
   // 右侧：去搜索页
   const handleRightClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -74,13 +95,14 @@ const List: React.FC = () => {
   // 下拉编辑面板确认逻辑
   const handleConfirm = () => {
     setShowSearchPanel(false);
-    setSearchParams({
-        ...Object.fromEntries(searchParams),
-        city,
-        beginDate: tempDates[0],
-        endDate: tempDates[1]
-    });
-    Toast.show({ content: '搜索已更新', position: 'bottom' });
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('city', tempCity); // 用草稿城市
+      newParams.set('beginDate', tempDates[0]);
+      newParams.set('endDate', tempDates[1]);
+      return newParams;
+  });
+    // Toast.show({ content: '搜索已更新', position: 'bottom' });
   };
    // 返回逻辑
   const handleBack = () => {
@@ -98,15 +120,46 @@ const List: React.FC = () => {
   const [hotelList, setHotelList] = useState<any[]>([]); 
   // 加载显示
   const [loading, setLoading] = useState(true); 
+  // 监听从城市页面返回
+  useEffect(() => {
+    const checkSelectedCity = () => {
+      const selected = localStorage.getItem('selectedCity');
+      if (selected) {
+        console.log('检测到新城市，更新草稿:', selected);
+        
+        // ✅ 关键修改 A：只更新“草稿城市”，不更新 URL
+        setTempCity(selected);
+        
+        // ✅ 关键修改 B：强制打开 SearchPanel，让用户确认
+        setShowSearchPanel(true);
+        
+        localStorage.removeItem('selectedCity');
+      }
+    };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkSelectedCity();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    checkSelectedCity(); // 初始化检查
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // 请求酒店列表
   useEffect(() => {
     const getHotelList = async () => {
       setLoading(true);
       try {
         const res: any = await apiGetHotelList({ 
           city, 
-          beginDate: safeBeginDate, // ✅ 传安全的参数
-          endDate: safeEndDate,     // ✅ 传安全的参数
+          beginDate: safeBeginDate, // 传安全的参数
+          endDate: safeEndDate,     // 传安全的参数
           type,
           sortType
       });
@@ -229,15 +282,16 @@ const List: React.FC = () => {
       <SearchPanel 
          visible={showSearchPanel}
          onClose={() => setShowSearchPanel(false)}
-         city={city}
-         // ✅ 这里传 tempDates，这样选完日历后这里会变
-         beginDate={tempDates[0]}
+         // 这里展示的是“草稿”数据
+         city={tempCity}         // 传 tempCity
+         beginDate={tempDates[0]} // 传 tempDates
          endDate={tempDates[1]}
          nightCount={dayjs(tempDates[1]).diff(dayjs(tempDates[0]), 'day')}
          onConfirm={handleConfirm}
-         onDateClick={handleDateClick} // ✅ 传进去
+         onDateClick={handleDateClick} 
+         onCityClick={handleCityClick}
        />
-       {/* ✅ DateRangePicker 放在最下面 */}
+       {/*  日期选择 */}
        <DateRangePicker 
          visible={showCalendar}
          onClose={() => setShowCalendar(false)}

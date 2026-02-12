@@ -7,7 +7,7 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 // 1. 获取酒店列表
 export const apiGetHotelList = async (params?: any) => {
   if (USE_MOCK) {
-    console.log('📢 [Mock] Fetching Hotel List...', params);
+    // console.log('📢 [Mock] Fetching Hotel List...', params);
     return mockRequest(MOCK_HOTEL_LIST, 800); // 模拟 800ms 延迟
   }
   // TODO: 这里写真实的 axios 请求
@@ -17,7 +17,7 @@ export const apiGetHotelList = async (params?: any) => {
 // 2. 获取酒店详情
 export const apiGetHotelDetail = async (id: string) => {
   if (USE_MOCK) {
-    console.log('📢 [Mock] Fetching Hotel Detail for ID:', id);
+    // console.log('📢 [Mock] Fetching Hotel Detail for ID:', id);
     // 简单逻辑：无论 ID 是啥，都返回同一份详情数据
     return mockRequest(MOCK_HOTEL_DETAIL, 500);
   }
@@ -27,7 +27,7 @@ export const apiGetHotelDetail = async (id: string) => {
 // 3. 提交订单
 export const submitOrder = async (data: any) => {
   if (USE_MOCK) {
-    console.log('📢 [Mock] Submitting Order:', data);
+    // console.log('📢 [Mock] Submitting Order:', data);
     return mockRequest({ orderId: '202602108888' }, 1500);
   }
   // return axios.post('/api/order/create', data);

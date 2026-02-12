@@ -16,6 +16,7 @@ interface Props {
   onConfirm: () => void;
   // ✅ 新增这一行：接收点击回调
   onDateClick: () => void;
+  onCityClick?: () => void;
 }
 
 const SearchPanel: React.FC<Props> = ({
@@ -26,7 +27,8 @@ const SearchPanel: React.FC<Props> = ({
   endDate,
   nightCount,
   onConfirm,
-  onDateClick
+  onDateClick,
+  onCityClick
 }) => {
   return (
     <Popup
@@ -38,7 +40,7 @@ const SearchPanel: React.FC<Props> = ({
     >
       <div className={styles.container}>
         {/* 1. 城市行 */}
-        <div className={styles.row}>
+        <div className={styles.row} onClick={onCityClick}>
           <span className={styles.cityText}>{city}</span>
           <RightOutline color='#ccc' />
         </div>
