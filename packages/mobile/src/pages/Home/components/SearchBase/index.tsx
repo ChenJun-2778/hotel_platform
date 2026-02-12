@@ -39,7 +39,10 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
   const currentTypeId = TYPE_MAP[type] || 1;
 
   // 3. 城市相关
-  const [city, setCity] = useState('上海');
+  // 优先从缓存拿上次选的城市
+  const [city, setCity] = useState(() => {
+    return localStorage.getItem('HOME_CITY') || '上海';
+  });
   const { goCities } = useGoCities();
   
   const handleCityClick = () => {
@@ -52,6 +55,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
       const selected = localStorage.getItem('selectedCity');
       if (selected) {
         setCity(selected);
+        localStorage.setItem('HOME_CITY', selected);
         localStorage.removeItem('selectedCity');
       }
     };

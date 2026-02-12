@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
 import { AppOutline, UnorderedListOutline, UserOutline, FireFill } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
@@ -15,16 +15,32 @@ const Home = () => {
   const navigate = useNavigate()
 
   // 1. 在这里定义日期状态 (Source of Truth)
-  const [dateRange, setDateRange] = useState<[Date, Date]>([
-    new Date(), // 今天
-    dayjs().add(1, 'day').toDate() // 明天
-  ]);
+  // 优先从 sessionStorage 读取
+  const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
+    try {
+      const cached = sessionStorage.getItem('HOME_DATE_RANGE');
+      if (cached) {
+        const [start, end] = JSON.parse(cached);
+        // 注意：JSON 取出来是字符串，必须转回 Date 对象
+        // 还要防止存储的是过期日期（可选优化，这里先不加，保持简单）
+        return [new Date(start), new Date(end)];
+      }
+    } catch (e) {
+      console.error('日期解析失败', e);
+    }
+    // 没缓存，才用默认值
+    return [new Date(), dayjs().add(1, 'day').toDate()];
+  });
   // 跳转到list页面
   // const goList = () => navigate('/list')
   const location = useLocation();
 
   // 根据当前路由确定激活哪个 Tab
   const activeKey = location.pathname.split('/').pop() || 'domestic';
+  // 新增监听：日期一变，立马存入 sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('HOME_DATE_RANGE', JSON.stringify(dateRange));
+  }, [dateRange]);
 
   // 制作假数据
   const recommendList = [
