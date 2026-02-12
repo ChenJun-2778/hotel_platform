@@ -210,7 +210,11 @@ const List: React.FC = () => {
          ) : (
            hotelList.map((item, index) => (
              // ✅ 注意：如果数据有重复，建议 key 加上 index: `${item.id}-${index}`
-             <div key={`${item.id}-${index}`} onClick={() => navigate(`/detail/${item.id}`)}>
+             <div key={`${item.id}-${index}`} onClick={() => navigate(
+              `/detail/${item.id}?` + 
+              `beginDate=${safeBeginDate}&` + 
+              `endDate=${safeEndDate}`
+            )}>
                <HotelCard hotel={item} />
              </div>
            ))

@@ -1,4 +1,4 @@
-// import React from 'react';
+import React, { useState } from 'react';
 import { CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
 import { AppOutline, UnorderedListOutline, UserOutline, FireFill } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
@@ -7,10 +7,18 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 // 引入组件
 import HotelCard from '@/components/HotelCard';
 import { MOCK_HOTEL_LIST } from '@/mock/data'
+import dayjs from 'dayjs';
+import type { HomeContextType } from './type/homeContextType';
 
 
 const Home = () => {
   const navigate = useNavigate()
+
+  // 1. 在这里定义日期状态 (Source of Truth)
+  const [dateRange, setDateRange] = useState<[Date, Date]>([
+    new Date(), // 今天
+    dayjs().add(1, 'day').toDate() // 明天
+  ]);
   // 跳转到list页面
   // const goList = () => navigate('/list')
   const location = useLocation();
@@ -46,7 +54,7 @@ const Home = () => {
       </div>
       {/* 2. 子路由占位符：这里会根据路由显示 Domestic/Overseas/etc. */}
       <div className={styles.searchCardWrapper}>
-        <Outlet />
+        <Outlet context={{ dateRange, setDateRange } satisfies HomeContextType} />
       </div>
 
       {/* 4. 快捷入口金刚区 (静态展示) */}
@@ -71,7 +79,14 @@ const Home = () => {
             <div 
                 key={`${item.id}-${index}`} 
                 className={styles.cardWrapper}
-                onClick={() => navigate(`/detail/${item.id}`)}
+                onClick={() => {
+                  // 1. 格式化日期
+                  const beginStr = dayjs(dateRange[0]).format('YYYY-MM-DD');
+                  const endStr = dayjs(dateRange[1]).format('YYYY-MM-DD');
+                  
+                  // 2. 带着参数跳转
+                  navigate(`/detail/${item.id}?beginDate=${beginStr}&endDate=${endStr}`);
+              }}
             >
               {/* 直接复用你之前写的卡片 */}
               <HotelCard hotel={item} />

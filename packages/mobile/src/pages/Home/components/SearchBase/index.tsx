@@ -8,7 +8,10 @@ import { useGoCities, useGoList } from '@/utils/routerUtils';
 
 interface SearchBaseProps {
   type: 'domestic' | 'overseas' | 'hourly' | 'inn';
-  showNightCount?: boolean; 
+  showNightCount?: boolean;
+  // 接收父组件的日期和修改方法
+  dateRange: [Date, Date];
+  onDateChange: (range: [Date, Date]) => void;
 }
 
 // 类型映射字典
@@ -19,15 +22,15 @@ const TYPE_MAP: Record<string, number> = {
   'inn': 4
 };
 
-const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true }) => {
+const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, dateRange, onDateChange }) => {
   // 1. 控制日历弹窗显隐
   const [visible, setVisible] = useState(false);
   
   // 2. 存储选中的日期范围
-  const [dateRange, setDateRange] = useState<[Date, Date]>([
-    new Date(),
-    dayjs().add(1, 'day').toDate()
-  ]);
+  // const [dateRange, setDateRange] = useState<[Date, Date]>([
+  //   new Date(),
+  //   dayjs().add(1, 'day').toDate()
+  // ]);
 
   // 计算晚数
   const nightCount = dayjs(dateRange[1]).diff(dayjs(dateRange[0]), 'day');
@@ -122,7 +125,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true }) 
         defaultDate={dateRange}
         // 旧：onChange={setDateRange} -> 新：onConfirm
         onConfirm={(start, end) => {
-           setDateRange([start, end]);
+          onDateChange([start, end]);
            // setVisible(false) 在组件内部已经调用
         }}
       />

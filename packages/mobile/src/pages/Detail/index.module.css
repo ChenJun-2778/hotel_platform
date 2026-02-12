@@ -238,3 +238,53 @@
     padding: 6px 16px;
     border-radius: 4px;
   }
+
+  /* ✅ 新增：日期选择条样式 */
+.dateBarWrapper {
+  margin: 12px;
+  background-color: #f5f7fa; /* 浅灰背景，区别于白色卡片 */
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.dateInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.dateLabel {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 2px;
+}
+
+.dateVal {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.nightInfo {
+  flex: 1; /* 撑开中间 */
+  display: flex;
+  justify-content: center;
+}
+
+.nightPill {
+  font-size: 11px;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background-color: #fff;
+}
+
+.dateArrow {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+}
