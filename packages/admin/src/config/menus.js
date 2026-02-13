@@ -5,6 +5,8 @@ import {
   FileTextOutlined,
   BarChartOutlined,
   HomeOutlined,
+  UnorderedListOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 
 // 管理员菜单
@@ -56,10 +58,23 @@ export const merchantMenus = [
     path: '/merchant/rooms',
   },
   {
-    key: '/merchant/orders',
+    key: 'orders',
     icon: FileTextOutlined,
     label: '订单管理',
-    path: '/merchant/orders',
+    children: [
+      {
+        key: '/merchant/orders/list',
+        icon: UnorderedListOutlined,
+        label: '订单明细',
+        path: '/merchant/orders/list',
+      },
+      {
+        key: '/merchant/orders/calendar',
+        icon: CalendarOutlined,
+        label: '日历视图',
+        path: '/merchant/orders/calendar',
+      },
+    ],
   },
 ];
 

@@ -47,3 +47,22 @@ export const updateHotel = (id, hotelData) => {
 export const updateHotelStatus = (id, status) => {
   return put(HOTEL_API.UPDATE_STATUS(id), { status });
 };
+
+/**
+ * 审核通过酒店
+ * @param {string|number} id - 酒店ID
+ * @returns {Promise}
+ */
+export const approveHotel = (id) => {
+  return put(HOTEL_API.APPROVE(id));
+};
+
+/**
+ * 审核拒绝酒店
+ * @param {string|number} id - 酒店ID
+ * @param {string} reason - 拒绝原因（可选）
+ * @returns {Promise}
+ */
+export const rejectHotel = (id, reason) => {
+  return put(HOTEL_API.REJECT(id), { reason });
+};

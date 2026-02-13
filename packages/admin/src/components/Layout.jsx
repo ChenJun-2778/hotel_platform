@@ -23,6 +23,17 @@ const Layout = () => {
     navigate('/login');
   };
 
+  // 处理用户菜单点击
+  const handleUserMenuClick = ({ key }) => {
+    if (key === 'profile') {
+      // 根据角色跳转到对应的个人信息页面
+      const profilePath = isAdmin ? '/admin/profile' : '/merchant/profile';
+      navigate(profilePath);
+    } else if (key === 'logout') {
+      handleLogout();
+    }
+  };
+
   // 用户下拉菜单
   const userMenuItems = [
     {
@@ -37,16 +48,31 @@ const Layout = () => {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: '退出登录',
-      onClick: handleLogout,
     },
   ];
 
   // 转换菜单配置为 Ant Design Menu 格式
-  const menuItems = menus.map(menu => ({
-    key: menu.key,
-    icon: React.createElement(menu.icon),
-    label: <Link to={menu.path}>{menu.label}</Link>,
-  }));
+  const menuItems = menus.map(menu => {
+    if (menu.children) {
+      // 有子菜单
+      return {
+        key: menu.key,
+        icon: React.createElement(menu.icon),
+        label: menu.label,
+        children: menu.children.map(child => ({
+          key: child.key,
+          icon: React.createElement(child.icon),
+          label: <Link to={child.path}>{child.label}</Link>,
+        })),
+      };
+    }
+    // 无子菜单
+    return {
+      key: menu.key,
+      icon: React.createElement(menu.icon),
+      label: <Link to={menu.path}>{menu.label}</Link>,
+    };
+  });
 
   return (
     <AntLayout style={{ minHeight: '100vh' }}>
@@ -80,19 +106,27 @@ const Layout = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 1px 4px rgba(0,21,41,.08)'
+          boxShadow: '0 1px 4px rgba(0,21,41,.08)',
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          left: 200,
+          zIndex: 999,
         }}>
           <div style={{ fontSize: '18px', fontWeight: 500 }}>
             {menus.find(m => m.path === location.pathname)?.label || '首页'}
           </div>
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+          <Dropdown 
+            menu={{ items: userMenuItems, onClick: handleUserMenuClick }} 
+            placement="bottomRight"
+          >
             <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Avatar icon={<UserOutlined />} />
               <span>开发模式</span>
             </div>
           </Dropdown>
         </Header>
-        <Content style={{ margin: '24px 16px 0', overflow: 'initial' }}>
+        <Content style={{ margin: '88px 16px 24px', overflow: 'initial' }}>
           <div style={{ padding: 24, background: '#fff', minHeight: 360 }}>
             <Outlet />
           </div>

@@ -1,0 +1,108 @@
+.profile-container {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: calc(100vh - 64px);
+}
+
+.profile-header-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.avatar-section {
+  flex-shrink: 0;
+}
+
+.avatar-wrapper {
+  position: relative;
+  cursor: pointer;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.user-avatar {
+  border: 3px solid #f0f0f0;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 50%;
+}
+
+.user-info-section {
+  flex: 1;
+}
+
+.user-name {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.user-role {
+  display: inline-block;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.user-meta {
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+.user-meta .divider {
+  margin: 0 12px;
+}
+
+.action-section {
+  flex-shrink: 0;
+}
+
+.profile-detail-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .action-section {
+    width: 100%;
+  }
+
+  .action-section .ant-space {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -18,15 +18,19 @@ function lazyLoad(importFunc) {
 
 // 懒加载管理员页面
 const adminDashboard = () => import('../pages/admin/Dashboard');
-const adminUsers = () => import('../pages/admin/Users');
-const adminHotelAudit = () => import('../pages/admin/HotelAudit');
-const adminStatistics = () => import('../pages/admin/Statistics');
+const adminUsers = () => import('../pages/admin/Users/index');
+const adminHotelAudit = () => import('../pages/admin/HotelAudit/index');
+const adminStatistics = () => import('../pages/admin/Statistics/index');
+const adminProfile = () => import('../pages/admin/Profile');
 
 // 懒加载商户页面
 const merchantDashboard = () => import('../pages/merchant/Dashboard');
 const merchantHotels = () => import('../pages/merchant/Hotels');
 const merchantRooms = () => import('../pages/merchant/Rooms');
-const merchantOrders = () => import('../pages/merchant/Orders');
+const merchantOrders = () => import('../pages/merchant/Orders/index');
+const merchantOrderList = () => import('../pages/merchant/Orders/OrderList');
+const merchantOrderCalendar = () => import('../pages/merchant/Orders/OrderCalendar');
+const merchantProfile = () => import('../pages/merchant/Profile');
 
 const router = createBrowserRouter([
   {
@@ -70,6 +74,10 @@ const router = createBrowserRouter([
         path: 'statistics',
         element: lazyLoad(adminStatistics),
       },
+      {
+        path: 'profile',
+        element: lazyLoad(adminProfile),
+      },
     ],
   },
   // 商户路由
@@ -100,6 +108,24 @@ const router = createBrowserRouter([
       {
         path: 'orders',
         element: lazyLoad(merchantOrders),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/merchant/orders/list" replace />,
+          },
+          {
+            path: 'list',
+            element: lazyLoad(merchantOrderList),
+          },
+          {
+            path: 'calendar',
+            element: lazyLoad(merchantOrderCalendar),
+          },
+        ],
+      },
+      {
+        path: 'profile',
+        element: lazyLoad(merchantProfile),
       },
     ],
   },

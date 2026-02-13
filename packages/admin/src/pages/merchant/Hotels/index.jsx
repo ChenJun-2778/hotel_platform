@@ -119,8 +119,9 @@ const Hotels = () => {
         contact: values.contact,
         contact_phone: values.contact_phone,
         hotel_facilities: values.hotel_facilities?.join(',') || '',
-        check_in_time: values.check_in_time?.format('YYYY-MM-DD HH:mm:ss'),
-        check_out_time: values.check_out_time?.format('YYYY-MM-DD HH:mm:ss'),
+        // 使用固定日期 + 时间，后端只需要时间部分
+        check_in_time: values.check_in_time?.format('2000-01-01 HH:mm:ss'),
+        check_out_time: values.check_out_time?.format('2000-01-01 HH:mm:ss'),
         description: values.description,
         cover_image: coverImage,
         images: JSON.stringify(images),
@@ -130,8 +131,11 @@ const Hotels = () => {
       // 6. 提交到后端
       let success;
       if (isEditMode && editingHotelId) {
+        console.log('更新酒店 - ID:', editingHotelId);
+        console.log('更新酒店 - 数据:', submitData);
         success = await updateHotelData(editingHotelId, submitData);
       } else {
+        console.log('创建酒店 - 数据:', submitData);
         success = await addHotel(submitData);
       }
 
@@ -224,8 +228,13 @@ const Hotels = () => {
         contact: hotelData.contact,
         contact_phone: hotelData.contact_phone,
         hotel_facilities: facilities,
-        check_in_time: hotelData.check_in_time ? dayjs(hotelData.check_in_time) : null,
-        check_out_time: hotelData.check_out_time ? dayjs(hotelData.check_out_time) : null,
+        // 从 datetime 中提取时间部分（支持多种格式）
+        check_in_time: hotelData.check_in_time 
+          ? dayjs(hotelData.check_in_time)
+          : null,
+        check_out_time: hotelData.check_out_time 
+          ? dayjs(hotelData.check_out_time)
+          : null,
         description: hotelData.description,
       };
       
