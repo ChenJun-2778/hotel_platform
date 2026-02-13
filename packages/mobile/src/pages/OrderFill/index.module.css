@@ -1,0 +1,147 @@
+/* src/pages/OrderFill/index.module.css */
+
+.container {
+    min-height: 100vh;
+    background-color: #f5f7fa; /* 浅灰底色 */
+    padding-bottom: 80px; /* 给底部固定栏留出位置，防止内容被遮挡 */
+  }
+  
+  .content {
+    padding: 12px;
+  }
+  
+  /* --- 通用卡片样式 (三个卡片共用) --- */
+  .infoCard, .formCard, .priceCard {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+  
+  /* --- 1. 房型信息卡片 --- */
+  .hotelName {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  
+  .roomName {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 12px;
+  }
+  
+  .dateRow {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  
+  .divider {
+    margin: 0 8px;
+    color: #ddd;
+  }
+  
+  .nights {
+    margin-left: 8px;
+    font-size: 12px;
+    color: #666;
+    background: #f5f7fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  
+  .tags {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #999;
+  }
+  
+  /* --- 2. 表单区域 --- */
+  .cardTitle {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #333;
+    border-left: 3px solid #1677ff; /* 左侧蓝色竖条装饰 */
+    padding-left: 8px;
+    line-height: 1;
+  }
+  
+  /* 覆盖 antd-mobile 默认 form 样式，去掉多余的边框 */
+  .customForm {
+    --border-top: none;
+    --border-bottom: none;
+    /* 让输入框显得更干净 */
+    padding: 0 !important; 
+  }
+  
+  /* --- 3. 价格明细 --- */
+  .priceRow {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .discount {
+    color: #ff4040; /* 优惠金额用红色 */
+    font-weight: bold;
+  }
+  
+  /* --- 4. 底部固定支付栏 --- */
+  .bottomBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 100;
+    
+    /* 适配 iPhone X 等全面屏底部的安全区 */
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  
+  .priceArea {
+    display: flex;
+    align-items: baseline;
+    color: #ff4040; /* 价格红 */
+  }
+  
+  .totalLabel {
+    font-size: 12px;
+    color: #333;
+    margin-right: 4px;
+  }
+  
+  .currency {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  .totalPrice {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1;
+  }
+  
+  .submitBtn {
+    width: 120px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 16px;
+    /* 这里的颜色默认是 primary blue，如果你想改成橙色可以加 background */
+    /* background: linear-gradient(to right, #ff9c00, #ff5000); */
+    /* border: none; */
+  }
