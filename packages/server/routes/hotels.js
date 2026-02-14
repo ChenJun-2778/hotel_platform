@@ -185,16 +185,30 @@ router.get('/list', async (req, res) => {
     const pageSize = Math.max(1, Math.min(100, parseInt(req.query.pageSize) || 10)); // 限制最大100条
     const offset = (page - 1) * pageSize;
 
+    // 获取关键词搜索参数
+    const keyword = req.query.keyword ? req.query.keyword.trim() : '';
+
+    // 构建WHERE条件
+    let whereCondition = 'is_deleted = 0';
+    const queryParams = [];
+
+    if (keyword) {
+      // 如果有关键词，添加名称或地址的模糊搜索
+      whereCondition += ' AND (name LIKE ? OR address LIKE ?)';
+      const searchPattern = `%${keyword}%`;
+      queryParams.push(searchPattern, searchPattern);
+    }
+
     // 查询总数
     const countSql = `
       SELECT COUNT(*) as total 
       FROM hotels 
-      WHERE is_deleted = 0
+      WHERE ${whereCondition}
     `;
-    const countResult = await query(countSql);
+    const countResult = await query(countSql, queryParams);
     const total = countResult[0].total;
 
-    // 查询酒店列表 - 直接使用整数值而不是占位符，因为LIMIT子句在某些MySQL版本的预处理语句中有问题
+    // 查询酒店列表
     const sql = `
       SELECT 
         id,
@@ -205,12 +219,12 @@ router.get('/list', async (req, res) => {
         status,
         star_rating
       FROM hotels
-      WHERE is_deleted = 0
+      WHERE ${whereCondition}
       ORDER BY created_at DESC
       LIMIT ${offset}, ${pageSize}
     `;
 
-    const hotels = await query(sql);
+    const hotels = await query(sql, queryParams);
 
     res.status(200).json({
       success: true,

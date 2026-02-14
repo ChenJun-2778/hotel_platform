@@ -178,6 +178,7 @@ router.post('/create', async (req, res) => {
  * 
  * 查询参数：
  * - hotel_id: 所属酒店ID (必填)
+ * - keyword: 搜索关键词 (可选，用于搜索房间号或房型)
  * 
  * 返回字段：
  * - id: 房间主键ID
@@ -190,7 +191,7 @@ router.post('/create', async (req, res) => {
  */
 router.get('/list', async (req, res) => {
   try {
-    const { hotel_id } = req.query;
+    const { hotel_id, keyword } = req.query;
 
     // 验证必填参数
     if (!hotel_id) {
@@ -211,6 +212,20 @@ router.get('/list', async (req, res) => {
       });
     }
 
+    // 获取关键词搜索参数
+    const searchKeyword = keyword ? keyword.trim() : '';
+
+    // 构建WHERE条件和参数
+    let whereCondition = 'hotel_id = ? AND is_deleted = 0';
+    const queryParams = [hotel_id];
+
+    if (searchKeyword) {
+      // 如果有关键词，添加房间号或房型的模糊搜索
+      whereCondition += ' AND (room_number LIKE ? OR room_type LIKE ?)';
+      const searchPattern = `%${searchKeyword}%`;
+      queryParams.push(searchPattern, searchPattern);
+    }
+
     // 查询房间列表
     const sql = `
       SELECT 
@@ -222,11 +237,11 @@ router.get('/list', async (req, res) => {
         booked_by,
         status
       FROM rooms
-      WHERE hotel_id = ? AND is_deleted = 0
+      WHERE ${whereCondition}
       ORDER BY room_number ASC
     `;
 
-    const rooms = await query(sql, [hotel_id]);
+    const rooms = await query(sql, queryParams);
 
     res.status(200).json({
       success: true,
