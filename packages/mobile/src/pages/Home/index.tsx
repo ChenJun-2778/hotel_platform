@@ -116,7 +116,7 @@ const Home = () => {
         <TabBar activeKey='home'>
           <TabBar.Item key='home' icon={<AppOutline />} title='首页' />
           <TabBar.Item key='order' icon={<UnorderedListOutline />} title='订单' />
-          <TabBar.Item key='user' icon={<UserOutline />} title='我的' />
+          <TabBar.Item key='user' onClick={() => navigate('/user')} icon={<UserOutline />} title='我的' />
         </TabBar>
       </div>
     </div>

@@ -1,0 +1,61 @@
+.container {
+    min-height: 100vh;
+    background-color: #fff;
+    padding: 20px;
+  }
+  
+  .logoSection {
+    margin-top: 60px;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  
+  .logo {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #2b7bfb 0%, #0052d9 100%);
+    border-radius: 16px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 32px;
+    font-weight: bold;
+    box-shadow: 0 8px 16px rgba(0, 82, 217, 0.2);
+  }
+  
+  .title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  
+  .subTitle {
+    font-size: 14px;
+    color: #999;
+  }
+  
+  .formSection {
+    margin-top: 20px;
+  }
+  
+  .submitBtn {
+    margin-top: 30px;
+    height: 44px;
+    font-size: 16px;
+    border-radius: 22px;
+  }
+  
+  .footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+  }
+  
+  .link {
+    color: #0052d9;
+    margin-left: 4px;
+  }

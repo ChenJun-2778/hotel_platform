@@ -8,6 +8,8 @@ import Hourly from '@/pages/Home/Hourly'
 import Inn from '@/pages/Home/Inn'
 import CitySelect from '@/pages/CitySelect';
 import OrderFill from '@/pages/OrderFill';
+import Login from '@/pages/Login';
+import User from './pages/User';
 
 function App() {
   return (
@@ -29,9 +31,12 @@ function App() {
         <Route path="/detail/:id?" element={<Detail />} />
         {/* 城市选择页面 */}
         <Route path="/city-select" element={<CitySelect />} />
-
+        {/* 订购页面 */}
         <Route path="/order/:id" element={<OrderFill />} />
-
+        {/* 登录页面 */}
+        <Route path="/login" element={<Login />} />
+        {/* 用户中心页面 */}
+        <Route path="/user" element={<User />} />
         {/* 3. 容错处理：输入不存在的地址时重定向回首页 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
