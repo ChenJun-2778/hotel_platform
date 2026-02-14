@@ -64,7 +64,12 @@ react、antd、vite、react-router、dayjs、china-division、ali-oss
 ## 后端接口
 - 基础地址：`http://47.99.56.81:3000/api`
 - Hotels模块：已对接真实API
-- Rooms模块：暂用假数据
+- Rooms模块：已对接真实API
+  - 创建房间：POST /api/rooms/create
+  - 获取房间列表：GET /api/rooms/list?hotel_id={hotelId}
+  - 获取房间详情：GET /api/rooms/:id
+  - 更新房间：PUT /api/rooms/:id
+  - 删除房间：DELETE /api/rooms/:id
 
 ## OSS配置
 - Region: oss-cn-beijing
@@ -100,6 +105,7 @@ src/
 ```
 
 ## 重要文档
-- `FIELD_MAPPING.md`：前后端字段映射对照表
+- `FIELD_MAPPING.md`：酒店字段映射对照表
+- `ROOM_FIELD_MAPPING.md`：房间字段映射对照表
 - `OSS_CONFIG_README.md`：OSS配置说明
 - `components/common/PAGE_CONTAINER_USAGE.md`：PageContainer使用指南

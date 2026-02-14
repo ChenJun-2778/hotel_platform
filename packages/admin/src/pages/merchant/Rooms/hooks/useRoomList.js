@@ -1,73 +1,95 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { message } from 'antd';
+import { getHotelList } from '../../../../services/hotelService';
+import { createRoom, getRoomList, updateRoom as updateRoomAPI, deleteRoom as deleteRoomAPI } from '../../../../services/roomService';
 
 /**
  * 房间列表管理 Hook
  */
 const useRoomList = () => {
-  // 模拟酒店数据
-  const [hotels] = useState([
-    { value: 'hotel1', label: '我的豪华酒店', totalRooms: 20 },
-    { value: 'hotel2', label: '舒适商务酒店', totalRooms: 15 },
-    { value: 'hotel3', label: '新开业酒店', totalRooms: 12 },
-  ]);
+  const [hotels, setHotels] = useState([]);
+  const [roomsData, setRoomsData] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  // 模拟房间数据
-  const [roomsData] = useState({
-    hotel1: [
-      { roomNumber: '101', status: 'available', type: '标准间', price: 299 },
-      { roomNumber: '102', status: 'occupied', type: '大床房', price: 399, guest: '张三' },
-      { roomNumber: '103', status: 'reserved', type: '标准间', price: 299, guest: '李四' },
-      { roomNumber: '104', status: 'available', type: '豪华套房', price: 699 },
-      { roomNumber: '105', status: 'occupied', type: '大床房', price: 399, guest: '王五' },
-      { roomNumber: '201', status: 'available', type: '标准间', price: 299 },
-      { roomNumber: '202', status: 'reserved', type: '大床房', price: 399, guest: '赵六' },
-      { roomNumber: '203', status: 'available', type: '标准间', price: 299 },
-      { roomNumber: '204', status: 'occupied', type: '豪华套房', price: 699, guest: '孙七' },
-      { roomNumber: '205', status: 'available', type: '大床房', price: 399 },
-      { roomNumber: '301', status: 'available', type: '标准间', price: 299 },
-      { roomNumber: '302', status: 'available', type: '大床房', price: 399 },
-      { roomNumber: '303', status: 'reserved', type: '标准间', price: 299, guest: '周八' },
-      { roomNumber: '304', status: 'available', type: '豪华套房', price: 699 },
-      { roomNumber: '305', status: 'available', type: '大床房', price: 399 },
-      { roomNumber: '401', status: 'occupied', type: '标准间', price: 299, guest: '吴九' },
-      { roomNumber: '402', status: 'available', type: '大床房', price: 399 },
-      { roomNumber: '403', status: 'available', type: '标准间', price: 299 },
-      { roomNumber: '404', status: 'available', type: '豪华套房', price: 699 },
-      { roomNumber: '405', status: 'reserved', type: '大床房', price: 399, guest: '郑十' },
-    ],
-    hotel2: [
-      { roomNumber: '101', status: 'available', type: '商务间', price: 399 },
-      { roomNumber: '102', status: 'occupied', type: '商务间', price: 399, guest: '客户A' },
-      { roomNumber: '103', status: 'available', type: '商务间', price: 399 },
-      { roomNumber: '201', status: 'reserved', type: '商务套房', price: 599, guest: '客户B' },
-      { roomNumber: '202', status: 'available', type: '商务套房', price: 599 },
-      { roomNumber: '203', status: 'available', type: '商务间', price: 399 },
-      { roomNumber: '301', status: 'occupied', type: '商务间', price: 399, guest: '客户C' },
-      { roomNumber: '302', status: 'available', type: '商务套房', price: 599 },
-      { roomNumber: '303', status: 'available', type: '商务间', price: 399 },
-      { roomNumber: '401', status: 'available', type: '商务间', price: 399 },
-      { roomNumber: '402', status: 'reserved', type: '商务套房', price: 599, guest: '客户D' },
-      { roomNumber: '403', status: 'available', type: '商务间', price: 399 },
-      { roomNumber: '501', status: 'available', type: '商务间', price: 399 },
-      { roomNumber: '502', status: 'available', type: '商务套房', price: 599 },
-      { roomNumber: '503', status: 'occupied', type: '商务间', price: 399, guest: '客户E' },
-    ],
-    hotel3: [
-      { roomNumber: '101', status: 'available', type: '精品间', price: 499 },
-      { roomNumber: '102', status: 'available', type: '精品间', price: 499 },
-      { roomNumber: '103', status: 'reserved', type: '精品套房', price: 799, guest: '新客A' },
-      { roomNumber: '201', status: 'available', type: '精品间', price: 499 },
-      { roomNumber: '202', status: 'available', type: '精品套房', price: 799 },
-      { roomNumber: '203', status: 'available', type: '精品间', price: 499 },
-      { roomNumber: '301', status: 'occupied', type: '精品间', price: 499, guest: '新客B' },
-      { roomNumber: '302', status: 'available', type: '精品套房', price: 799 },
-      { roomNumber: '303', status: 'available', type: '精品间', price: 499 },
-      { roomNumber: '401', status: 'available', type: '精品间', price: 499 },
-      { roomNumber: '402', status: 'available', type: '精品套房', price: 799 },
-      { roomNumber: '403', status: 'reserved', type: '精品间', price: 499, guest: '新客C' },
-    ],
-  });
+  /**
+   * 加载酒店列表
+   */
+  const loadHotels = useCallback(async () => {
+    try {
+      const response = await getHotelList();
+      const hotelList = response.data?.list || response.list || [];
+      
+      // 转换为下拉选项格式
+      const hotelOptions = hotelList.map(hotel => ({
+        value: hotel.id,
+        label: hotel.name,
+        totalRooms: hotel.room_number || 0,
+      }));
+      
+      setHotels(hotelOptions);
+    } catch (error) {
+      console.error('加载酒店列表失败:', error);
+      message.error('加载酒店列表失败');
+    }
+  }, []);
+
+  /**
+   * 加载指定酒店的房间列表
+   */
+  const loadRoomsByHotel = useCallback(async (hotelId) => {
+    if (!hotelId) return;
+    
+    setLoading(true);
+    try {
+      const response = await getRoomList({ hotel_id: hotelId });
+      
+      // 后端返回格式：{success: true, data: {rooms: [...], total: 3}}
+      const roomList = response.data?.rooms || response.rooms || [];
+      
+      // 转换房间数据格式
+      const formattedRooms = roomList.map(room => ({
+        id: room.id,
+        roomNumber: room.room_number,
+        type: room.room_type,
+        type_en: room.room_type_en,
+        bed_type: room.bed_type,
+        area: room.area,
+        floor: room.floor, // 字符串类型，如 "28层"
+        max_occupancy: room.max_occupancy,
+        price: room.base_price,
+        total_rooms: room.total_rooms,
+        available_rooms: room.available_rooms,
+        facilities: room.facilities ? JSON.parse(room.facilities) : [],
+        description: room.description,
+        images: room.images ? JSON.parse(room.images) : [],
+        status: room.status, // 数字类型：1=可预订, 2=已入住, 3=维护中, 4=清洁中
+        booked_by: room.booked_by, // 预定人ID，"0"表示无人预定
+      }));
+      
+      console.log(`✅ 加载房间列表成功: 酒店ID=${hotelId}, 房间数=${formattedRooms.length}`);
+      
+      setRoomsData(prev => ({
+        ...prev,
+        [hotelId]: formattedRooms,
+      }));
+    } catch (error) {
+      console.error('❌ 加载房间列表失败:', error.message);
+      message.error('加载房间列表失败');
+      setRoomsData(prev => ({
+        ...prev,
+        [hotelId]: [],
+      }));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
+   * 初始化：加载酒店列表
+   */
+  useEffect(() => {
+    loadHotels();
+  }, [loadHotels]);
 
   /**
    * 获取指定酒店的房间列表
@@ -82,9 +104,10 @@ const useRoomList = () => {
   const calculateStats = useCallback((rooms) => {
     return {
       total: rooms.length,
-      available: rooms.filter(r => r.status === 'available').length,
-      occupied: rooms.filter(r => r.status === 'occupied').length,
-      reserved: rooms.filter(r => r.status === 'reserved').length,
+      available: rooms.filter(r => r.status === 1).length,      // 可预订
+      occupied: rooms.filter(r => r.status === 2).length,       // 已入住
+      reserved: rooms.filter(r => r.status === 3).length,       // 已预订
+      cleaning: rooms.filter(r => r.status === 4).length,       // 清洁中
     };
   }, []);
 
@@ -93,57 +116,136 @@ const useRoomList = () => {
    */
   const addRoom = useCallback(async (roomData) => {
     try {
-      // TODO: 调用后端接口
-      console.log('房间提交数据:', roomData);
+      setLoading(true);
+      
+      // 构建提交数据
+      const submitData = {
+        hotel_id: roomData.hotel_id,
+        room_number: roomData.room_number,
+        room_type: roomData.room_type,
+        room_type_en: roomData.room_type_en || '',
+        bed_type: roomData.bed_type,
+        area: Number(roomData.area),
+        floor: String(roomData.floor), // 字符串类型
+        max_occupancy: Number(roomData.max_occupancy),
+        base_price: Number(roomData.base_price),
+        total_rooms: Number(roomData.total_rooms),
+        available_rooms: Number(roomData.available_rooms),
+        facilities: JSON.stringify(Array.isArray(roomData.facilities) ? roomData.facilities : []),
+        description: roomData.description || '',
+        images: JSON.stringify(roomData.images || []),
+        status: 1, // 新建房间默认为1（可预订）
+        booked_by: "0", // 默认无人预定
+      };
+      
+      await createRoom(submitData);
+      console.log(`✅ 添加房间成功: ${submitData.room_number}`);
       message.success('房间添加成功！');
+      
+      // 重新加载该酒店的房间列表
+      await loadRoomsByHotel(roomData.hotel_id);
+      
       return true;
     } catch (error) {
-      console.error('添加房间失败:', error);
-      message.error('添加房间失败，请重试');
+      console.error('❌ 添加房间失败:', error.message);
+      message.error(error.message || '添加房间失败，请重试');
       return false;
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [loadRoomsByHotel]);
 
   /**
    * 更新房间
    */
   const updateRoom = useCallback(async (roomId, roomData) => {
     try {
-      // TODO: 调用后端接口
-      console.log('更新房间数据:', { roomId, roomData });
+      setLoading(true);
+      
+      // 构建提交数据（id 放在 Body 中）
+      const submitData = {
+        id: roomId, // ⭐ id 作为 Body 参数
+        hotel_id: roomData.hotel_id,
+        room_number: roomData.room_number,
+        room_type: roomData.room_type,
+        room_type_en: roomData.room_type_en || '',
+        bed_type: roomData.bed_type,
+        area: Number(roomData.area),
+        floor: String(roomData.floor), // 字符串类型
+        max_occupancy: Number(roomData.max_occupancy),
+        base_price: Number(roomData.base_price),
+        total_rooms: Number(roomData.total_rooms),
+        available_rooms: Number(roomData.available_rooms),
+        facilities: JSON.stringify(Array.isArray(roomData.facilities) ? roomData.facilities : []),
+        description: roomData.description || '',
+        images: JSON.stringify(roomData.images || []),
+        status: Number(roomData.status) || 1,
+        booked_by: roomData.booked_by || "0", // 保留原有预定人
+      };
+      
+      await updateRoomAPI(roomId, submitData);
+      console.log(`✅ 更新房间成功: ID=${roomId}, 房间号=${submitData.room_number}`);
       message.success('房间更新成功！');
+      
+      // 重新加载该酒店的房间列表
+      await loadRoomsByHotel(roomData.hotel_id);
+      
       return true;
     } catch (error) {
-      console.error('更新房间失败:', error);
-      message.error('更新房间失败，请重试');
+      console.error('❌ 更新房间失败:', error.message);
+      message.error(error.message || '更新房间失败，请重试');
       return false;
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [loadRoomsByHotel]);
 
   /**
    * 删除房间
    */
-  const deleteRoom = useCallback(async (roomId) => {
+  const deleteRoom = useCallback(async (roomId, hotelId) => {
     try {
-      // TODO: 调用后端接口
-      console.log('删除房间:', roomId);
+      setLoading(true);
+      
+      await deleteRoomAPI(roomId);
+      console.log(`✅ 删除房间成功: ID=${roomId}`);
       message.success('房间删除成功！');
+      
+      // 重新加载该酒店的房间列表
+      if (hotelId) {
+        await loadRoomsByHotel(hotelId);
+      }
+      
       return true;
     } catch (error) {
-      console.error('删除房间失败:', error);
-      message.error('删除房间失败，请重试');
+      console.error('❌ 删除房间失败:', error.message);
+      message.error(error.message || '删除房间失败，请重试');
       return false;
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [loadRoomsByHotel]);
+
+  /**
+   * 刷新房间列表
+   */
+  const refreshRooms = useCallback((hotelId) => {
+    if (hotelId) {
+      loadRoomsByHotel(hotelId);
+    }
+  }, [loadRoomsByHotel]);
 
   return {
     hotels,
     roomsData,
+    loading,
     getRoomsByHotel,
     calculateStats,
     addRoom,
     updateRoom,
     deleteRoom,
+    refreshRooms,
+    loadRoomsByHotel,
   };
 };
 

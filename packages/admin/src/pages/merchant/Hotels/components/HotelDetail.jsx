@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Row, Col, Space, Image, Tag, Divider, Descriptions } from 'antd';
 import { EnvironmentOutlined, PhoneOutlined, UserOutlined, ClockCircleOutlined, StarFilled } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 /**
  * 酒店详情组件 - 优化展示样式
@@ -143,13 +144,13 @@ const HotelDetail = ({ hotel, loading }) => {
           <Col span={12}>
             <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>入住时间</div>
             <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
-              {hotel.check_in_time || '-'}
+              {hotel.check_in_time ? dayjs(hotel.check_in_time).format('HH:mm') : '-'}
             </div>
           </Col>
           <Col span={12}>
             <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>退房时间</div>
             <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
-              {hotel.check_out_time || '-'}
+              {hotel.check_out_time ? dayjs(hotel.check_out_time).format('HH:mm') : '-'}
             </div>
           </Col>
         </Row>

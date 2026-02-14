@@ -137,13 +137,18 @@ const useHotelList = () => {
   // 更新酒店
   const updateHotelData = async (id, hotelData) => {
     try {
-      await updateHotel(id, hotelData);
+      console.log('✅ 开始更新酒店 - ID:', id);
+      console.log('✅ 提交数据:', JSON.stringify(hotelData, null, 2));
+      const response = await updateHotel(id, hotelData);
+      console.log('✅ 更新酒店成功:', response);
       message.success('酒店更新成功！');
       await loadHotelList(); // 重新加载列表
       return true;
     } catch (error) {
-      console.error('更新酒店失败:', error);
-      message.error('更新酒店失败，请重试');
+      console.error('❌ 更新酒店失败 - ID:', id);
+      console.error('❌ 错误详情:', error);
+      console.error('❌ 错误消息:', error.message);
+      message.error(error.message || '更新酒店失败，请重试');
       return false;
     }
   };

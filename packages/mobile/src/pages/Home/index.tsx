@@ -1,19 +1,54 @@
-// import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
-import { AppOutline, UnorderedListOutline, UserOutline } from 'antd-mobile-icons'; // 需要安装图标库
+import { AppOutline, UnorderedListOutline, UserOutline, FireFill } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
 // 引入跳转钩子
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+// 引入组件
+import HotelCard from '@/components/HotelCard';
+import { MOCK_HOTEL_LIST } from '@/mock/data'
+import dayjs from 'dayjs';
+import type { HomeContextType } from './type/homeContextType';
 
 
 const Home = () => {
   const navigate = useNavigate()
+
+  // 1. 在这里定义日期状态 (Source of Truth)
+  // 优先从 sessionStorage 读取
+  const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
+    try {
+      const cached = sessionStorage.getItem('HOME_DATE_RANGE');
+      if (cached) {
+        const [start, end] = JSON.parse(cached);
+        // 注意：JSON 取出来是字符串，必须转回 Date 对象
+        // 还要防止存储的是过期日期（可选优化，这里先不加，保持简单）
+        return [new Date(start), new Date(end)];
+      }
+    } catch (e) {
+      console.error('日期解析失败', e);
+    }
+    // 没缓存，才用默认值
+    return [new Date(), dayjs().add(1, 'day').toDate()];
+  });
   // 跳转到list页面
   // const goList = () => navigate('/list')
   const location = useLocation();
 
   // 根据当前路由确定激活哪个 Tab
   const activeKey = location.pathname.split('/').pop() || 'domestic';
+  // 新增监听：日期一变，立马存入 sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('HOME_DATE_RANGE', JSON.stringify(dateRange));
+  }, [dateRange]);
+
+  // 制作假数据
+  const recommendList = [
+    ...MOCK_HOTEL_LIST,
+    ...MOCK_HOTEL_LIST,
+    ...MOCK_HOTEL_LIST,
+    ...MOCK_HOTEL_LIST
+  ]
   return (
     <div className={styles.homeContainer}>
       <NavBar back={null} className={styles.navBar}>易宿酒店预订</NavBar>
@@ -35,39 +70,8 @@ const Home = () => {
       </div>
       {/* 2. 子路由占位符：这里会根据路由显示 Domestic/Overseas/etc. */}
       <div className={styles.searchCardWrapper}>
-        <Outlet />
+        <Outlet context={{ dateRange, setDateRange } satisfies HomeContextType} />
       </div>
-
-      {/* 搜索卡片 */}
-      {/* <div className={styles.searchCard}>
-        <div className={styles.inputItem}>
-          <div className={styles.label}>目的地</div>
-          <div className={styles.value}>上海</div>
-        </div>
-        <div className={styles.inputItem}>
-          <div className={styles.dateRow}>
-            <div className={styles.dateBlock}>
-              <div className={styles.label}>入住</div>
-              <div className={styles.dateValue}>01月30日</div>
-            </div>
-            <div className={styles.nightCount}>1晚</div>
-            <div className={`${styles.dateBlock} ${styles.textRight}`}>
-              <div className={styles.label}>离店</div>
-              <div className={styles.dateValue}>01月31日</div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.btnWrapper}>
-          <Button
-            block color='primary'
-            size='large'
-            // onClick={goList}
-            className={styles.searchBtn}
-            >
-            查询酒店
-          </Button>
-        </div>
-      </div> */}
 
       {/* 4. 快捷入口金刚区 (静态展示) */}
       <div className={styles.gridContainer}>
@@ -77,6 +81,34 @@ const Home = () => {
             <div className={styles.gridLabel}>{item}</div>
           </div>
         ))}
+      </div>
+
+      {/* ✅ 3. 新增：猜你喜欢 / 推荐列表 */}
+      <div className={styles.recommendSection}>
+        <div className={styles.sectionTitle}>
+           <FireFill color='#ff3141' /> 猜你喜欢
+        </div>
+        
+        <div className={styles.cardList}>
+          {recommendList.map((item, index) => (
+            // 注意：因为数据是重复的，key 不能只用 item.id，要加上 index 避免重复报错
+            <div 
+                key={`${item.id}-${index}`} 
+                className={styles.cardWrapper}
+                onClick={() => {
+                  // 1. 格式化日期
+                  const beginStr = dayjs(dateRange[0]).format('YYYY-MM-DD');
+                  const endStr = dayjs(dateRange[1]).format('YYYY-MM-DD');
+                  
+                  // 2. 带着参数跳转
+                  navigate(`/detail/${item.id}?beginDate=${beginStr}&endDate=${endStr}`);
+              }}
+            >
+              {/* 直接复用你之前写的卡片 */}
+              <HotelCard hotel={item} />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* 5. 底部固定导航 (TabBar) */}

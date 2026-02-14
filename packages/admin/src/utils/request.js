@@ -23,7 +23,6 @@ const request = async (url, options = {}) => {
   };
 
   try {
-    console.log('请求:', url, config);
     const response = await fetch(url, config);
     
     // 尝试解析响应体
@@ -33,15 +32,17 @@ const request = async (url, options = {}) => {
       data = await response.json();
     } else {
       const text = await response.text();
-      console.error('非 JSON 响应:', text);
+      console.error('❌ 非 JSON 响应:', text);
       throw new Error(`服务器返回非 JSON 数据: ${response.status}`);
     }
-
-    console.log('响应:', data);
 
     // 检查 HTTP 状态码
     if (!response.ok) {
       const errorMsg = data.message || data.error || `HTTP Error: ${response.status}`;
+      console.error(`❌ ${config.method || 'REQUEST'} ${url}`);
+      console.error('❌ 状态码:', response.status);
+      console.error('❌ 响应数据:', JSON.stringify(data, null, 2));
+      console.error('❌ 错误消息:', errorMsg);
       message.error(errorMsg);
       throw new Error(errorMsg);
     }
@@ -49,13 +50,14 @@ const request = async (url, options = {}) => {
     // 根据后端返回的数据结构处理
     // 假设后端返回格式：{ success: true, data: {...}, message: '...' }
     if (data.success === false) {
+      console.error(`❌ ${config.method} ${url} - ${data.message}`);
       message.error(data.message || '请求失败');
       throw new Error(data.message || '请求失败');
     }
 
     return data;
   } catch (error) {
-    console.error('请求错误:', error);
+    console.error('❌ 请求错误:', error.message);
     
     // 如果是网络错误
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
@@ -91,7 +93,6 @@ export const get = (url, params) => {
  * POST 请求
  */
 export const post = (url, data) => {
-  console.log('POST 数据:', data);
   return request(url, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -111,8 +112,17 @@ export const put = (url, data) => {
 /**
  * DELETE 请求
  */
-export const del = (url) => {
-  return request(url, {
+export const del = (url, params) => {
+  let requestUrl = url;
+  
+  if (params) {
+    const queryString = Object.keys(params)
+      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .join('&');
+    requestUrl = `${url}?${queryString}`;
+  }
+
+  return request(requestUrl, {
     method: 'DELETE',
   });
 };

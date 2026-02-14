@@ -1,11 +1,32 @@
 .homeContainer {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #f5f7fa; /* 给整个页面一个浅灰背景，突显卡片 */
+  /* ✅ 关键：给底部留出空间，防止内容被固定的 TabBar 遮住 */
+  padding-bottom: 60px; 
 }
 
 .navBar {
-  background-color: #0086F6;
-  --text-color: #ffffff;
+  /* 1. 背景设为透明或品牌蓝（取决于你的 Banner 是否延伸到了顶部） */
+  /* 如果 Banner 在顶部，这里设为 transparent；如果是独立导航栏，设为 #1677ff */
+  background-color: #1677ff; 
+  
+  /* 2. 移除默认的边框线，显得更沉浸 */
+  --border-bottom: none;
+}
+
+/* 专门针对标题文字的优化 */
+.navBar :global(.adm-nav-bar-title) {
+  /* 字体设置 */
+  font-family: "PingFang SC", "Helvetica Neue", sans-serif; /* 确保用无衬线体 */
+  font-size: 18px;       /* 稍微大一点，更有分量 */
+  font-weight: 600;      /* 半粗体，既清晰又不显得笨重 */
+  letter-spacing: 2px;   /* 关键点：增加字间距，显得大气、高级 */
+  
+  /* 颜色设置 */
+  color: #ffffff;        /* 纯白文字 */
+  
+  /* 阴影效果：让文字在蓝色背景上更立体，有浮起感 */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
 }
 
 .banner {
@@ -49,6 +70,44 @@
 .gridLabel {
   font-size: 12px;
   color: #666;
+}
+
+/* ✅ 新增：推荐板块样式 */
+.recommendSection {
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px; /* 图标和文字的间距 */
+}
+
+/* 给每个卡片加一点间距，不要贴得太紧 */
+.cardWrapper {
+  margin-bottom: 12px;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden; /* 防止圆角溢出 */
+  /* 给卡片加一点阴影，更有层次感 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* 优化一下底部的 TabBar，确保它固定在最上面层级 */
+.bottomTabBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+  z-index: 100; /* 确保盖住列表内容 */
+  padding-bottom: safe-area-inset-bottom; /* 适配 iPhone 底部横条 */
 }
 
 /* 底部导航固定 */

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Select, Modal, Form } from 'antd';
+import { useState, useEffect } from 'react';
+import { Select, Modal, Form, message } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import PageContainer from '../../../components/common/PageContainer';
 import useRoomList from './hooks/useRoomList';
@@ -7,21 +7,40 @@ import RoomStatsPanel from './components/RoomStatsPanel';
 import RoomGrid from './components/RoomGrid';
 import RoomForm from './components/RoomForm';
 import RoomDetail from './components/RoomDetail';
+import StockAdjustModal from './components/StockAdjustModal';
+import { uploadImagesToOss, convertUrlsToFileList } from '../../../utils/imageUploadHelper';
+import { getRoomDetail } from '../../../services/roomService';
 import './Rooms.css';
 
 /**
  * 房间管理主页面
  */
 const Rooms = () => {
-  const [selectedHotel, setSelectedHotel] = useState('hotel1');
+  const [selectedHotel, setSelectedHotel] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [currentRoom, setCurrentRoom] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [form] = Form.useForm();
   const [roomImageFileList, setRoomImageFileList] = useState([]);
 
-  const { hotels, getRoomsByHotel, calculateStats, addRoom, updateRoom, deleteRoom } = useRoomList();
+  const { hotels, getRoomsByHotel, calculateStats, addRoom, updateRoom, deleteRoom, loading, loadRoomsByHotel } = useRoomList();
+
+  // 当酒店列表加载完成且还没有选中酒店时，自动选中第一个
+  useEffect(() => {
+    if (!selectedHotel && hotels.length > 0) {
+      setSelectedHotel(hotels[0].value);
+    }
+  }, [hotels, selectedHotel]);
+
+  // 当选中的酒店变化时，加载该酒店的房间列表
+  useEffect(() => {
+    if (selectedHotel) {
+      loadRoomsByHotel(selectedHotel);
+    }
+  }, [selectedHotel, loadRoomsByHotel]);
 
   // 获取当前酒店的房间列表
   const currentRooms = getRoomsByHotel(selectedHotel);
@@ -61,21 +80,50 @@ const Rooms = () => {
    * 提交添加房间表单
    */
   const handleAddSubmit = async (values) => {
-    const images = roomImageFileList.map(file => file.response?.url).filter(Boolean);
-    const submitData = { ...values, images };
+    try {
+      // 1. 上传房间图片到OSS
+      const images = await uploadImagesToOss(roomImageFileList, 'rooms');
 
-    const success = await addRoom(submitData);
-    if (success) {
-      handleAddCancel();
+      // 2. 构建提交数据
+      const submitData = { ...values, images };
+
+      // 3. 提交到后端
+      const success = await addRoom(submitData);
+      if (success) {
+        handleAddCancel();
+      }
+    } catch (error) {
+      console.error('提交失败:', error);
+      message.error('操作失败，请重试');
     }
   };
 
   /**
    * 查看房间详情
    */
-  const handleView = (room) => {
-    setCurrentRoom(room);
+  const handleView = async (room) => {
+    setDetailLoading(true);
     setIsDetailModalOpen(true);
+    try {
+      const response = await getRoomDetail(room.id);
+      const roomData = response.data || response;
+      
+      // 解析 JSON 字段
+      const detailData = {
+        ...roomData,
+        facilities: roomData.facilities ? JSON.parse(roomData.facilities) : [],
+        images: roomData.images ? JSON.parse(roomData.images) : [],
+      };
+      
+      console.log(`✅ 查看房间详情: ID=${room.id}, 房间号=${roomData.room_number}`);
+      setCurrentRoom(detailData);
+    } catch (error) {
+      console.error('❌ 获取房间详情失败:', error.message);
+      message.error('获取房间详情失败，请重试');
+      setIsDetailModalOpen(false);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   /**
@@ -89,38 +137,58 @@ const Rooms = () => {
   /**
    * 编辑房间
    */
-  const handleEdit = (room) => {
-    setCurrentRoom(room);
+  const handleEdit = async (room) => {
     setIsEditModalOpen(true);
+    setCurrentRoom(room);
     
-    // 填充表单数据
-    form.setFieldsValue({
-      hotel_id: selectedHotel,
-      room_number: room.roomNumber,
-      room_type: room.type,
-      room_type_en: room.type_en || '',
-      bed_type: room.bed_type || '大床',
-      area: room.area,
-      floor: room.floor,
-      max_occupancy: room.max_occupancy || 2,
-      base_price: room.price,
-      total_rooms: room.total_rooms || 1,
-      available_rooms: room.available_rooms || 1,
-      facilities: room.facilities || [],
-      description: room.description || '',
-      status: room.status,
-    });
+    try {
+      // 从后端获取完整的房间数据
+      const response = await getRoomDetail(room.id);
+      const roomData = response.data || response;
+      
+      // 解析 JSON 字段
+      const facilities = roomData.facilities ? JSON.parse(roomData.facilities) : [];
+      const images = roomData.images ? JSON.parse(roomData.images) : [];
+      
+      console.log(`✅ 编辑房间: ID=${room.id}, 房间号=${roomData.room_number}`);
+      
+      // 填充表单数据
+      form.setFieldsValue({
+        hotel_id: roomData.hotel_id,
+        room_number: roomData.room_number,
+        room_type: roomData.room_type,
+        room_type_en: roomData.room_type_en || '',
+        bed_type: roomData.bed_type || '大床',
+        area: roomData.area,
+        floor: roomData.floor,
+        max_occupancy: roomData.max_occupancy || 2,
+        base_price: roomData.base_price,
+        total_rooms: roomData.total_rooms || 1,
+        available_rooms: roomData.available_rooms || 1,
+        facilities: facilities,
+        description: roomData.description || '',
+        status: roomData.status,
+      });
 
-    // 填充图片列表
-    if (room.images && room.images.length > 0) {
-      const imageList = room.images.map((url, index) => ({
-        uid: `-${index}`,
-        name: `image-${index}.jpg`,
-        status: 'done',
-        url: url,
-        response: { url: url },
-      }));
-      setRoomImageFileList(imageList);
+      // 填充图片列表
+      if (images.length > 0) {
+        const imageList = convertUrlsToFileList(images);
+        setRoomImageFileList(imageList);
+      } else {
+        setRoomImageFileList([]);
+      }
+      
+      // 更新 currentRoom 为完整数据
+      setCurrentRoom({
+        ...roomData,
+        facilities,
+        images,
+      });
+    } catch (error) {
+      console.error('❌ 获取房间数据失败:', error.message);
+      message.error('获取房间数据失败，请重试');
+      setIsEditModalOpen(false);
+      setCurrentRoom(null);
     }
   };
 
@@ -138,12 +206,25 @@ const Rooms = () => {
    * 提交编辑房间表单
    */
   const handleEditSubmit = async (values) => {
-    const images = roomImageFileList.map(file => file.response?.url).filter(Boolean);
-    const submitData = { ...values, images };
+    try {
+      // 1. 上传房间图片到OSS
+      const images = await uploadImagesToOss(roomImageFileList, 'rooms');
 
-    const success = await updateRoom(currentRoom.roomNumber, submitData);
-    if (success) {
-      handleEditCancel();
+      // 2. 构建提交数据（保留原有的 booked_by）
+      const submitData = { 
+        ...values, 
+        images,
+        booked_by: currentRoom.booked_by, // 保留原有预定人信息
+      };
+
+      // 3. 提交到后端
+      const success = await updateRoom(currentRoom.id, submitData);
+      if (success) {
+        handleEditCancel();
+      }
+    } catch (error) {
+      console.error('提交失败:', error);
+      message.error('操作失败，请重试');
     }
   };
 
@@ -159,9 +240,80 @@ const Rooms = () => {
       okType: 'danger',
       cancelText: '取消',
       onOk: async () => {
-        await deleteRoom(room.roomNumber);
+        await deleteRoom(room.id, selectedHotel);
       },
     });
+  };
+
+  /**
+   * 打开库存调整弹窗
+   */
+  const handleAdjustStock = async (room) => {
+    try {
+      // 获取最新的房间数据
+      const response = await getRoomDetail(room.id);
+      const roomData = response.data || response;
+      
+      // 解析 JSON 字段
+      const facilities = roomData.facilities ? JSON.parse(roomData.facilities) : [];
+      const images = roomData.images ? JSON.parse(roomData.images) : [];
+      
+      setCurrentRoom({
+        ...roomData,
+        roomNumber: roomData.room_number,
+        type: roomData.room_type,
+        facilities: facilities,
+        images: images,
+      });
+      setIsStockModalOpen(true);
+    } catch (error) {
+      console.error('❌ 获取房间数据失败:', error.message);
+      message.error('获取房间数据失败，请重试');
+    }
+  };
+
+  /**
+   * 关闭库存调整弹窗
+   */
+  const handleStockModalClose = () => {
+    setIsStockModalOpen(false);
+    setCurrentRoom(null);
+  };
+
+  /**
+   * 提交库存调整
+   */
+  const handleStockAdjust = async (roomId, newAvailableRooms) => {
+    try {
+      // 构建更新数据（只更新 available_rooms）
+      const submitData = {
+        id: roomId,
+        hotel_id: currentRoom.hotel_id,
+        room_number: currentRoom.room_number,
+        room_type: currentRoom.room_type,
+        room_type_en: currentRoom.room_type_en || '',
+        bed_type: currentRoom.bed_type,
+        area: Number(currentRoom.area),
+        floor: String(currentRoom.floor),
+        max_occupancy: Number(currentRoom.max_occupancy),
+        base_price: Number(currentRoom.base_price),
+        total_rooms: Number(currentRoom.total_rooms),
+        available_rooms: Number(newAvailableRooms), // 更新库存
+        facilities: JSON.stringify(Array.isArray(currentRoom.facilities) ? currentRoom.facilities : []),
+        description: currentRoom.description || '',
+        images: JSON.stringify(Array.isArray(currentRoom.images) ? currentRoom.images : []),
+        status: Number(currentRoom.status) || 1,
+        booked_by: currentRoom.booked_by || "0",
+      };
+
+      const success = await updateRoom(roomId, submitData);
+      if (success) {
+        handleStockModalClose();
+      }
+    } catch (error) {
+      console.error('❌ 调整库存失败:', error.message);
+      message.error('调整库存失败，请重试');
+    }
   };
 
   return (
@@ -178,6 +330,7 @@ const Rooms = () => {
       showSearch={true}
       searchPlaceholder="搜索房间号、类型"
       onSearch={handleSearch}
+      searchLoading={loading}
       showAddButton={true}
       onAdd={showAddModal}
     >
@@ -190,6 +343,7 @@ const Rooms = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onAdjustStock={handleAdjustStock}
       />
 
       {/* 添加房间弹窗 */}
@@ -238,6 +392,15 @@ const Rooms = () => {
         visible={isDetailModalOpen}
         room={currentRoom}
         onClose={handleDetailClose}
+        loading={detailLoading}
+      />
+
+      {/* 库存调整弹窗 */}
+      <StockAdjustModal
+        visible={isStockModalOpen}
+        room={currentRoom}
+        onClose={handleStockModalClose}
+        onSubmit={handleStockAdjust}
       />
     </PageContainer>
   );

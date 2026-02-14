@@ -6,7 +6,7 @@ import { getRoomStatusInfo } from '../../../../constants/roomStatus';
 /**
  * 房间门卡片组件
  */
-const RoomDoorCard = ({ room, onView, onEdit, onDelete }) => {
+const RoomDoorCard = ({ room, onView, onEdit, onDelete, onAdjustStock }) => {
   const config = getRoomStatusInfo(room.status);
 
   // 右键菜单项
@@ -22,6 +22,12 @@ const RoomDoorCard = ({ room, onView, onEdit, onDelete }) => {
       icon: <EditOutlined />,
       label: '编辑房间',
       onClick: () => onEdit && onEdit(room),
+    },
+    {
+      key: 'stock',
+      icon: <EditOutlined />,
+      label: '调整库存',
+      onClick: () => onAdjustStock && onAdjustStock(room),
     },
     {
       type: 'divider',
@@ -58,7 +64,9 @@ const RoomDoorCard = ({ room, onView, onEdit, onDelete }) => {
             <div><strong>房型：</strong>{room.type}</div>
             <div><strong>价格：</strong>¥{room.price}/晚</div>
             <div><strong>状态：</strong>{config.text}</div>
-            {room.guest && <div><strong>客人：</strong>{room.guest}</div>}
+            {room.booked_by && room.booked_by !== "0" && (
+              <div><strong>预定人ID：</strong>{room.booked_by}</div>
+            )}
             <div style={{ marginTop: 8, fontSize: 11, color: '#bbb' }}>
               左键查看 | 右键操作
             </div>
@@ -67,60 +75,98 @@ const RoomDoorCard = ({ room, onView, onEdit, onDelete }) => {
       >
         <div
           style={{
-            width: 100,
-            height: 140,
+            width: 140,
+            height: 180,
             backgroundColor: config.bgColor,
-            border: `3px solid ${config.borderColor}`,
-            borderRadius: 8,
+            border: `2px solid ${config.borderColor}`,
+            borderRadius: 16,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            transition: 'all 0.3s',
+            transition: 'all 0.3s ease',
             position: 'relative',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            padding: '16px 12px',
           }}
           onClick={handleClick}
           onContextMenu={handleContextMenu}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = 'none';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
           }}
         >
           {/* 门把手 */}
           <div
             style={{
               position: 'absolute',
-              right: 15,
-              top: '50%',
-              width: 8,
-              height: 8,
+              right: 16,
+              top: '42%',
+              width: 12,
+              height: 12,
               backgroundColor: config.color,
               borderRadius: '50%',
+              boxShadow: `0 0 10px ${config.color}`,
             }}
           />
           
           {/* 房间号 */}
-          <div style={{ fontSize: 24, fontWeight: 'bold', color: config.color, marginBottom: 8 }}>
+          <div style={{ 
+            fontSize: 42, 
+            fontWeight: 700, 
+            color: config.color, 
+            marginBottom: 12,
+            fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            letterSpacing: '2px',
+            lineHeight: 1,
+          }}>
             {room.roomNumber}
           </div>
           
           {/* 房型 */}
-          <div style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>
+          <div style={{ 
+            fontSize: 14, 
+            color: '#555', 
+            marginBottom: 8,
+            textAlign: 'center',
+            padding: '0 8px',
+            fontWeight: 500,
+            lineHeight: 1.4,
+            maxWidth: '100%',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
             {room.type}
           </div>
           
           {/* 价格 */}
-          <div style={{ fontSize: 14, color: config.color, fontWeight: 'bold' }}>
+          <div style={{ 
+            fontSize: 18, 
+            color: config.color, 
+            fontWeight: 600,
+            marginBottom: 10,
+            fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          }}>
             ¥{room.price}
           </div>
           
           {/* 状态标签 */}
-          <Tag color={config.color} style={{ marginTop: 8, fontSize: 10 }}>
+          <Tag 
+            color={config.color} 
+            style={{ 
+              fontSize: 12,
+              fontWeight: 500,
+              padding: '3px 12px',
+              borderRadius: 14,
+              border: 'none',
+            }}
+          >
             {config.text}
           </Tag>
         </div>

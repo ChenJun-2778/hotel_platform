@@ -8,9 +8,15 @@ export const HOTEL_API = {
   DETAIL: (id) => `${API_BASE_URL}/hotels/${id}`, // GET - 获取酒店详情
   UPDATE: (id) => `${API_BASE_URL}/hotels/${id}`, // PUT - 更新酒店信息
   UPDATE_STATUS: (id) => `${API_BASE_URL}/hotels/${id}/status`, // PUT - 更新酒店状态
+  APPROVE: (id) => `${API_BASE_URL}/hotels/${id}/approve`, // PUT - 审核通过
+  REJECT: (id) => `${API_BASE_URL}/hotels/${id}/reject`,   // PUT - 审核拒绝
 };
 
-// 房间相关接口（预留）
+// 房间相关接口
 export const ROOM_API = {
-  // TODO: 后续添加房间接口
+  CREATE: `${API_BASE_URL}/rooms/create`,       // POST - 创建房间
+  LIST: `${API_BASE_URL}/rooms/list`,           // GET - 获取房间列表
+  DETAIL: `${API_BASE_URL}/rooms/detail`,       // GET - 获取房间详情 (Query: id)
+  UPDATE: `${API_BASE_URL}/rooms/update`,       // PUT - 更新房间信息 (Body: id + data)
+  DELETE: `${API_BASE_URL}/rooms/delete`,       // DELETE - 删除房间 (Query: id)
 };
