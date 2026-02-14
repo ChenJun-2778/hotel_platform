@@ -1,0 +1,16 @@
+.layoutContainer {
+    /* 这里的 pb-50 是为了防止页面内容被底部导航挡住 */
+    padding-bottom: 50px; 
+    min-height: 100vh;
+    background-color: #f5f5f5;
+  }
+  
+  .bottomTabBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #eee;
+    background-color: #fff;
+    z-index: 999; /* 保证层级最高 */
+  }

@@ -1,9 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { NavBar, Tabs, Button, Toast } from 'antd-mobile';
+import { NavBar, Tabs, Button, Toast, TabBar } from 'antd-mobile'; // 👈 引入 TabBar
 import { useNavigate } from 'react-router-dom';
+import { 
+  AppOutline, 
+  UnorderedListOutline, 
+  UserOutline 
+} from 'antd-mobile-icons'; // 👈 引入图标
 import styles from './index.module.css';
 
-// 1. Mock 数据
+// ... (MOCK_ORDERS 数据保持不变，省略以节省空间) ...
 const MOCK_ORDERS = [
   {
     id: 'ORD2026021101',
@@ -17,6 +22,7 @@ const MOCK_ORDERS = [
     status: 'confirmed',
     statusText: '待入住'
   },
+  // ... 其他数据 ...
   {
     id: 'ORD2026021102',
     hotelName: '舒适商务酒店',
@@ -57,14 +63,10 @@ const MOCK_ORDERS = [
 
 const OrderList: React.FC = () => {
   const navigate = useNavigate();
-  // ✅ 1. 恢复状态管理
   const [activeTab, setActiveTab] = useState('all');
 
-  // ✅ 2. 计算筛选后的列表 (使用 useMemo 优化性能，其实直接 filter 也可以)
   const filteredList = useMemo(() => {
-    if (activeTab === 'all') {
-      return MOCK_ORDERS;
-    }
+    if (activeTab === 'all') return MOCK_ORDERS;
     return MOCK_ORDERS.filter(item => item.status === activeTab);
   }, [activeTab]);
 
@@ -77,12 +79,20 @@ const OrderList: React.FC = () => {
     }
   };
 
+  // ✅ 底部 TabBar 跳转逻辑
+  const handleTabChange = (key: string) => {
+    if (key === 'home') navigate('/');
+    if (key === 'order') navigate('/order-list'); // 已经在当前页，其实不跳也行，但保持一致
+    if (key === 'user') navigate('/user');
+  };
+
   return (
     <div className={styles.container}>
       
-      {/* ✅ 头部固定区域：包含 NavBar 和 Tabs */}
+      {/* 顶部固定区域 */}
       <div className={styles.topFixedArea}>
-        <NavBar onBack={() => navigate(-1)} style={{ background: '#fff' }}>我的订单</NavBar>
+        {/* 🔥 修改：去掉了 back={null} 或 onBack，作为主页通常不显示返回箭头 */}
+        <NavBar back={null} style={{ background: '#fff' }}>订单列表</NavBar>
         
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <Tabs.Tab title='全部' key='all' />
@@ -100,16 +110,12 @@ const OrderList: React.FC = () => {
         ) : (
           filteredList.map(item => (
             <div key={item.id} className={styles.card}>
-              
-              {/* 卡片头部 */}
               <div className={styles.cardHeader}>
                 <div className={styles.hotelName}>{item.hotelName}</div>
                 <div className={`${styles.statusTag} ${getStatusClass(item.status)}`}>
                   {item.statusText}
                 </div>
               </div>
-
-              {/* 中间信息 */}
               <div className={styles.cardBody}>
                 <img src={item.image} className={styles.roomImg} alt="" />
                 <div className={styles.infoCol}>
@@ -124,35 +130,33 @@ const OrderList: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {/* 底部按钮 (注意 onClick 的花括号写法) */}
               <div className={styles.cardFooter}>
                  {item.status === 'pending' && (
                    <>
-                     <Button size='small' onClick={() => {
-                        Toast.show('订单已取消');
-                     }}>取消</Button>
-                     {/* 间隔一下 */}
+                     <Button size='small' onClick={() => { Toast.show('订单已取消'); }}>取消</Button>
                      <div style={{width: 8}}></div>
-                     <Button size='small' color='primary' onClick={() => {
-                        Toast.show('支付成功');
-                     }}>去支付</Button>
+                     <Button size='small' color='primary' onClick={() => { Toast.show('支付成功'); }}>去支付</Button>
                    </>
                  )}
                  {item.status === 'confirmed' && (
-                    <Button size='small' onClick={() => {
-                        Toast.show('已联系客服');
-                    }}>联系酒店</Button>
+                    <Button size='small' onClick={() => { Toast.show('已联系客服'); }}>联系酒店</Button>
                  )}
                  {(item.status === 'completed' || item.status === 'canceled') && (
-                    <Button size='small' color='primary' fill='outline' onClick={() => {
-                        navigate('/'); 
-                    }}>再次预订</Button>
+                    <Button size='small' color='primary' fill='outline' onClick={() => { navigate('/'); }}>再次预订</Button>
                  )}
               </div>
             </div>
           ))
         )}
+      </div>
+
+      {/* ✅ 底部 TabBar (高亮 'order') */}
+      <div className={styles.bottomTabBar}>
+        <TabBar activeKey='order' onChange={handleTabChange}>
+          <TabBar.Item key='home' icon={<AppOutline />} title='首页' />
+          <TabBar.Item key='order' icon={<UnorderedListOutline />} title='订单' />
+          <TabBar.Item key='user' icon={<UserOutline />} title='我的' />
+        </TabBar>
       </div>
     </div>
   );

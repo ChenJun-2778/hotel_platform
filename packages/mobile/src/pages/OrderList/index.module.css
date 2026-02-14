@@ -3,23 +3,23 @@
   background-color: #f5f5f5;
 }
 
-/* ✅ 新增：顶部固定区域 (NavBar + Tabs) */
+/* 顶部固定区域 */
 .topFixedArea {
-  position: sticky; /* 关键：粘性定位 */
-  top: 0;           /* 吸顶位置 */
-  z-index: 100;     /* 保证在最上层，盖住列表 */
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background-color: #fff;
-  border-bottom: 1px solid #eee; /* 加一条细线，区分内容 */
+  border-bottom: 1px solid #eee;
 }
 
 /* 列表内容 */
 .listContent {
   padding: 12px;
-  /* 增加底部 padding，防止最后一个卡片贴底太紧 */
-  padding-bottom: 40px; 
+  /* 🔥 关键：底部留出 50px 给 TabBar，防止最后一条订单被遮住 */
+  padding-bottom: 60px; 
 }
 
-/* --- 以下卡片样式保持不变 --- */
+/* --- 卡片样式保持不变 --- */
 .card {
   background: #fff;
   border-radius: 12px;
@@ -134,4 +134,15 @@
   padding-top: 100px;
   text-align: center;
   color: #999;
+}
+
+/* ✅ 新增：底部导航栏样式 (跟User页一样) */
+.bottomTabBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-top: 1px solid #eee;
+  background-color: #fff;
+  z-index: 100;
 }
