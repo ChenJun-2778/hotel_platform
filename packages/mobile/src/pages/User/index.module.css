@@ -48,13 +48,3 @@
   padding: 0 16px;
 }
 
-/* 底部导航固定 */
-.bottomTabBar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  border-top: 1px solid #eee;
-  background-color: #fff;
-  z-index: 100;
-}

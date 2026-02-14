@@ -110,13 +110,3 @@
   padding-bottom: safe-area-inset-bottom; /* 适配 iPhone 底部横条 */
 }
 
-/* 底部导航固定 */
-.bottomTabBar {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #ffffff;
-  border-top: 1px solid #eee;
-  padding-bottom: constant(safe-area-inset-bottom); /* 适配刘海屏 */
-  padding-bottom: env(safe-area-inset-bottom);
-}

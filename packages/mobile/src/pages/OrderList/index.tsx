@@ -149,15 +149,6 @@ const OrderList: React.FC = () => {
           ))
         )}
       </div>
-
-      {/* ✅ 底部 TabBar (高亮 'order') */}
-      <div className={styles.bottomTabBar}>
-        <TabBar activeKey='order' onChange={handleTabChange}>
-          <TabBar.Item key='home' icon={<AppOutline />} title='首页' />
-          <TabBar.Item key='order' icon={<UnorderedListOutline />} title='订单' />
-          <TabBar.Item key='user' icon={<UserOutline />} title='我的' />
-        </TabBar>
-      </div>
     </div>
   );
 };

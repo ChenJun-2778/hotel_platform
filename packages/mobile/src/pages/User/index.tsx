@@ -135,15 +135,6 @@ const User: React.FC = () => {
         </div>
       )}
 
-      {/* 底部 TabBar */}
-      <div className={styles.bottomTabBar}>
-        <TabBar activeKey='user' onChange={handleTabChange}>
-          <TabBar.Item key='home' icon={<AppOutline />} title='首页' />
-          <TabBar.Item key='order' icon={<UnorderedListOutline />} title='订单' />
-          <TabBar.Item key='user' icon={<UserOutline />} title='我的' />
-        </TabBar>
-      </div>
-
       {/* ✅ 确认弹窗 (使用 Dialog 组件) */}
       <Dialog
         visible={logoutVisible}

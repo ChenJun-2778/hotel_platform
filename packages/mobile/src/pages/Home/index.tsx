@@ -110,15 +110,6 @@ const Home = () => {
           ))}
         </div>
       </div>
-
-      {/* 5. 底部固定导航 (TabBar) */}
-      <div className={styles.bottomTabBar}>
-        <TabBar activeKey='home'>
-          <TabBar.Item key='home' icon={<AppOutline />} title='首页' />
-          <TabBar.Item key='order' icon={<UnorderedListOutline />} title='订单' />
-          <TabBar.Item key='user' onClick={() => navigate('/user')} icon={<UserOutline />} title='我的' />
-        </TabBar>
-      </div>
     </div>
   );
 };

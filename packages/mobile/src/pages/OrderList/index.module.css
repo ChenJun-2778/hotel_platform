@@ -136,13 +136,3 @@
   color: #999;
 }
 
-/* ✅ 新增：底部导航栏样式 (跟User页一样) */
-.bottomTabBar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  border-top: 1px solid #eee;
-  background-color: #fff;
-  z-index: 100;
-}
