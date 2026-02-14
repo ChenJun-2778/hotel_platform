@@ -1,0 +1,137 @@
+.container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* ✅ 新增：顶部固定区域 (NavBar + Tabs) */
+.topFixedArea {
+  position: sticky; /* 关键：粘性定位 */
+  top: 0;           /* 吸顶位置 */
+  z-index: 100;     /* 保证在最上层，盖住列表 */
+  background-color: #fff;
+  border-bottom: 1px solid #eee; /* 加一条细线，区分内容 */
+}
+
+/* 列表内容 */
+.listContent {
+  padding: 12px;
+  /* 增加底部 padding，防止最后一个卡片贴底太紧 */
+  padding-bottom: 40px; 
+}
+
+/* --- 以下卡片样式保持不变 --- */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f7f7f7;
+}
+
+.hotelName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.statusTag {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status_pending { color: #ff8f1f; }
+.status_confirmed { color: #1677ff; }
+.status_completed { color: #00b578; }
+.status_canceled { color: #999; }
+
+.cardBody {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.roomImg {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #eee;
+}
+
+.infoCol {
+  flex: 1;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.roomName {
+  font-size: 15px;
+  color: #333;
+  font-weight: 500;
+}
+
+.dateRange {
+  font-size: 12px;
+  color: #666;
+  background: #f7f7f7;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  margin-top: 8px;
+}
+
+.priceLabel {
+  font-size: 12px;
+  color: #999;
+  margin-right: 4px;
+  margin-bottom: 2px;
+}
+
+.currency {
+  font-size: 12px;
+  color: #ff3141;
+  font-weight: bold;
+}
+
+.price {
+  font-size: 18px;
+  color: #ff3141;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f7f7f7;
+}
+
+.empty {
+  padding-top: 100px;
+  text-align: center;
+  color: #999;
+}
