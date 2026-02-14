@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { NavBar, Avatar, List, Button, Modal, Toast, TabBar } from 'antd-mobile';
-import { useNavigate } from 'react-router-dom';
+import { NavBar, Avatar, List, Button, Modal, Toast, TabBar, Dialog } from 'antd-mobile';
+import { useNavigate, useLocation } from 'react-router-dom'; 
 import { 
   UnorderedListOutline, 
   RightOutline,
@@ -12,9 +12,13 @@ import styles from './index.module.css';
 
 const User: React.FC = () => {
   const navigate = useNavigate();
+  // const location = useLocation(); // 暂时用不到 location，先注释掉
   const [userInfo, setUserInfo] = useState<any>(null);
 
-  // 1. 进页面检查本地缓存
+  // ✅ 1. 控制退出弹窗的开关
+  const [logoutVisible, setLogoutVisible] = useState(false);
+
+  // 进页面检查本地缓存
   useEffect(() => {
     const storedUser = localStorage.getItem('USER_INFO');
     if (storedUser) {
@@ -26,28 +30,47 @@ const User: React.FC = () => {
     }
   }, []);
 
-  // 2. 退出登录逻辑
-  const handleLogout = () => {
-    Modal.confirm({
-      content: '确定要退出登录吗？',
-      onConfirm: () => {
-        // 清除 Token 和用户信息
-        localStorage.removeItem('TOKEN');
-        localStorage.removeItem('USER_INFO');
-        
-        setUserInfo(null);
-        Toast.show('已退出');
-        // 这里的逻辑看你需求：退出后是留在当前页变回“未登录”状态，还是跳去登录页？
-        // 这里默认是留在当前页
-      },
+  // ✅ 2. 核心退出逻辑 (带动画)
+  const performLogout = async () => {
+    // A. 关闭确认弹窗
+    setLogoutVisible(false);
+
+    // B. 显示加载动画 (模拟网络请求/清理过程)
+    Toast.show({
+      icon: 'loading',
+      content: '正在退出...',
+      duration: 0, // 设为 0 表示不自动关闭，必须手动 close
     });
+
+    // 模拟一个短暂的延迟 (500ms)，让动画展示一会儿，体验更丝滑
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // C. 清除数据
+    localStorage.removeItem('TOKEN');
+    localStorage.removeItem('USER_INFO');
+
+    // D. 清空状态 -> 界面会自动变回 "未登录" 样式
+    setUserInfo(null);
+
+    // E. 关闭 Loading，提示成功
+    Toast.clear();
+    Toast.show({ icon: 'success', content: '已退出' });
+
+    // F. 不需要 navigate跳转，就停在当前页
   };
 
-  // 3. 点击头部：没登录跳去登录
+  // 点击头部：没登录跳去登录
   const handleHeaderClick = () => {
     if (!userInfo) {
       navigate('/login');
     }
+  };
+
+  // TabBar 路由跳转逻辑
+  const handleTabChange = (key: string) => {
+    if (key === 'home') navigate('/');
+    if (key === 'order') navigate('/order-list'); 
+    if (key === 'user') navigate('/user');
   };
 
   return (
@@ -66,7 +89,7 @@ const User: React.FC = () => {
             // 登录了显示这个
             <>
               <div className={styles.nickname}>{userInfo.nickname}</div>
-              <div className={styles.userId}>普通用户</div>
+              <div className={styles.userId} style={{opacity: 0.6}}>普通用户</div>
             </>
           ) : (
             // 没登录显示这个
@@ -106,7 +129,7 @@ const User: React.FC = () => {
       {/* 退出按钮：只有登录了才显示 */}
       {userInfo && (
         <div className={styles.logoutSection}>
-          <Button block color='danger' onClick={handleLogout}>
+          <Button block color='danger' onClick={() => setLogoutVisible(true)}>
             退出登录
           </Button>
         </div>
@@ -114,12 +137,36 @@ const User: React.FC = () => {
 
       {/* 底部 TabBar */}
       <div className={styles.bottomTabBar}>
-        <TabBar activeKey='user' onChange={key => navigate(key === 'home' ? '/' : '/user')}>
+        <TabBar activeKey='user' onChange={handleTabChange}>
           <TabBar.Item key='home' icon={<AppOutline />} title='首页' />
           <TabBar.Item key='order' icon={<UnorderedListOutline />} title='订单' />
           <TabBar.Item key='user' icon={<UserOutline />} title='我的' />
         </TabBar>
       </div>
+
+      {/* ✅ 确认弹窗 (使用 Dialog 组件) */}
+      <Dialog
+        visible={logoutVisible}
+        content='确定要退出登录吗？'
+        closeOnAction
+        onClose={() => setLogoutVisible(false)}
+        actions={[
+          [
+            {
+              key: 'cancel',
+              text: '取消',
+              onClick: () => setLogoutVisible(false),
+            },
+            {
+              key: 'confirm',
+              text: '退出',
+              danger: true,
+              bold: true,
+              onClick: performLogout, // 触发带动画的退出
+            },
+          ],
+        ]}
+      />
     </div>
   );
 };
