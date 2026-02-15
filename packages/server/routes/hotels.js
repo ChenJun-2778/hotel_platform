@@ -7,6 +7,7 @@ const { query } = require('../config/database');
  * POST /api/hotels/create
  * 
  * 请求体参数：
+ * - user_id: 创建酒店的用户ID (必填)
  * - name: 酒店名称 (必填)
  * - english_name: 酒店英文名称 (可选)
  * - brand: 酒店品牌 (可选)
@@ -27,6 +28,7 @@ const { query } = require('../config/database');
 router.post('/create', async (req, res) => {
   try {
     const {
+      user_id,
       name,
       english_name,
       brand,
@@ -46,6 +48,22 @@ router.post('/create', async (req, res) => {
     } = req.body;
 
     // 验证必填字段
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        message: '用户ID不能为空'
+      });
+    }
+
+    // 验证 user_id 是否为有效数字
+    const userIdNum = parseInt(user_id);
+    if (!userIdNum || userIdNum <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的用户ID'
+      });
+    }
+
     if (!name) {
       return res.status(400).json({
         success: false,
@@ -98,6 +116,7 @@ router.post('/create', async (req, res) => {
     // 插入酒店数据
     const sql = `
       INSERT INTO hotels (
+        user_id,
         name, 
         english_name, 
         brand, 
@@ -116,10 +135,11 @@ router.post('/create', async (req, res) => {
         images, 
         status, 
         is_deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 0)
     `;
 
     const params = [
+      userIdNum,
       name,
       english_name,
       brand,
@@ -145,6 +165,7 @@ router.post('/create', async (req, res) => {
       message: '酒店创建成功，等待审批',
       data: {
         id: result.insertId,
+        user_id: userIdNum,
         name,
         status: 2, // 待审批
         is_deleted: 0 // 未删除
@@ -171,6 +192,7 @@ router.post('/create', async (req, res) => {
  * 
  * 返回字段：
  * - id: 酒店ID
+ * - user_id: 创建酒店的用户ID
  * - name: 酒店名称
  * - location: 酒店地点/城市
  * - address: 详细地址
@@ -212,6 +234,7 @@ router.get('/list', async (req, res) => {
     const sql = `
       SELECT 
         id,
+        user_id,
         name,
         location,
         address,

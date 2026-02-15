@@ -4,6 +4,8 @@ const PORT = 3000;
 const { testConnection } = require("./config/database");
 const hotelsRouter = require("./routes/hotels");
 const roomsRouter = require("./routes/rooms");
+const loginPCRouter = require("./routes/loginPC");
+const hotelsReviewRouter = require("./routes/hotelsReview");
 
 // 中间件 - 解析 JSON 请求体
 app.use(express.json());
@@ -31,6 +33,8 @@ app.use((req, res, next) => {
 // API 路由
 app.use("/api/hotels", hotelsRouter);
 app.use("/api/rooms", roomsRouter);
+app.use("/api/loginPC", loginPCRouter);
+app.use("/api/hotelsReview", hotelsReviewRouter);
 
 // 根路由 - API 信息
 app.get("/", (req, res) => {
