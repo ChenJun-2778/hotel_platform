@@ -3,7 +3,6 @@ import { NavBar, Form, Input, Button, Toast } from 'antd-mobile';
 import { useNavigate } from 'react-router-dom';
 import { UserOutline, LockOutline, EyeInvisibleOutline, EyeOutline } from 'antd-mobile-icons';
 import styles from './index.module.css';
-
 // 假设这是你之后要换成的真实 API
 // import { apiLogin } from '@/api/user';
 
@@ -73,6 +72,7 @@ const Login: React.FC = () => {
   };
 
   return (
+    
     <div className={styles.container}>
       {/* 顶部导航，点击返回 */}
       <NavBar onBack={() => navigate(-1)} style={{ background: '#fff' }}></NavBar>

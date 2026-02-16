@@ -1,11 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { NavBar, Tabs, Button, Toast, TabBar } from 'antd-mobile'; // 👈 引入 TabBar
 import { useNavigate } from 'react-router-dom';
-import { 
-  AppOutline, 
-  UnorderedListOutline, 
-  UserOutline 
-} from 'antd-mobile-icons'; // 👈 引入图标
 import styles from './index.module.css';
 
 // ... (MOCK_ORDERS 数据保持不变，省略以节省空间) ...
