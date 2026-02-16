@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { NavBar, Avatar, List, Button, Modal, Toast, TabBar, Dialog } from 'antd-mobile';
-import { useNavigate, useLocation } from 'react-router-dom'; 
+import { NavBar, Avatar, List, Button, Dialog, Toast, ImageUploader, Form, Input } from 'antd-mobile'; // 👈 1. 引入 Form, Input
+import { useNavigate } from 'react-router-dom';
 import { 
   UnorderedListOutline, 
   RightOutline,
-  AppOutline,
-  UserOutline,
-  SetOutline
+  SetOutline,
+  EditSOutline // 👈 2. 引入编辑图标
 } from 'antd-mobile-icons';
 import styles from './index.module.css';
 
+type ImageUploadItem = {
+  url: string;
+  thumbnail?: string;
+}
+
 const User: React.FC = () => {
   const navigate = useNavigate();
-  // const location = useLocation(); // 暂时用不到 location，先注释掉
   const [userInfo, setUserInfo] = useState<any>(null);
-
-  // ✅ 1. 控制退出弹窗的开关
+  
+  // 控制退出弹窗
   const [logoutVisible, setLogoutVisible] = useState(false);
 
-  // 进页面检查本地缓存
+  // ✅ 3. 新增：控制“修改信息”弹窗
+  const [editVisible, setEditVisible] = useState(false);
+  const [form] = Form.useForm(); // 创建表单实例
+
   useEffect(() => {
     const storedUser = localStorage.getItem('USER_INFO');
     if (storedUser) {
@@ -29,44 +35,82 @@ const User: React.FC = () => {
       }
     }
   }, []);
-
-  // ✅ 2. 核心退出逻辑 (带动画)
-  const performLogout = async () => {
-    // A. 关闭确认弹窗
-    setLogoutVisible(false);
-
-    // B. 显示加载动画 (模拟网络请求/清理过程)
-    Toast.show({
-      icon: 'loading',
-      content: '正在退出...',
-      duration: 0, // 设为 0 表示不自动关闭，必须手动 close
+  // 在真实项目中，这里会调用 apiUpload(file) 把图片传给服务器，然后返回 http://... 的链接
+  const mockUpload = async (file: File): Promise<ImageUploadItem> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        // 模拟延时，假装在上传
+        setTimeout(() => {
+          resolve({
+            url: e.target?.result as string, // 这里拿到的是 base64
+          });
+        }, 500);
+      };
+      reader.readAsDataURL(file);
     });
-
-    // 模拟一个短暂的延迟 (500ms)，让动画展示一会儿，体验更丝滑
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // C. 清除数据
-    localStorage.removeItem('TOKEN');
-    localStorage.removeItem('USER_INFO');
-
-    // D. 清空状态 -> 界面会自动变回 "未登录" 样式
-    setUserInfo(null);
-
-    // E. 关闭 Loading，提示成功
-    Toast.clear();
-    Toast.show({ icon: 'success', content: '已退出' });
-
-    // F. 不需要 navigate跳转，就停在当前页
   };
 
-  // 点击头部：没登录跳去登录
+  // 点击编辑按钮
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (userInfo) {
+      // 构造 ImageUploader 需要的 fileList 格式: [{ url: '...' }]
+      const avatarFileList = userInfo.avatar ? [{ url: userInfo.avatar }] : [];
+
+      form.setFieldsValue({
+        nickname: userInfo.nickname,
+        avatar: avatarFileList, // 把数组传给上传组件
+      });
+      setEditVisible(true);
+    }
+  };
+
+  // 保存修改
+  const handleSaveProfile = async () => {
+    try {
+      const values = await form.validateFields();
+      
+      // 处理头像数据：values.avatar 是一个数组，我们需要取出第一张图的 url
+      let newAvatarUrl = '';
+      if (values.avatar && values.avatar.length > 0) {
+        newAvatarUrl = values.avatar[0].url;
+      }
+
+      // 构造新的用户信息
+      const newUser = { 
+        ...userInfo, 
+        nickname: values.nickname,
+        avatar: newAvatarUrl 
+      };
+
+      setUserInfo(newUser);
+      localStorage.setItem('USER_INFO', JSON.stringify(newUser));
+      
+      Toast.show({ icon: 'success', content: '修改成功' });
+      setEditVisible(false);
+    } catch (error) {
+      console.log('验证失败', error);
+    }
+  };
+
+  const performLogout = async () => {
+    setLogoutVisible(false);
+    Toast.show({ icon: 'loading', content: '正在退出...', duration: 0 });
+    await new Promise(resolve => setTimeout(resolve, 500));
+    localStorage.removeItem('TOKEN');
+    localStorage.removeItem('USER_INFO');
+    setUserInfo(null);
+    Toast.clear();
+    Toast.show({ icon: 'success', content: '已退出' });
+  };
+
   const handleHeaderClick = () => {
     if (!userInfo) {
       navigate('/login');
     }
   };
 
-  // TabBar 路由跳转逻辑
   const handleTabChange = (key: string) => {
     if (key === 'home') navigate('/');
     if (key === 'order') navigate('/order-list'); 
@@ -86,13 +130,18 @@ const User: React.FC = () => {
         
         <div className={styles.userInfo}>
           {userInfo ? (
-            // 登录了显示这个
             <>
-              <div className={styles.nickname}>{userInfo.nickname}</div>
+              {/* ✅ 4. 这里稍微改了一下结构，为了放编辑图标 */}
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div className={styles.nickname}>{userInfo.nickname}</div>
+                <EditSOutline 
+                  style={{ marginLeft: 8, color: '#666', fontSize: 16, cursor: 'pointer' }} 
+                  onClick={handleEditClick}
+                />
+              </div>
               <div className={styles.userId} style={{opacity: 0.6}}>普通用户</div>
             </>
           ) : (
-            // 没登录显示这个
             <>
               <div className={styles.loginTip}>点击登录/注册</div>
               <div className={styles.subTip}>登录后查看订单</div>
@@ -103,12 +152,10 @@ const User: React.FC = () => {
         <RightOutline color='#ccc' />
       </div>
 
-      {/* 简单列表 */}
       <List>
         <List.Item 
           prefix={<UnorderedListOutline color='#1677ff' />} 
           onClick={() => {
-            // 如果没登录，点击订单也跳去登录
             if (!userInfo) return navigate('/login');
             navigate('/order-list'); 
           }}
@@ -126,7 +173,6 @@ const User: React.FC = () => {
         </List.Item>
       </List>
 
-      {/* 退出按钮：只有登录了才显示 */}
       {userInfo && (
         <div className={styles.logoutSection}>
           <Button block color='danger' onClick={() => setLogoutVisible(true)}>
@@ -135,7 +181,7 @@ const User: React.FC = () => {
         </div>
       )}
 
-      {/* ✅ 确认弹窗 (使用 Dialog 组件) */}
+      {/* 退出确认弹窗 */}
       <Dialog
         visible={logoutVisible}
         content='确定要退出登录吗？'
@@ -143,19 +189,56 @@ const User: React.FC = () => {
         onClose={() => setLogoutVisible(false)}
         actions={[
           [
+            { key: 'cancel', text: '取消', onClick: () => setLogoutVisible(false) },
+            { key: 'confirm', text: '退出', danger: true, bold: true, onClick: performLogout },
+          ],
+        ]}
+      />
+
+      {/* ✅ 5. 新增：编辑信息的弹窗 */}
+      <Dialog
+        visible={editVisible}
+        title="修改信息"
+        content={
+          <Form form={form} layout='horizontal' footer={null}>
+            <Form.Item 
+              name='nickname' 
+              label='昵称' 
+              rules={[{ required: true, message: '昵称不能为空' }]}
+            >
+              <Input placeholder='请输入昵称' clearable />
+            </Form.Item>
+            
+            <Form.Item 
+              name='avatar' 
+              label='头像'
+              // ImageUploader 放在这里
+            >
+              <ImageUploader
+                maxCount={1} // 限制只能传一张
+                upload={mockUpload} // 绑定模拟上传函数
+                onDelete={() => {
+                  return Dialog.confirm({ content: '确定删除头像吗？' })
+                }}
+              />
+            </Form.Item>
+          </Form>
+        }
+        actions={[
+          [
             {
               key: 'cancel',
               text: '取消',
-              onClick: () => setLogoutVisible(false),
+              onClick: () => setEditVisible(false),
             },
             {
               key: 'confirm',
-              text: '退出',
-              danger: true,
+              text: '保存',
               bold: true,
-              onClick: performLogout, // 触发带动画的退出
+              style: { color: '#1677ff' },
+              onClick: handleSaveProfile,
             },
-          ],
+          ]
         ]}
       />
     </div>
