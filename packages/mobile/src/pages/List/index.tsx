@@ -26,7 +26,8 @@ const TYPE_MAP_STR_TO_NUM: Record<string, number> = {
 const List: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams(); // ✅ 这里需要 setSearchParams
   const navigate = useNavigate();
-
+  // 搜索时的关键字
+  const keyword = searchParams.get('keyword') || '';
   // --- 1. 参数提取与默认值处理  ---
   const type = searchParams.get('type');
   const city = searchParams.get('city') || '上海';
@@ -78,7 +79,9 @@ const List: React.FC = () => {
   const handleRightClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setTempDates([urlBeginDate, urlEndDate]); // 重置
-    console.log('去搜索页');
+    // 带着当前参数去搜索页
+    const searchUrl = `/search?city=${city}&beginDate=${safeBeginDate}&endDate=${safeEndDate}&type=${type || ''}`;
+    navigate(searchUrl);
   };
   // 3. 点击 SearchPanel 里的日期 -> 打开日历
   const handleDateClick = () => {
@@ -161,7 +164,8 @@ const List: React.FC = () => {
           beginDate: safeBeginDate, // 传安全的参数
           endDate: safeEndDate,     // 传安全的参数
           type,
-          sortType
+          sortType,
+          keyword
       });
         if (res && res.code === 200) {
           setHotelList(res.data);
@@ -174,7 +178,7 @@ const List: React.FC = () => {
     }
 
     getHotelList();
-  }, [city, type, safeBeginDate, safeEndDate, sortType]) // ✅ 依赖项也改成 safe 变量
+  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword]) // ✅ 依赖项也改成 safe 变量
 
   return (
     <div className={styles.listContainer}>
@@ -203,7 +207,7 @@ const List: React.FC = () => {
             {/* 右侧搜索框 */}
             <div className={styles.inputMock} onClick={handleRightClick}>
                <SearchOutline className={styles.searchIcon} />
-               <span className={styles.placeholder}>位置/品牌/酒店</span>
+               <span className={styles.placeholder} style={{ color: keyword ? '#333' : '#999' }}>位置/品牌/酒店{keyword || '位置/品牌/酒店'}</span>
             </div>
           </div>
         </NavBar>

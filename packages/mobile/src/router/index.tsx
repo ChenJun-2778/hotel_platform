@@ -20,6 +20,7 @@ import List from '@/pages/List';         // 酒店列表/搜索结果页
 import Detail from '@/pages/Detail';     // 酒店详情页
 import CitySelect from '@/pages/CitySelect'; // 城市选择页
 import OrderFill from '@/pages/OrderFill';   // 订单填写页
+import Search from '@/pages/Search'; // Search页面
 
 // 定义路由数组
 const router = createBrowserRouter([
@@ -75,6 +76,11 @@ const router = createBrowserRouter([
     // 填写订单页 (需要参数 id)
     path: '/order/:id',
     element: <OrderFill />,
+  },
+  // 搜索页面
+  {
+    path: '/search',
+    element: <Search />,
   },
   {
     // 404 兜底，跳回首页
