@@ -217,7 +217,7 @@ const List: React.FC = () => {
             {/* 右侧搜索框 */}
             <div className={styles.inputMock} onClick={handleRightClick}>
               <SearchOutline className={styles.searchIcon} />
-              <span className={styles.placeholder} style={{ color: keyword ? '#333' : '#999' }}>位置/品牌/酒店{keyword || '位置/品牌/酒店'}</span>
+              <span className={styles.placeholder} style={{ color: keyword ? '#333' : '#999' }}>{keyword || '位置/品牌/酒店'}</span>
               {keyword && (
                 <div
                   onClick={handleClearKeyword} // 绑定清除事件
