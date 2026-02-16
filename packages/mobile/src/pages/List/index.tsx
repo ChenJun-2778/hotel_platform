@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavBar, CapsuleTabs, DotLoading, Dropdown, Radio, Space, Toast } from 'antd-mobile';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { EnvironmentOutline, SearchOutline } from 'antd-mobile-icons';
+import { EnvironmentOutline, SearchOutline, CloseCircleFill } from 'antd-mobile-icons';
 import styles from './index.module.css';
 import 'dayjs/locale/zh-cn';
 dayjs.locale('zh-cn');
@@ -38,31 +38,30 @@ const List: React.FC = () => {
   // 设置安全值
   const safeBeginDate = rawBegin || dayjs().format('YYYY-MM-DD'); // 默认今天
   const safeEndDate = rawEnd || dayjs().add(1, 'day').format('YYYY-MM-DD'); // 默认明天
-  
+
   // 计算晚数
   const nightCount = dayjs(safeEndDate).diff(dayjs(safeBeginDate), 'day');
-  
+
   // 控制排序
-  const [sortType, setSortType] = useState<string>('def'); 
+  const [sortType, setSortType] = useState<string>('def');
   // 控制 Dropdown 关闭
   const dropdownRef = useRef<any>(null);
-
   // 控制弹窗显示
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   // 城市跳转方法
   const handleCityClick = () => {
     // 把 URL 里的 'domestic' 转成 1，默认 1
     const targetTypeId = TYPE_MAP_STR_TO_NUM[type || 'domestic'] || 1;
-    
+
     // 关闭下拉面板 (为了体验好，跳走前先关掉)
     setShowSearchPanel(false);
-    
+
     // 跳转
     goCities(targetTypeId, city);
   };
   // 左侧：打开弹窗
   const handleLeftClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     setShowSearchPanel(true);
   };
   const urlBeginDate = searchParams.get('beginDate') || dayjs().format('YYYY-MM-DD');
@@ -104,10 +103,10 @@ const List: React.FC = () => {
       newParams.set('beginDate', tempDates[0]);
       newParams.set('endDate', tempDates[1]);
       return newParams;
-  });
+    });
     // Toast.show({ content: '搜索已更新', position: 'bottom' });
   };
-   // 返回逻辑
+  // 返回逻辑
   const handleBack = () => {
     const pathMap: Record<string, string> = { '2': '/overseas', '3': '/hourly', '4': '/inn' };
     navigate(pathMap[type || ''] || '/');
@@ -120,22 +119,22 @@ const List: React.FC = () => {
     </div>
   );
   // 存放列表数据
-  const [hotelList, setHotelList] = useState<any[]>([]); 
+  const [hotelList, setHotelList] = useState<any[]>([]);
   // 加载显示
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   // 监听从城市页面返回
   useEffect(() => {
     const checkSelectedCity = () => {
       const selected = localStorage.getItem('selectedCity');
       if (selected) {
         console.log('检测到新城市，更新草稿:', selected);
-        
+
         // ✅ 关键修改 A：只更新“草稿城市”，不更新 URL
         setTempCity(selected);
-        
+
         // ✅ 关键修改 B：强制打开 SearchPanel，让用户确认
         setShowSearchPanel(true);
-        
+
         localStorage.removeItem('selectedCity');
       }
     };
@@ -153,25 +152,36 @@ const List: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
-
+  // ✅ 清除关键词的逻辑
+  const handleClearKeyword = (e: React.MouseEvent) => {
+    // 1. 阻止冒泡：防止触发父级 div 的点击跳转
+    e.stopPropagation();
+    // 2. 修改 URL参数：删除 keyword
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.delete('keyword');
+      return newParams;
+    });
+    // 3. 此时 URL 变了，useEffect 会自动监听到变化并重新请求数据
+  }
   // 请求酒店列表
   useEffect(() => {
     const getHotelList = async () => {
       setLoading(true);
       try {
-        const res: any = await apiGetHotelList({ 
-          city, 
+        const res: any = await apiGetHotelList({
+          city,
           beginDate: safeBeginDate, // 传安全的参数
           endDate: safeEndDate,     // 传安全的参数
           type,
           sortType,
           keyword
-      });
+        });
         if (res && res.code === 200) {
           setHotelList(res.data);
         }
       } catch (error) {
-        
+
       } finally {
         setLoading(false);
       }
@@ -183,31 +193,44 @@ const List: React.FC = () => {
   return (
     <div className={styles.listContainer}>
       <div className={styles.headerSticky}>
-        <NavBar 
-          onBack={handleBack} 
-          right={renderRight} 
+        <NavBar
+          onBack={handleBack}
+          right={renderRight}
           className={styles.customNav}
         >
           <div className={styles.searchBox}>
             {/* 左侧三个元素 */}
-            <div onClick={handleLeftClick} style={{display: 'flex', alignItems: 'center'}}>
-               {/* 注意：为了布局对齐，建议在这里加个 style flex，或者去 CSS 里把 cityText 的父级处理好 */}
+            <div onClick={handleLeftClick} style={{ display: 'flex', alignItems: 'center' }}>
+              {/* 注意：为了布局对齐，建议在这里加个 style flex，或者去 CSS 里把 cityText 的父级处理好 */}
               <div className={styles.cityText}>{city}</div>
-                <div className={styles.dateRange}>
-                  <div className={styles.dateItem}>
-                    <span>住</span>{dayjs(safeBeginDate).format('MM-DD')}
-                  </div>
-                  <div className={styles.dateItem}>
-                    <span>离</span>{dayjs(safeEndDate).format('MM-DD')}
-                  </div>
+              <div className={styles.dateRange}>
+                <div className={styles.dateItem}>
+                  <span>住</span>{dayjs(safeBeginDate).format('MM-DD')}
                 </div>
+                <div className={styles.dateItem}>
+                  <span>离</span>{dayjs(safeEndDate).format('MM-DD')}
+                </div>
+              </div>
             </div>
             <div className={styles.nightBadge} onClick={handleLeftClick}>{nightCount}晚</div>
-            
+
             {/* 右侧搜索框 */}
             <div className={styles.inputMock} onClick={handleRightClick}>
-               <SearchOutline className={styles.searchIcon} />
-               <span className={styles.placeholder} style={{ color: keyword ? '#333' : '#999' }}>位置/品牌/酒店{keyword || '位置/品牌/酒店'}</span>
+              <SearchOutline className={styles.searchIcon} />
+              <span className={styles.placeholder} style={{ color: keyword ? '#333' : '#999' }}>位置/品牌/酒店{keyword || '位置/品牌/酒店'}</span>
+              {keyword && (
+                <div
+                  onClick={handleClearKeyword} // 绑定清除事件
+                  style={{
+                    padding: '4px', // 增加一点点击热区
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: '#ccc' // 灰色图标不抢眼
+                  }}
+                >
+                  <CloseCircleFill fontSize={16} />
+                </div>
+              )}
             </div>
           </div>
         </NavBar>
@@ -216,16 +239,16 @@ const List: React.FC = () => {
         <div className={styles.dropdownWrapper}>
           <Dropdown ref={dropdownRef}>
             <Dropdown.Item key='sort' title={
-                sortType === 'def' ? '欢迎度排序' : 
+              sortType === 'def' ? '欢迎度排序' :
                 sortType === 'price_asc' ? '价格低到高' : '高分优先'
             }>
               <div style={{ padding: 12 }}>
-                <Radio.Group 
-                    value={sortType} 
-                    onChange={(val) => {
-                        setSortType(val as string);
-                        dropdownRef.current?.close();
-                    }}
+                <Radio.Group
+                  value={sortType}
+                  onChange={(val) => {
+                    setSortType(val as string);
+                    dropdownRef.current?.close();
+                  }}
                 >
                   <Space direction='vertical' block>
                     <Radio block value='def'>欢迎度排序 (默认)</Radio>
@@ -241,68 +264,68 @@ const List: React.FC = () => {
               <div style={{ padding: 12, height: 200 }}>这里可以放商圈/地铁站选择组件...</div>
             </Dropdown.Item>
             <Dropdown.Item key='price' title='价格/星级'>
-               <div style={{ padding: 12 }}>更多筛选...</div>
+              <div style={{ padding: 12 }}>更多筛选...</div>
             </Dropdown.Item>
             <Dropdown.Item key='more' title='筛选'>
-               <div style={{ padding: 12 }}>更多筛选条件...</div>
+              <div style={{ padding: 12 }}>更多筛选条件...</div>
             </Dropdown.Item>
           </Dropdown>
         </div>
 
         <div className={styles.quickTags}>
-             <CapsuleTabs defaultActiveKey='1'>
-                <CapsuleTabs.Tab title='外滩' key='1' />
-                <CapsuleTabs.Tab title='双床房' key='2' />
-                <CapsuleTabs.Tab title='含早餐' key='3' />
-                <CapsuleTabs.Tab title='免费兑早餐' key='4' />
-             </CapsuleTabs>
+          <CapsuleTabs defaultActiveKey='1'>
+            <CapsuleTabs.Tab title='外滩' key='1' />
+            <CapsuleTabs.Tab title='双床房' key='2' />
+            <CapsuleTabs.Tab title='含早餐' key='3' />
+            <CapsuleTabs.Tab title='免费兑早餐' key='4' />
+          </CapsuleTabs>
         </div>
       </div>
 
       <div className={styles.listContent}>
-         {loading ? (
-           <div className={styles.loadingWrapper}>
-             <DotLoading color='primary' /> 正在寻找酒店...
-           </div>
-         ) : (
-           hotelList.map((item, index) => (
-             // ✅ 注意：如果数据有重复，建议 key 加上 index: `${item.id}-${index}`
-             <div key={`${item.id}-${index}`} onClick={() => navigate(
-              `/detail/${item.id}?` + 
-              `beginDate=${safeBeginDate}&` + 
+        {loading ? (
+          <div className={styles.loadingWrapper}>
+            <DotLoading color='primary' /> 正在寻找酒店...
+          </div>
+        ) : (
+          hotelList.map((item, index) => (
+            // ✅ 注意：如果数据有重复，建议 key 加上 index: `${item.id}-${index}`
+            <div key={`${item.id}-${index}`} onClick={() => navigate(
+              `/detail/${item.id}?` +
+              `beginDate=${safeBeginDate}&` +
               `endDate=${safeEndDate}`
             )}>
-               <HotelCard hotel={item} />
-             </div>
-           ))
-         )}
-         
-         {!loading && hotelList.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>暂无数据</div>
-         )}
+              <HotelCard hotel={item} />
+            </div>
+          ))
+        )}
+
+        {!loading && hotelList.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>暂无数据</div>
+        )}
       </div>
 
       {/* 下拉编辑框 */}
-      <SearchPanel 
-         visible={showSearchPanel}
-         onClose={() => setShowSearchPanel(false)}
-         // 这里展示的是“草稿”数据
-         city={tempCity}         // 传 tempCity
-         beginDate={tempDates[0]} // 传 tempDates
-         endDate={tempDates[1]}
-         nightCount={dayjs(tempDates[1]).diff(dayjs(tempDates[0]), 'day')}
-         onConfirm={handleConfirm}
-         onDateClick={handleDateClick} 
-         onCityClick={handleCityClick}
-       />
-       {/*  日期选择 */}
-       <DateRangePicker 
-         visible={showCalendar}
-         onClose={() => setShowCalendar(false)}
-         // 把字符串转回 Date 对象传给日历做回显
-         defaultDate={[new Date(tempDates[0]), new Date(tempDates[1])]}
-         onConfirm={handleCalendarConfirm}
-       />
+      <SearchPanel
+        visible={showSearchPanel}
+        onClose={() => setShowSearchPanel(false)}
+        // 这里展示的是“草稿”数据
+        city={tempCity}         // 传 tempCity
+        beginDate={tempDates[0]} // 传 tempDates
+        endDate={tempDates[1]}
+        nightCount={dayjs(tempDates[1]).diff(dayjs(tempDates[0]), 'day')}
+        onConfirm={handleConfirm}
+        onDateClick={handleDateClick}
+        onCityClick={handleCityClick}
+      />
+      {/*  日期选择 */}
+      <DateRangePicker
+        visible={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        // 把字符串转回 Date 对象传给日历做回显
+        defaultDate={[new Date(tempDates[0]), new Date(tempDates[1])]}
+        onConfirm={handleCalendarConfirm}
+      />
     </div>
   );
 };
