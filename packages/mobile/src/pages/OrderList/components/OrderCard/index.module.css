@@ -1,0 +1,116 @@
+/* src/components/OrderCard/index.module.css */
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f7f7f7;
+}
+
+.hotelName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  /* 防止标题太长换行 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.statusTag {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 状态颜色 */
+.status_pending { color: #ff8f1f; }
+.status_confirmed { color: #1677ff; }
+.status_completed { color: #00b578; }
+.status_canceled { color: #999; }
+
+.cardBody {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+/* 🔥 关键修复：限制图片大小，否则会撑爆屏幕 */
+.roomImg {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #eee;
+  flex-shrink: 0; /* 防止被挤扁 */
+}
+
+.infoCol {
+  flex: 1;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden; /* 防止文字溢出 */
+}
+
+.roomName {
+  font-size: 15px;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.dateRange {
+  font-size: 12px;
+  color: #666;
+  background: #f7f7f7;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  margin-top: 8px;
+}
+
+.priceLabel {
+  font-size: 12px;
+  color: #999;
+  margin-right: 4px;
+  margin-bottom: 2px;
+}
+
+.currency {
+  font-size: 12px;
+  color: #ff3141;
+  font-weight: bold;
+}
+
+.price {
+  font-size: 18px;
+  color: #ff3141;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f7f7f7;
+}

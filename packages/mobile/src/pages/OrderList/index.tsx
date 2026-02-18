@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { NavBar, Tabs, Button, Toast, TabBar } from 'antd-mobile'; // 👈 引入 TabBar
-import { useNavigate } from 'react-router-dom';
+import { NavBar, Tabs } from 'antd-mobile'; // 1. 删掉了 Button, Toast, TabBar
+// import { useNavigate } from 'react-router-dom'; // 2. 如果这里没有其他跳转逻辑，useNavigate 也可以删掉
+import OrderCard from './components/OrderCard'; // 引入子组件
 import styles from './index.module.css';
 
-// ... (MOCK_ORDERS 数据保持不变，省略以节省空间) ...
+// ... (MOCK_ORDERS 数据保持不变) ...
 const MOCK_ORDERS = [
+  // ... 你的数据 ...
   {
     id: 'ORD2026021101',
     hotelName: '我的豪华酒店',
@@ -17,7 +19,6 @@ const MOCK_ORDERS = [
     status: 'confirmed',
     statusText: '待入住'
   },
-  // ... 其他数据 ...
   {
     id: 'ORD2026021102',
     hotelName: '舒适商务酒店',
@@ -57,36 +58,23 @@ const MOCK_ORDERS = [
 ];
 
 const OrderList: React.FC = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // 如果没用到跳转，这行也能删
   const [activeTab, setActiveTab] = useState('all');
 
+  // 筛选逻辑保留
   const filteredList = useMemo(() => {
     if (activeTab === 'all') return MOCK_ORDERS;
     return MOCK_ORDERS.filter(item => item.status === activeTab);
   }, [activeTab]);
 
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'pending': return styles.status_pending;
-      case 'confirmed': return styles.status_confirmed;
-      case 'completed': return styles.status_completed;
-      default: return styles.status_canceled;
-    }
-  };
-
-  // ✅ 底部 TabBar 跳转逻辑
-  const handleTabChange = (key: string) => {
-    if (key === 'home') navigate('/');
-    if (key === 'order') navigate('/order-list'); // 已经在当前页，其实不跳也行，但保持一致
-    if (key === 'user') navigate('/user');
-  };
+  // ❌ 删除了 getStatusClass (逻辑移到了 OrderCard)
+  // ❌ 删除了 handleTabChange (逻辑移到了 MainLayout)
 
   return (
     <div className={styles.container}>
       
       {/* 顶部固定区域 */}
       <div className={styles.topFixedArea}>
-        {/* 🔥 修改：去掉了 back={null} 或 onBack，作为主页通常不显示返回箭头 */}
         <NavBar back={null} style={{ background: '#fff' }}>订单列表</NavBar>
         
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
@@ -104,43 +92,8 @@ const OrderList: React.FC = () => {
           <div className={styles.empty}>暂无相关订单</div>
         ) : (
           filteredList.map(item => (
-            <div key={item.id} className={styles.card}>
-              <div className={styles.cardHeader}>
-                <div className={styles.hotelName}>{item.hotelName}</div>
-                <div className={`${styles.statusTag} ${getStatusClass(item.status)}`}>
-                  {item.statusText}
-                </div>
-              </div>
-              <div className={styles.cardBody}>
-                <img src={item.image} className={styles.roomImg} alt="" />
-                <div className={styles.infoCol}>
-                  <div className={styles.roomName}>{item.roomName}</div>
-                  <div className={styles.dateRange}>
-                    {item.checkIn} 至 {item.checkOut} · {item.nights}晚
-                  </div>
-                  <div className={styles.priceRow}>
-                     <span className={styles.priceLabel}>总价</span>
-                     <span className={styles.currency}>¥</span>
-                     <span className={styles.price}>{item.price}</span>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.cardFooter}>
-                 {item.status === 'pending' && (
-                   <>
-                     <Button size='small' onClick={() => { Toast.show('订单已取消'); }}>取消</Button>
-                     <div style={{width: 8}}></div>
-                     <Button size='small' color='primary' onClick={() => { Toast.show('支付成功'); }}>去支付</Button>
-                   </>
-                 )}
-                 {item.status === 'confirmed' && (
-                    <Button size='small' onClick={() => { Toast.show('已联系客服'); }}>联系酒店</Button>
-                 )}
-                 {(item.status === 'completed' || item.status === 'canceled') && (
-                    <Button size='small' color='primary' fill='outline' onClick={() => { navigate('/'); }}>再次预订</Button>
-                 )}
-              </div>
-            </div>
+            // ✅ 极其简洁：只负责循环和传数据
+            <OrderCard key={item.id} data={item} />
           ))
         )}
       </div>
