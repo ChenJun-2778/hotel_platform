@@ -7,6 +7,8 @@ const roomsRouter = require("./routes/rooms");
 const loginPCRouter = require("./routes/loginPC");
 const hotelsReviewRouter = require("./routes/hotelsReview");
 
+// 移动端
+const loginMobileRouter = require("./routes/loginMobile");
 // 中间件 - 解析 JSON 请求体
 app.use(express.json());
 
@@ -35,6 +37,8 @@ app.use("/api/hotels", hotelsRouter);
 app.use("/api/rooms", roomsRouter);
 app.use("/api/loginPC", loginPCRouter);
 app.use("/api/hotelsReview", hotelsReviewRouter);
+// 移动端 API 路由
+app.use("/api/loginMobile", loginMobileRouter);
 
 // 根路由 - API 信息
 app.get("/", (req, res) => {
