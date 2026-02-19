@@ -5,7 +5,7 @@ import type { LoginParams, ApiResponse, UserInfo } from './type';
  * @param data 登录参数 (LoginParams)
  * @returns 返回一个 Promise，最终解析为包含 UserInfo 的 ApiResponse
  */
-export const loginMobile = (data: LoginParams) => {
+export const apiLogin = (data: LoginParams) => {
     // request.post<参数1, 参数2> 
     // 参数1: axios 内部使用的类型(一般写 any)
     // 参数2: 最终返回给页面的数据类型 (ApiResponse<UserInfo>)

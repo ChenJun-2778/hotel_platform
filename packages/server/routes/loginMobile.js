@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs'); 
+const bcrypt = require('bcryptjs');
 const { query } = require('../config/database');
+// jwt库生成token
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = 'my_hotel_super_secret_key_2026';
 
 /**
  * 生成随机账号 (移动端用户)
@@ -83,13 +86,13 @@ router.post('/login', async (req, res) => {
         return res.status(401).json({ success: false, message: '该手机号未注册' });
       }
       user = users[0];
-    } 
+    }
     // --- 方式 B：账号密码登录 (备用) ---
     else if (login_type === 'account') {
       if (!account || !password) {
         return res.status(400).json({ success: false, message: '账号和密码不能为空' });
       }
-      
+
       const users = await query('SELECT * FROM users WHERE account = ? AND is_deleted = 0', [account.trim()]);
       if (users.length === 0) {
         return res.status(401).json({ success: false, message: '账号不存在' });
@@ -114,12 +117,31 @@ router.post('/login', async (req, res) => {
 
     // 更新登录时间并返回数据
     await query('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id]);
+    // 3. 新增：生成真正的 Token
+    // 第一个参数是“载荷”(Payload)：你想在手环里存什么公开信息（绝对不要存密码！）
+    // 第二个参数是刚才定义的秘钥
+    // 第三个参数是过期时间（比如 24 小时）
+    const token = jwt.sign(
+      {
+        id: user.id,
+        account: user.account,
+        role_type: user.role_type
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
     delete user.password; // 绝不能把密码返回给前端！
-
+    user.last_login_at = new Date();
     res.status(200).json({
       success: true,
       message: '登录成功',
-      data: user
+      data: {
+        token: token,       // <--- 这里！真正的 Token 发出去了！
+        userInfo: {
+          ...user,
+          avatar: user.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
+        }      // 把用户信息包在 userInfo 里，迎合前端的格式
+      }
     });
 
   } catch (error) {

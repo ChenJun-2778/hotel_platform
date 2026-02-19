@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserOutline, LockOutline, EyeInvisibleOutline, EyeOutline } from 'antd-mobile-icons';
 import styles from './index.module.css';
 // 假设这是你之后要换成的真实 API
-// import { apiLogin } from '@/api/user';
+// import { apiLogin } from '@/api/Login/index';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
