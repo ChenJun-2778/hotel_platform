@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { NavBar, Avatar, List, Button, Dialog, Toast, ImageUploader, Form, Input } from 'antd-mobile'; // 👈 1. 引入 Form, Input
+import { NavBar, Avatar, List, Button, Dialog, Toast, ImageUploader, Form, Input } from 'antd-mobile';
 import { useNavigate } from 'react-router-dom';
 import { 
   UnorderedListOutline, 
   RightOutline,
   SetOutline,
-  EditSOutline // 👈 2. 引入编辑图标
+  EditSOutline 
 } from 'antd-mobile-icons';
 import styles from './index.module.css';
 
@@ -18,13 +18,12 @@ const User: React.FC = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<any>(null);
   
-  // 控制退出弹窗
+  // 控制弹窗
   const [logoutVisible, setLogoutVisible] = useState(false);
-
-  // ✅ 3. 新增：控制“修改信息”弹窗
   const [editVisible, setEditVisible] = useState(false);
-  const [form] = Form.useForm(); // 创建表单实例
+  const [form] = Form.useForm(); 
 
+  // 1. 初始化读取本地用户信息
   useEffect(() => {
     const storedUser = localStorage.getItem('USER_INFO');
     if (storedUser) {
@@ -35,16 +34,26 @@ const User: React.FC = () => {
       }
     }
   }, []);
-  // 在真实项目中，这里会调用 apiUpload(file) 把图片传给服务器，然后返回 http://... 的链接
+
+  // 🌟 2. 核心：统一的权限拦截函数
+  const requireAuth = (targetPath: string) => {
+    if (userInfo) {
+      // 已登录，直接放行跳转
+      navigate(targetPath);
+    } else {
+      // 未登录，拦截并跳去登录
+      Toast.show('请先登录');
+      navigate('/login');
+    }
+  };
+
+  // 模拟图片上传
   const mockUpload = async (file: File): Promise<ImageUploadItem> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        // 模拟延时，假装在上传
         setTimeout(() => {
-          resolve({
-            url: e.target?.result as string, // 这里拿到的是 base64
-          });
+          resolve({ url: e.target?.result as string });
         }, 500);
       };
       reader.readAsDataURL(file);
@@ -53,14 +62,13 @@ const User: React.FC = () => {
 
   // 点击编辑按钮
   const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation(); // 阻止冒泡，防止触发外层 header 的点击事件
     if (userInfo) {
-      // 构造 ImageUploader 需要的 fileList 格式: [{ url: '...' }]
       const avatarFileList = userInfo.avatar ? [{ url: userInfo.avatar }] : [];
-
+      // ✅ 字段对齐：用 username 替换原来的 nickname
       form.setFieldsValue({
-        nickname: userInfo.nickname,
-        avatar: avatarFileList, // 把数组传给上传组件
+        username: userInfo.username,
+        avatar: avatarFileList, 
       });
       setEditVisible(true);
     }
@@ -71,19 +79,19 @@ const User: React.FC = () => {
     try {
       const values = await form.validateFields();
       
-      // 处理头像数据：values.avatar 是一个数组，我们需要取出第一张图的 url
       let newAvatarUrl = '';
       if (values.avatar && values.avatar.length > 0) {
         newAvatarUrl = values.avatar[0].url;
       }
 
-      // 构造新的用户信息
+      // ✅ 字段对齐：更新 username
       const newUser = { 
         ...userInfo, 
-        nickname: values.nickname,
+        username: values.username,
         avatar: newAvatarUrl 
       };
 
+      // 💡 提示：真实开发时，这里需要调接口 apiUpdateUser(newUser) 同步给后端
       setUserInfo(newUser);
       localStorage.setItem('USER_INFO', JSON.stringify(newUser));
       
@@ -94,34 +102,36 @@ const User: React.FC = () => {
     }
   };
 
+  // 退出登录
   const performLogout = async () => {
     setLogoutVisible(false);
     Toast.show({ icon: 'loading', content: '正在退出...', duration: 0 });
+    
+    // 模拟网络延迟
     await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // 清除本地缓存
     localStorage.removeItem('TOKEN');
     localStorage.removeItem('USER_INFO');
     setUserInfo(null);
+    
     Toast.clear();
     Toast.show({ icon: 'success', content: '已退出' });
   };
 
+  // 点击头部区域
   const handleHeaderClick = () => {
+    // 没登录点头部就去登录，登录了点头部什么都不做（因为有专门的编辑按钮了）
     if (!userInfo) {
       navigate('/login');
     }
-  };
-
-  const handleTabChange = (key: string) => {
-    if (key === 'home') navigate('/');
-    if (key === 'order') navigate('/order-list'); 
-    if (key === 'user') navigate('/user');
   };
 
   return (
     <div className={styles.container}>
       <NavBar back={null} style={{ background: '#fff' }}>个人中心</NavBar>
 
-      {/* 头部区域 */}
+      {/* ========== 头部区域 ========== */}
       <div className={styles.header} onClick={handleHeaderClick}>
         <Avatar 
             src={userInfo?.avatar || ''} 
@@ -131,48 +141,52 @@ const User: React.FC = () => {
         <div className={styles.userInfo}>
           {userInfo ? (
             <>
-              {/* ✅ 4. 这里稍微改了一下结构，为了放编辑图标 */}
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div className={styles.nickname}>{userInfo.nickname}</div>
+                {/* ✅ 渲染后端的 username */}
+                <div className={styles.nickname}>{userInfo.username}</div>
                 <EditSOutline 
                   style={{ marginLeft: 8, color: '#666', fontSize: 16, cursor: 'pointer' }} 
                   onClick={handleEditClick}
                 />
               </div>
-              <div className={styles.userId} style={{opacity: 0.6}}>普通用户</div>
+              <div className={styles.userId} style={{opacity: 0.6}}>账号: {userInfo.account}</div>
             </>
           ) : (
             <>
-              <div className={styles.loginTip}>点击登录/注册</div>
-              <div className={styles.subTip}>登录后查看订单</div>
+              <div className={styles.loginTip}>未登录</div>
+              <div className={styles.subTip}>点击登录 / 注册</div>
             </>
           )}
         </div>
         
-        <RightOutline color='#ccc' />
+        {/* 如果没登录，显示右侧箭头引导去登录 */}
+        {!userInfo && <RightOutline color='#ccc' />}
       </div>
 
+      {/* ========== 列表区域 (保留外壳，点击拦截) ========== */}
       <List>
         <List.Item 
           prefix={<UnorderedListOutline color='#1677ff' />} 
-          onClick={() => {
-            if (!userInfo) return navigate('/login');
-            navigate('/order-list'); 
-          }}
+          // ✅ 使用统一拦截函数
+          onClick={() => requireAuth('/order-list')} 
           extra={<RightOutline />}
+          clickable
         >
           我的订单
         </List.Item>
         
         <List.Item 
           prefix={<SetOutline />} 
-          onClick={() => Toast.show('暂未开发')}
+          // ✅ 使用统一拦截函数
+          onClick={() => requireAuth('/settings')}
           extra={<RightOutline />}
+          clickable
         >
           设置
         </List.Item>
       </List>
 
+      {/* ========== 退出登录按钮 ========== */}
       {userInfo && (
         <div className={styles.logoutSection}>
           <Button block color='danger' onClick={() => setLogoutVisible(true)}>
@@ -181,7 +195,7 @@ const User: React.FC = () => {
         </div>
       )}
 
-      {/* 退出确认弹窗 */}
+      {/* ========== 退出确认弹窗 ========== */}
       <Dialog
         visible={logoutVisible}
         content='确定要退出登录吗？'
@@ -195,14 +209,14 @@ const User: React.FC = () => {
         ]}
       />
 
-      {/* ✅ 5. 新增：编辑信息的弹窗 */}
+      {/* ========== 修改信息弹窗 ========== */}
       <Dialog
         visible={editVisible}
         title="修改信息"
         content={
           <Form form={form} layout='horizontal' footer={null}>
             <Form.Item 
-              name='nickname' 
+              name='username' 
               label='昵称' 
               rules={[{ required: true, message: '昵称不能为空' }]}
             >
@@ -212,31 +226,24 @@ const User: React.FC = () => {
             <Form.Item 
               name='avatar' 
               label='头像'
-              // ImageUploader 放在这里
             >
               <ImageUploader
-                maxCount={1} // 限制只能传一张
-                upload={mockUpload} // 绑定模拟上传函数
-                onDelete={() => {
-                  return Dialog.confirm({ content: '确定删除头像吗？' })
-                }}
+                maxCount={1}
+                upload={mockUpload}
+                onDelete={() => Dialog.confirm({ content: '确定删除头像吗？' })}
               />
             </Form.Item>
           </Form>
         }
         actions={[
           [
-            {
-              key: 'cancel',
-              text: '取消',
-              onClick: () => setEditVisible(false),
-            },
-            {
-              key: 'confirm',
-              text: '保存',
-              bold: true,
-              style: { color: '#1677ff' },
-              onClick: handleSaveProfile,
+            { key: 'cancel', text: '取消', onClick: () => setEditVisible(false) },
+            { 
+              key: 'confirm', 
+              text: '保存', 
+              bold: true, 
+              style: { color: '#1677ff' }, 
+              onClick: handleSaveProfile 
             },
           ]
         ]}

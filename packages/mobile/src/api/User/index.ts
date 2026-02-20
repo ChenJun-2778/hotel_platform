@@ -6,5 +6,5 @@ import type { LoginParams, ApiResponse, UserInfo } from './type';
  * @returns 返回一个 Promise，最终解析为包含 UserInfo 的 ApiResponse
  */
 export const apiLogin = (data: LoginParams) => {
-  return request.post<any, ApiResponse<UserInfo>>('http://localhost:3000/api/loginMobile/login', data);
+  return request.post<any, ApiResponse<UserInfo>>('/api/loginMobile/login', data);
 };
