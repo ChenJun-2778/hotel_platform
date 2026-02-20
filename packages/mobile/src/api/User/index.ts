@@ -6,8 +6,5 @@ import type { LoginParams, ApiResponse, UserInfo } from './type';
  * @returns 返回一个 Promise，最终解析为包含 UserInfo 的 ApiResponse
  */
 export const apiLogin = (data: LoginParams) => {
-    // request.post<参数1, 参数2> 
-    // 参数1: axios 内部使用的类型(一般写 any)
-    // 参数2: 最终返回给页面的数据类型 (ApiResponse<UserInfo>)
-    return request.post<any, ApiResponse<UserInfo>>('/api/loginMobile/login', data);
-  };
+  return request.post<any, ApiResponse<UserInfo>>('http://localhost:3000/api/loginMobile/login', data);
+};

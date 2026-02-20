@@ -1,29 +1,37 @@
 /** * 1. 定义后端统一返回的数据结构 
- * T 泛型代表 data 里面的具体内容，默认是 any
  */
 export interface ApiResponse<T = any> {
-    success: boolean;
-    message: string;
-    data: T;
-  }
+  success: boolean;
+  message: string;
+  data: T;
+}
 
-/** * 2. 定义登录成功的用户信息结构 (根据你后端的返回)
+/** * 2. 定义具体的用户信息结构 (对应后端返回的 data.userInfo)
  */
 export interface UserInfo {
-    id: number;
-    account: string;
-    username: string;
-    phone: string;
-    role_type: number;
-  }
+  id: number;
+  account: string;
+  username: string;
+  phone: string;
+  email: string;
+  role_type: number;
+  avatar?: string | null; // 后端有这个字段，加上更好
+  status?: number;
+}
 
-/** * 3. 定义登录请求的入参参数
- * 使用 ? 表示这个字段是可选的（因为手机号登录不需要密码，账号登录不需要验证码）
+/** * 🌟 3. 新增：专门定义登录成功后，后端返回的完整的 data 结构
+ */
+export interface UserInfo {
+  token: string;
+  userInfo: UserInfo;
+}
+
+/** * 4. 定义登录请求的入参参数
  */
 export interface LoginParams {
-    login_type: 'phone' | 'account'; // 必须是这两个值之一
-    phone?: string;
-    code?: string;
-    account?: string;
-    password?: string;
-  }
+  login_type: 'phone' | 'account';
+  phone?: string;
+  code?: string;
+  account?: string;
+  password?: string;
+}
