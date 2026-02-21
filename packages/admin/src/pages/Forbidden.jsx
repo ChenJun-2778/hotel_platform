@@ -9,9 +9,9 @@ const Forbidden = () => {
 
   const handleBackHome = () => {
     // 根据用户角色跳转到对应的首页
-    if (user?.role === 'admin') {
+    if (user?.role_type === 1) {
       navigate('/admin/dashboard');
-    } else if (user?.role === 'merchant') {
+    } else if (user?.role_type === 2) {
       navigate('/merchant/dashboard');
     } else {
       navigate('/login');

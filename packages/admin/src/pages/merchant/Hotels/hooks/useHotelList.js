@@ -2,24 +2,54 @@ import { useState, useEffect } from 'react';
 import { message } from 'antd';
 import { createHotel, getHotelList, updateHotel, updateHotelStatus } from '../../../../services/hotelService';
 import { HOTEL_STATUS } from '../../../../constants/hotelStatus';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 /**
  * 酒店列表管理 Hook
  */
 const useHotelList = () => {
+  const { user } = useAuth();
   const [hotelList, setHotelList] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   // 加载酒店列表
-  const loadHotelList = async () => {
+  const loadHotelList = async (page = pagination.current, pageSize = pagination.pageSize, keyword = searchKeyword) => {
     setLoading(true);
     try {
-      const response = await getHotelList();
-      console.log('后端返回的原始数据:', response);
+      // 构建请求参数
+      const params = {
+        page,
+        pageSize,
+      };
+      
+      // 如果有搜索关键词，添加到参数中
+      if (keyword) {
+        params.keyword = keyword;
+      }
+      
+      // 商户用户只能看到自己的酒店，添加 user_id 参数
+      if (user?.role_type === 2 && user?.id) {
+        params.user_id = user.id;
+        console.log('✅ 商户用户，添加 user_id 过滤:', user.id);
+      }
+      
+      console.log('🔍 请求参数:', params);
+      
+      const response = await getHotelList(params);
+      console.log('✅ 后端返回的原始数据:', response);
       
       // 后端返回格式：{ data: { list: [], pagination: {} }, success: true, message: '' }
       const hotels = response.data?.list || response.list || response.data || response || [];
-      console.log('解析后的酒店列表:', hotels);
+      const paginationData = response.data?.pagination || response.pagination || {};
+      
+      console.log('✅ 解析后的酒店列表:', hotels);
+      console.log('✅ 分页信息:', paginationData);
       
       // 确保每条数据都有唯一的 id
       const hotelsWithId = Array.isArray(hotels) 
@@ -28,96 +58,36 @@ const useHotelList = () => {
             id: hotel.id || hotel._id || hotel.hotel_id || `hotel-${index}-${Date.now()}`
           }))
         : [];
+      
       setHotelList(hotelsWithId);
       
-      // 假数据（已注释）
-      // const mockHotels = [
-      //   {
-      //     id: 1,
-      //     name: '易宿豪华酒店',
-      //     name_en: 'Yisu Luxury Hotel',
-      //     brand: '易宿连锁',
-      //     star_level: 5,
-      //     country: '中国',
-      //     province: '浙江省',
-      //     city: '杭州市',
-      //     district: '西湖区',
-      //     address: '文三路123号',
-      //     phone: '0571-12345678',
-      //     contact_person: '张经理',
-      //     contact_phone: '+86-13800138000',
-      //     facilities: ['WiFi', '停车场', '餐厅', '健身房', '游泳池'],
-      //     cover_image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
-      //     images: [
-      //       'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
-      //       'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',
-      //     ],
-      //     description: '位于市中心，交通便利，环境优雅',
-      //     check_in_time: '14:00',
-      //     check_out_time: '12:00',
-      //     total_rooms: 50,
-      //     status: 1,
-      //   },
-      //   {
-      //     id: 2,
-      //     name: '易宿商务酒店',
-      //     name_en: 'Yisu Business Hotel',
-      //     brand: '易宿连锁',
-      //     star_level: 4,
-      //     country: '中国',
-      //     province: '浙江省',
-      //     city: '杭州市',
-      //     district: '滨江区',
-      //     address: '江南大道456号',
-      //     phone: '0571-23456789',
-      //     contact_person: '李经理',
-      //     contact_phone: '+86-13900139000',
-      //     facilities: ['WiFi', '停车场', '会议室', '商务中心'],
-      //     cover_image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800',
-      //     images: [
-      //       'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800',
-      //     ],
-      //     description: '商务出行首选，配套设施齐全',
-      //     check_in_time: '14:00',
-      //     check_out_time: '12:00',
-      //     total_rooms: 30,
-      //     status: 1,
-      //   },
-      //   {
-      //     id: 3,
-      //     name: '易宿精品民宿',
-      //     name_en: 'Yisu Boutique Inn',
-      //     brand: '易宿连锁',
-      //     star_level: 3,
-      //     country: '中国',
-      //     province: '浙江省',
-      //     city: '杭州市',
-      //     district: '西湖区',
-      //     address: '龙井路789号',
-      //     phone: '0571-34567890',
-      //     contact_person: '王经理',
-      //     contact_phone: '+86-13700137000',
-      //     facilities: ['WiFi', '停车场', '茶室', '花园'],
-      //     cover_image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800',
-      //     images: [
-      //       'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800',
-      //       'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800',
-      //     ],
-      //     description: '西湖边的精品民宿，环境清幽',
-      //     check_in_time: '15:00',
-      //     check_out_time: '11:00',
-      //     total_rooms: 15,
-      //     status: 2,
-      //   },
-      // ];
-      // setHotelList(mockHotels);
+      // 更新分页信息
+      setPagination({
+        current: paginationData.current || page,
+        pageSize: paginationData.pageSize || pageSize,
+        total: paginationData.total || hotelsWithId.length,
+      });
+      
     } catch (error) {
-      console.error('加载酒店列表失败:', error);
+      console.error('❌ 加载酒店列表失败:', error);
       message.error('加载酒店列表失败，请重试');
       setHotelList([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  // 搜索酒店
+  const searchHotels = async (keyword) => {
+    console.log('🔍 搜索关键词:', keyword);
+    setSearchKeyword(keyword);
+    await loadHotelList(1, pagination.pageSize, keyword);
+  };
+
+  // 分页变化
+  const handlePageChange = async (page, pageSize) => {
+    console.log('📄 分页变化 - 页码:', page, '每页数量:', pageSize);
+    await loadHotelList(page, pageSize, searchKeyword);
   };
 
   // 添加酒店
@@ -186,7 +156,11 @@ const useHotelList = () => {
   return {
     hotelList,
     loading,
+    pagination,
+    searchKeyword,
     loadHotelList,
+    searchHotels,
+    handlePageChange,
     addHotel,
     updateHotelData,
     toggleHotelStatus,

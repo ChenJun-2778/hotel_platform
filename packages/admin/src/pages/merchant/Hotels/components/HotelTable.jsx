@@ -7,7 +7,9 @@ import { getHotelTableColumns } from './HotelTableColumns';
  */
 const HotelTable = ({ 
   dataSource, 
-  loading, 
+  loading,
+  pagination,
+  onPageChange,
   onView, 
   onEdit,
   onToggleStatus,
@@ -22,10 +24,14 @@ const HotelTable = ({
       rowKey="id"
       scroll={{ x: 'max-content' }}
       pagination={{
-        pageSize: 10,
+        current: pagination?.current || 1,
+        pageSize: pagination?.pageSize || 10,
+        total: pagination?.total || 0,
         showTotal: (total) => `共 ${total} 条`,
         showSizeChanger: true,
         showQuickJumper: true,
+        onChange: onPageChange,
+        onShowSizeChange: onPageChange,
       }}
       locale={{
         emptyText: '暂无酒店数据，点击上方"添加酒店"按钮创建第一个酒店',

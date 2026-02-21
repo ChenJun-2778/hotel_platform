@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout as AntLayout, Menu, Dropdown, Avatar } from 'antd';
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { adminMenus, merchantMenus } from '../config/menus';
+import { useAuth } from '../contexts/AuthContext';
 import './Layout.css';
 
 const { Header, Sider, Content } = AntLayout;
@@ -10,6 +11,7 @@ const { Header, Sider, Content } = AntLayout;
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   // TODO: 后续根据用户角色动态获取菜单
   // 暂时根据路径判断使用哪个菜单
@@ -19,7 +21,7 @@ const Layout = () => {
 
   // 处理登出
   const handleLogout = () => {
-    // TODO: 后续添加登出逻辑
+    logout();
     navigate('/login');
   };
 
@@ -121,8 +123,8 @@ const Layout = () => {
             placement="bottomRight"
           >
             <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Avatar icon={<UserOutlined />} />
-              <span>开发模式</span>
+              <Avatar icon={<UserOutlined />} src={user?.avatar_url} />
+              <span>{user?.username || '用户'}</span>
             </div>
           </Dropdown>
         </Header>

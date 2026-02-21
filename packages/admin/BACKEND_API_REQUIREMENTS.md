@@ -52,18 +52,14 @@
 | brand | VARCHAR | 100 | 否 | 品牌 | 易宿连锁 |
 | star_rating | TINYINT | - | 是 | 星级：1-5 | 5 |
 | room_number | INT | - | 是 | 房间总数 | 120 |
-| location | VARCHAR | 200 | 是 | 完整地址 | 浙江省杭州市西湖区文三路123号 |
-| country | VARCHAR | 50 | 是 | 国家 | 中国 |
-| province | VARCHAR | 50 | 是 | 省份 | 浙江省 |
-| city | VARCHAR | 50 | 是 | 城市 | 杭州市 |
-| district | VARCHAR | 50 | 是 | 区县 | 西湖区 |
+| location | VARCHAR | 200 | 是 | 所在区域（省市区） | 浙江省杭州市西湖区 |
 | address | VARCHAR | 200 | 是 | 详细地址 | 文三路123号 |
 | hotel_phone | VARCHAR | 20 | 是 | 酒店电话 | 0571-12345678 |
 | contact | VARCHAR | 50 | 是 | 联系人 | 张经理 |
 | contact_phone | VARCHAR | 20 | 是 | 联系电话 | 13800138000 |
 | hotel_facilities | TEXT | - | 否 | 酒店设施（逗号分隔） | 免费WiFi,停车场,餐厅 |
-| check_in_time | DATETIME | - | 是 | 入住时间 | 2000-01-01 14:00:00 |
-| check_out_time | DATETIME | - | 是 | 退房时间 | 2000-01-01 12:00:00 |
+| check_in_time | DATETIME | - | 是 | 入住时间 | 2026-02-10 14:00:00 |
+| check_out_time | DATETIME | - | 是 | 退房时间 | 2026-02-12 12:00:00 |
 | description | TEXT | - | 否 | 酒店描述 | 位于市中心... |
 | cover_image | VARCHAR | 500 | 否 | 封面图片URL | https://... |
 | images | TEXT | - | 否 | 图片列表（JSON数组字符串） | ["https://..."] |
@@ -74,7 +70,12 @@
 
 **索引**:
 - PRIMARY KEY: id
-- INDEX: merchant_id, status, city
+- INDEX: merchant_id, status, location
+
+**注意**:
+- `location` 字段存储完整的省市区信息，如"浙江省杭州市西湖区"或"上海"
+- `check_in_time` 和 `check_out_time` 存储完整的日期时间，前端只显示时间部分
+- `created_at` 和 `updated_at` 由数据库自动管理
 
 ---
 
