@@ -20,6 +20,10 @@ import List from '@/pages/List';         // 酒店列表/搜索结果页
 import Detail from '@/pages/Detail';     // 酒店详情页
 import CitySelect from '@/pages/CitySelect'; // 城市选择页
 import OrderFill from '@/pages/OrderFill';   // 订单填写页
+import Search from '@/pages/Search'; // Search页面
+
+// 引入路由鉴权组件
+import { AuthRoute } from '@/components/AuthRoute';
 
 // 定义路由数组
 const router = createBrowserRouter([
@@ -41,7 +45,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'order-list', // 对应底部“订单”Tab
-        element: <OrderList />,
+        element: (
+          <AuthRoute>
+            <OrderList />
+          </AuthRoute>
+        ),
       },
       {
         path: 'user', // 对应底部“我的”Tab
@@ -74,7 +82,16 @@ const router = createBrowserRouter([
   {
     // 填写订单页 (需要参数 id)
     path: '/order/:id',
-    element: <OrderFill />,
+    element: (
+      <AuthRoute>
+        <OrderFill />
+      </AuthRoute>
+    ),
+  },
+  // 搜索页面
+  {
+    path: '/search',
+    element: <Search />,
   },
   {
     // 404 兜底，跳回首页

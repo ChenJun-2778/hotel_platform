@@ -79,19 +79,40 @@
 
 /* 搜索词占位：让它占据胶囊内剩余的所有空间 */
 .inputMock {
-  flex: 1; 
+  flex: 1;               /* 占据剩余空间 */
+  /* background: #f5f5f5; 不要背景色，让它融入大胶囊 */
+  /* border-radius: 16px;  */
+  height: 100%;          /* 撑满高度 */
   display: flex;
-  align-items: center;
-  color: #999;
-  font-size: 12px;
-  overflow: hidden;
-  min-width: 0; /* 允许在 flex 容器中收缩 */
+  align-items: center;   /* CSS里必须用 align-items */
+  padding-left: 10px;    /* 左边距 */
+  
+  /* 加一个左侧竖线分割，视觉更清晰 */
+  border-left: 1px solid #e5e5e5; 
+  margin-left: 8px;      /* 让竖线和左边的日期有点距离 */
+  
+  cursor: pointer;
+  min-width: 0;          /* 关键：防止 flex 子项内容溢出撑开容器 */
 }
 
+.searchIcon {
+  font-size: 15px;       /* 稍微调小一点更精致 */
+  color: #999;           /* 颜色淡一点 */
+  margin-right: 6px;
+  flex-shrink: 0;        /* 防止图标被挤扁 */
+}
 .placeholder {
+  flex: 1;               /* ✅ 关键：让文字占据所有剩余宽度 */
+  font-size: 13px;
+  color: #999;           /* 默认灰色，React里有关键词时会覆盖这个颜色 */
+  
+  /* 下面三行配合 flex: 1 实现省略号 */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  
+  /* 确保文字左对齐 */
+  text-align: left;
 }
 
 /* 右侧地图图标样式 */
