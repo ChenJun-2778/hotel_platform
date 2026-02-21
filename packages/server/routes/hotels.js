@@ -20,8 +20,6 @@ const { query } = require('../config/database');
  * - contact_phone: 联系电话 (可选)
  * - description: 酒店备注/描述 (可选)
  * - hotel_facilities: 酒店设施 (可选)
- * - check_in_time: 入住时间 (必填，格式: YYYY-MM-DD HH:mm:ss)
- * - check_out_time: 退房时间 (必填，格式: YYYY-MM-DD HH:mm:ss)
  * - cover_image: 酒店首页图片URL (必填)
  * - images: 酒店图片列表，JSON数组 (可选)
  */
@@ -92,19 +90,6 @@ router.post('/create', async (req, res) => {
       });
     }
 
-    if (!check_in_time) {
-      return res.status(400).json({
-        success: false,
-        message: '入住时间不能为空'
-      });
-    }
-
-    if (!check_out_time) {
-      return res.status(400).json({
-        success: false,
-        message: '退房时间不能为空'
-      });
-    }
 
     if (!cover_image) {
       return res.status(400).json({
@@ -129,13 +114,11 @@ router.post('/create', async (req, res) => {
         contact_phone, 
         description, 
         hotel_facilities, 
-        check_in_time, 
-        check_out_time, 
         cover_image, 
         images, 
         status, 
         is_deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 0)
     `;
 
     const params = [
@@ -310,8 +293,6 @@ router.get('/:id', async (req, res) => {
         contact_phone,
         description,
         hotel_facilities,
-        check_in_time,
-        check_out_time,
         cover_image,
         images,
         created_at,
@@ -366,8 +347,6 @@ router.get('/:id', async (req, res) => {
  * - contact_phone: 联系电话
  * - description: 酒店备注/描述
  * - hotel_facilities: 酒店设施
- * - check_in_time: 入住时间
- * - check_out_time: 退房时间
  * - cover_image: 酒店首页图片URL
  * - images: 酒店图片列表
  * - status: 状态（1-营业中，0-已下架，2-待审批，3-审批拒绝）
@@ -467,14 +446,6 @@ router.put('/:id', async (req, res) => {
     if (hotel_facilities !== undefined) {
       updateFields.push('hotel_facilities = ?');
       updateParams.push(hotel_facilities);
-    }
-    if (check_in_time !== undefined) {
-      updateFields.push('check_in_time = ?');
-      updateParams.push(check_in_time);
-    }
-    if (check_out_time !== undefined) {
-      updateFields.push('check_out_time = ?');
-      updateParams.push(check_out_time);
     }
     if (cover_image !== undefined) {
       updateFields.push('cover_image = ?');

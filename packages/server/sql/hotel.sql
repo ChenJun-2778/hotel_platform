@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 15/02/2026 21:15:25
+ Date: 21/02/2026 15:55:01
 */
 
 SET NAMES utf8mb4;
@@ -57,8 +57,8 @@ CREATE TABLE `hotels`  (
 -- ----------------------------
 -- Records of hotels
 -- ----------------------------
-INSERT INTO `hotels` VALUES (4, 0, '上海外滩华尔道夫酒店', 'Waldorf Astoria Shanghai on the Bund', '华尔道夫', 5, 260, '上海', '上海市黄浦区中山东一路2号', '021-63229988', '张经理', '13800138000', '位于外滩黄浦江畔的奢华酒店，拥有绝佳江景和历史建筑。酒店提供米其林星级餐厅、豪华水疗中心和顶层酒吧。', '免费WiFi,健身房,游泳池,水疗中心,商务中心,餐厅,酒吧,停车场,礼宾服务', '2026-02-10 14:00:00', '2026-02-12 12:00:00', 'https://example.com/images/waldorf-shanghai-cover.jpg', '[\"https://example.com/images/waldorf-1.jpg\",\"https://example.com/images/waldorf-2.jpg\",\"https://example.com/images/waldorf-3.jpg\"]', 2, '', '2026-02-09 20:50:00', '2026-02-09 20:50:00', 0);
-INSERT INTO `hotels` VALUES (5, 0, '好利来酒店', 'haolilai hotel', '好利来连锁', 3, 45, '河北省秦皇岛市北戴河区', '江南水岸', '05551234567', '唐经理', '18005552928', '请问请问', '停车场,游泳池,健身房', '2000-01-01 14:00:00', '2000-01-01 12:00:00', 'https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1770713883279-k0al35.png', '[\"https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1770713889494-8kepb1.png\"]', 2, '', '2026-02-10 16:58:10', '2026-02-13 15:47:14', 0);
+INSERT INTO `hotels` VALUES (4, 3, '上海外滩华尔道夫酒店', 'Waldorf Astoria Shanghai on the Bund', '华尔道夫', 5, 260, '上海', '上海市黄浦区中山东一路2号', '021-63229988', '张经理', '13800138000', '位于外滩黄浦江畔的奢华酒店，拥有绝佳江景和历史建筑。酒店提供米其林星级餐厅、豪华水疗中心和顶层酒吧。', '免费WiFi,健身房,游泳池,水疗中心,商务中心,餐厅,酒吧,停车场,礼宾服务', '2026-02-10 14:00:00', '2026-02-12 12:00:00', 'https://example.com/images/waldorf-shanghai-cover.jpg', '[\"https://example.com/images/waldorf-1.jpg\",\"https://example.com/images/waldorf-2.jpg\",\"https://example.com/images/waldorf-3.jpg\"]', 3, '酒店资质不符合要求，缺少营业执照', '2026-02-09 20:50:00', '2026-02-15 21:22:47', 0);
+INSERT INTO `hotels` VALUES (5, 3, '好利来酒店', 'haolilai hotel', '好利来连锁', 3, 45, '河北省秦皇岛市北戴河区', '江南水岸', '05551234567', '唐经理', '18005552928', '请问请问', '停车场,游泳池,健身房', '2000-01-01 14:00:00', '2000-01-01 12:00:00', 'https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1770713883279-k0al35.png', '[\"https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1770713889494-8kepb1.png\"]', 2, '', '2026-02-10 16:58:10', '2026-02-15 21:22:52', 0);
 
 -- ----------------------------
 -- Table structure for rooms
@@ -140,11 +140,38 @@ CREATE TABLE `users`  (
   INDEX `idx_phone`(`phone` ASC) USING BTREE,
   INDEX `idx_role_type`(`role_type` ASC) USING BTREE,
   INDEX `idx_created_at`(`created_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户信息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户信息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of users
 -- ----------------------------
 INSERT INTO `users` VALUES (3, 'USER982533880', '张三丰', 'zhangsan_new@hotel.com', '13900139001', '$2b$10$1UhoHBBGHp6j/1eZREXtSe2SvQ8ZD8n02fFnCVPIvpTj7yTXQ7aAe', 2, 'https://example.com/new-avatar.jpg', '2026-02-14 21:49:44', '2026-02-14 22:23:55', '2026-02-15 19:56:08', 1, 0);
+INSERT INTO `users` VALUES (4, 'MOB307988854', 'Apifox测试员', '', '13812345678', '$2b$10$mbQY9l4MfznSgtJolSkH0OqaUTAZfEcKDC6MeezO3NBxH9ZPGjvmS', 3, NULL, '2026-02-19 17:45:08', NULL, '2026-02-19 18:05:06', 1, 1);
+INSERT INTO `users` VALUES (5, 'MOB989870339', 'Cj', '', '18383919236', '$2b$10$3lGjql90C0iZRvcNyuS2seNR9vSy7qpAHNaqFsWldJEian5Akw9JW', 3, 'https://www.google.com/imgres?q=%E7%A9%BA%E7%99%BD%E7%94%A8%E6%88%B7%E5%A4%B4%E5%83%8F&imgurl=https%3A%2F%2Fimg.ixintu.com%2Fdownload%2Fjpg%2F202001%2Fb319c1054eb817a437fb518f92597b0a.jpg!ys&imgrefurl=https%3A%2F%2Fixintu.com%2Fall%2Fkongbaitouxiang.html&docid=qq4EQ9tfpcLRcM&tbnid=WbKoJNICOlQYwM&vet=12ahUKEwiNo72m6-eSAxUniq8BHdIqL0gQM3oECBkQAA..i&w=250&h=250&hcb=2&ved=2ahUKEwiNo72m6-eSAxUniq8BHdIqL0gQM3oECBkQAA', '2026-02-19 21:16:29', '2026-02-21 15:41:51', '2026-02-21 15:41:51', 1, 0);
+
+-- ----------------------------
+-- Table structure for room_inventory
+-- ----------------------------
+DROP TABLE IF EXISTS `room_inventory`;
+CREATE TABLE `room_inventory`  (
+  `id` int NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `room_id` int NOT NULL COMMENT '房间（房型）ID',
+  `hotel_id` int NOT NULL COMMENT '酒店ID（冗余，便于按城市查询）',
+  `date` date NOT NULL COMMENT '日期',
+  `total_rooms` int NOT NULL COMMENT '该日期该房型总数',
+  `available_rooms` int NOT NULL COMMENT '该日期该房型剩余可用数',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_room_date` (`room_id`, `date`) USING BTREE,
+  INDEX `idx_hotel_date` (`hotel_id`, `date`) USING BTREE,
+  CONSTRAINT `fk_inventory_room_id` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_inventory_hotel_id` FOREIGN KEY (`hotel_id`) REFERENCES `hotels` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '房间日历库存表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of room_inventory
+-- ----------------------------
 
 SET FOREIGN_KEY_CHECKS = 1;
+

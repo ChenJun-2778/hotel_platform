@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/database');
+const { query, pool } = require('../config/database');
 
 /**
  * 获取酒店审核列表接口（分页）
@@ -102,7 +102,10 @@ router.get('/list', async (req, res) => {
  * 路径参数：
  * - id: 酒店ID
  * 
- * 功能：将酒店状态改为 1（营业中），代表审批通过
+ * 功能：
+ *   1. 将酒店状态改为 1（营业中），代表审批通过
+ *   2. 自动将该酒店所有房间的库存写入 room_inventory 表（未来180天）
+ *      若某日期的库存记录已存在，则跳过（INSERT IGNORE）
  * 
  * 返回数据：成功消息
  */
@@ -145,15 +148,58 @@ router.put('/approve/:id', async (req, res) => {
       SET status = 1, updated_at = NOW()
       WHERE id = ? AND is_deleted = 0
     `;
-
     await query(updateSql, [hotelId]);
+
+    // -------------------------------------------------------
+    // 审批通过后：初始化 room_inventory（未来180天的库存）
+    // -------------------------------------------------------
+
+    // 1. 查询该酒店下所有未删除的房间
+    const roomsSql = `
+      SELECT id AS room_id, total_rooms, available_rooms
+      FROM rooms
+      WHERE hotel_id = ? AND is_deleted = 0
+    `;
+    const rooms = await query(roomsSql, [hotelId]);
+
+    if (rooms.length > 0) {
+      // 2. 生成从今天起未来180天的日期列表
+      const DAYS = 180;
+      const today = new Date();
+      const dateList = [];
+      for (let i = 0; i < DAYS; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        // 格式化为 YYYY-MM-DD
+        dateList.push(d.toISOString().slice(0, 10));
+      }
+
+      // 3. 构建批量插入数据：(room_id, hotel_id, date, total_rooms, available_rooms)
+      const inventoryValues = [];
+      for (const room of rooms) {
+        for (const date of dateList) {
+          inventoryValues.push([room.room_id, hotelId, date, room.total_rooms, room.available_rooms]);
+        }
+      }
+
+      // 4. 使用 INSERT IGNORE 批量写入，已存在的记录自动跳过
+      // 注意：批量 VALUES ? 需要用 pool.query 而非 pool.execute
+      const insertSql = `
+        INSERT IGNORE INTO room_inventory (room_id, hotel_id, date, total_rooms, available_rooms)
+        VALUES ?
+      `;
+      await pool.query(insertSql, [inventoryValues]);
+
+      console.log(`酒店 ${hotelId} 审批通过，已初始化 ${rooms.length} 个房型 × ${DAYS} 天 = ${inventoryValues.length} 条库存记录`);
+    }
 
     res.status(200).json({
       success: true,
-      message: '酒店审批通过，状态已更新为营业中',
+      message: '酒店审批通过，状态已更新为营业中，库存已初始化',
       data: {
         id: hotelId,
-        status: 1
+        status: 1,
+        inventory_initialized: rooms.length > 0
       }
     });
 
