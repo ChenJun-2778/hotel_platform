@@ -1,15 +1,40 @@
-import React from 'react';
-import { NavBar, SearchBar, IndexBar, List, Grid } from 'antd-mobile';
+import React, { useState, useEffect } from 'react';
+import { NavBar, SearchBar, IndexBar, List, Grid, DotLoading } from 'antd-mobile'; // ✅ 引入 DotLoading
+import { EnvironmentOutline } from 'antd-mobile-icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from './index.module.css';
 
+// ✅ 1. 引入我们刚写的强大 Hook
+import { useLocation } from '@/utils/useLocation';
+
 const CitySelect: React.FC = () => {
   const navigate = useNavigate();
-  // 1. 获取 URL 参数，方便知道刚才选的是哪个城市 (用于高亮回显)
   const [searchParams] = useSearchParams();
   const currentCity = searchParams.get('current') || '上海';
 
-  // 模拟数据
+  // ✅ 2. 取出定位状态和定位方法
+  const { locating, getCurrentCity } = useLocation();
+  // 专门用一个 state 存定位到的城市，初始为空
+  const [locatedCity, setLocatedCity] = useState<string | null>(null);
+  // 记录是否定位失败，方便用户点击重试
+  const [locateFailed, setLocateFailed] = useState(false);
+
+  // ✅ 3. 封装一个执行定位的函数
+  const doLocate = async () => {
+    setLocateFailed(false);
+    try {
+      const city = await getCurrentCity();
+      setLocatedCity(city);
+    } catch (error) {
+      setLocateFailed(true);
+    }
+  };
+
+  // ✅ 4. 页面一加载，自动触发一次定位
+  useEffect(() => {
+    doLocate();
+  }, []);
+
   const hotCities = ['北京', '上海', '广州', '深圳', '成都', '杭州', '三亚', '西安'];
   const cityGroups = [
     {
@@ -23,16 +48,11 @@ const CitySelect: React.FC = () => {
     {
       title: 'S',
       items: ['上海', '深圳', '三亚', '石家庄', '苏州', '沈阳', '绍兴', '三门峡', '三明', '商洛', '商丘', '上饶', '山南', '汕头', '汕尾']
-    },
-    // ... 可以补充更多
+    }
   ];
 
-  // ✅ 核心逻辑：点击城市后的动作
   const handleSelect = (city: string) => {
-    // 1. 存入信箱 (localStorage)
     localStorage.setItem('selectedCity', city);
-    
-    // 2. 返回上一页 (SearchBase 会监听到这个变化)
     navigate(-1);
   };
 
@@ -49,14 +69,30 @@ const CitySelect: React.FC = () => {
         <IndexBar>
           <IndexBar.Panel index="#" title="当前定位">
             <div className={styles.sectionContent}>
-               <div 
-                 className={styles.locationCity}
-                 // ✅ 点击定位也能选
-                 onClick={() => handleSelect('上海')} 
-               >
-                 <span className={styles.locationIcon}>📍</span> 上海
-                 <span className={styles.gpsText}>GPS定位</span>
-               </div>
+              {/* ✅ 5. 动态渲染定位区域 */}
+              <div 
+                className={styles.locationCity}
+                onClick={() => {
+                  if (locatedCity) {
+                    // 如果已经定位成功，点击就是选择该城市
+                    handleSelect(locatedCity);
+                  } else if (locateFailed) {
+                    // 如果定位失败，点击就是重新定位
+                    doLocate();
+                  }
+                }} 
+              >
+                <span className={styles.locationIcon}><EnvironmentOutline /></span>
+                {/* 根据当前状态显示不同内容 */}
+                {locating ? (
+                  <span>定位中 <DotLoading color='currentColor' /></span>
+                ) : locateFailed ? (
+                  <span style={{ color: '#ff3141' }}>定位失败，点击重试</span>
+                ) : (
+                  <span>{locatedCity || '正在获取...'}</span>
+                )}
+                <span className={styles.gpsText}>GPS定位</span>
+              </div>
             </div>
           </IndexBar.Panel>
 
@@ -65,10 +101,7 @@ const CitySelect: React.FC = () => {
               <Grid columns={4} gap={8}>
                 {hotCities.map(city => (
                   <Grid.Item key={city} onClick={() => handleSelect(city)}>
-                    {/* ✅ 增加选中高亮样式：如果等于 currentCity，变蓝色 */}
-                    <div 
-                      className={`${styles.cityTag} ${city === currentCity ? styles.activeTag : ''}`}
-                    >
+                    <div className={`${styles.cityTag} ${city === currentCity ? styles.activeTag : ''}`}>
                       {city}
                     </div>
                   </Grid.Item>
@@ -87,9 +120,9 @@ const CitySelect: React.FC = () => {
                 {group.items.map(city => (
                   <List.Item 
                     key={city} 
-                    onClick={() => handleSelect(city)} // ✅ 列表项绑定点击
-                    arrow={false} // 去掉右侧箭头，更像选择列表
-                    extra={city === currentCity ? '✔' : ''} // ✅ 选中项显示对勾
+                    onClick={() => handleSelect(city)} 
+                    arrow={false} 
+                    extra={city === currentCity ? '✔' : ''} 
                   >
                     <span style={{ color: city === currentCity ? '#0086F6' : '#333' }}>
                       {city}
