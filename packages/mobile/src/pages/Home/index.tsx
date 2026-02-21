@@ -75,7 +75,7 @@ const Home = () => {
 
       {/* 4. 快捷入口金刚区 (静态展示) */}
       <div className={styles.gridContainer}>
-        {['特价酒店', '民宿客栈', '钟点房', '滑雪季'].map(item => (
+        {['特价酒店', '亲子房', '免费停车', '滑雪季'].map(item => (
           <div key={item} className={styles.gridItem}>
             <div className={styles.gridIcon}></div>
             <div className={styles.gridLabel}>{item}</div>
