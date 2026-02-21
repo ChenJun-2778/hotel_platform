@@ -80,9 +80,9 @@ const OrderList: React.FC = () => {
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <Tabs.Tab title='全部' key='all' />
           <Tabs.Tab title='待付款' key='pending' />
-          <Tabs.Tab title='待入住' key='confirmed' />
-          <Tabs.Tab title='已完成' key='completed' />
-          <Tabs.Tab title='已取消' key='canceled' />
+          <Tabs.Tab title='待确认' key='confirmed' />
+          <Tabs.Tab title='待入住' key='completed' />
+          <Tabs.Tab title='已完成' key='canceled' />
         </Tabs>
       </div>
 
