@@ -236,48 +236,46 @@ const List: React.FC = () => {
         </NavBar>
 
         {/* 筛选区 */}
-        <div className={styles.dropdownWrapper}>
-          <Dropdown ref={dropdownRef}>
-            <Dropdown.Item key='sort' title={
-              sortType === 'def' ? '欢迎度排序' :
-                sortType === 'price_asc' ? '价格低到高' : '高分优先'
-            }>
-              <div style={{ padding: 12 }}>
-                <Radio.Group
-                  value={sortType}
-                  onChange={(val) => {
-                    setSortType(val as string);
-                    dropdownRef.current?.close();
-                  }}
-                >
-                  <Space direction='vertical' block>
-                    <Radio block value='def'>欢迎度排序 (默认)</Radio>
-                    <Radio block value='price_asc'>价格从低到高</Radio>
-                    <Radio block value='score_desc'>评分从高到低</Radio>
-                  </Space>
-                </Radio.Group>
-              </div>
-            </Dropdown.Item>
-
-            {/* 其他下拉项保持不变... */}
-            <Dropdown.Item key='position' title='位置距离'>
-              <div style={{ padding: 12, height: 200 }}>这里可以放商圈/地铁站选择组件...</div>
-            </Dropdown.Item>
-            <Dropdown.Item key='price' title='价格/星级'>
-              <div style={{ padding: 12 }}>更多筛选...</div>
-            </Dropdown.Item>
-            <Dropdown.Item key='more' title='筛选'>
-              <div style={{ padding: 12 }}>更多筛选条件...</div>
-            </Dropdown.Item>
-          </Dropdown>
+        <div className={styles.sortContainer}>
+          {[
+            { key: 'def', label: '推荐' },
+            { key: 'price_asc', label: '低价优先' },
+            { key: 'score_desc', label: '高分优先' },
+            { key: 'star_desc', label: '高星优先' }
+          ].map(item => (
+            <div
+              key={item.key}
+              onClick={() => setSortType(item.key)}
+              // 动态组合 class：如果选中，就多加一个 active 的 class
+              className={`${styles.sortItem} ${sortType === item.key ? styles.sortItemActive : ''}`}
+            >
+              {item.label}
+              {/* 只有选中时才渲染底部蓝条 */}
+              {sortType === item.key && <div className={styles.activeBar} />}
+            </div>
+          ))}
         </div>
-
+        
+        {/* 快捷标签区 */}
         <div className={styles.quickTags}>
-          <CapsuleTabs defaultActiveKey='1'>
-            <CapsuleTabs.Tab title='外滩' key='1' />
-            <CapsuleTabs.Tab title='双床房' key='2' />
-            <CapsuleTabs.Tab title='含早餐' key='3' />
-            <CapsuleTabs.Tab title='免费兑早餐' key='4' />
+          <CapsuleTabs
+            defaultActiveKey=''
+            onChange={(key) => {
+              setSearchParams(prev => {
+                const newParams = new URLSearchParams(prev);
+                if (key === '') {
+                  newParams.delete('keyword');
+                } else {
+                  newParams.set('keyword', key);
+                }
+                return newParams;
+              });
+            }}
+          >
+            <CapsuleTabs.Tab title='全部' key='' />
+            <CapsuleTabs.Tab title='免费停车' key='停车' />
+            <CapsuleTabs.Tab title='近地铁' key='地铁' />
+            <CapsuleTabs.Tab title='含早餐' key='早餐' />
           </CapsuleTabs>
         </div>
       </div>

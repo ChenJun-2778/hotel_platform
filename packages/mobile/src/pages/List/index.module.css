@@ -154,12 +154,55 @@
   justify-content: center;
 }
 
+.sortContainer {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 44px;
+  background: #fff;
+  padding: 4px 8px 0;
+}
+
+.sortItem {
+  color: #666;
+  font-size: 14px;
+  padding: 6px 8px;
+  position: relative;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+/* 排序项选中状态 */
+.sortItemActive {
+  color: #1677ff;
+  font-weight: bold;
+}
+
+/* 选中项底部的小蓝条 */
+.activeBar {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 3px;
+  background: #1677ff;
+  border-radius: 2px;
+}
+
 /* 调整快速标签容器，确保它也能横向滚动而不换行 */
 .quickTags {
   width: 100%;
   overflow: hidden;
+  background: #fff;
+  padding: 8px 12px 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box; /* 防止 padding 撑开父容器 */
 }
 
+/* 保持你原来的这句不动 */
 .quickTags :global(.adm-capsule-tabs-header) {
   padding: 0 8px;
 }
