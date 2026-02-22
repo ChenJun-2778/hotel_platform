@@ -28,15 +28,21 @@ export const useGoList = () => {
 
 export const useGoCities = () => {
   const navigate = useNavigate();
-  // 城市页面的跳转
+  
   const goCities = (type: number = 1, city: string) => {
-    // 携带当前业务类型跳转，方便城市页展示对应的热门城市
-    // 防止中文乱码
+    // 把当前城市放到参数里，方便 DomesticCity 读取
     const searchParams = new URLSearchParams({
-      type: String(type),
       current: city
     });
-    navigate(`/city-select?${searchParams.toString()}`);
+
+    // ✅ 核心逻辑：根据传进来的 type，直接精准拼出完整的子路由路径
+    // 如果是海外 (type === 2)，直接跳 /city-select/overseas
+    // 其他情况默认跳 /city-select/domestic
+    const targetPath = type === 2 ? '/city-select/overseas' : '/city-select/domestic';
+
+    // 一步到位，直接起飞
+    navigate(`${targetPath}?${searchParams.toString()}`);
   }
-  return {goCities}
+  
+  return { goCities }
 }
