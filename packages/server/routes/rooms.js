@@ -21,8 +21,6 @@ const { query } = require('../config/database');
  * - facilities: 房间设施，JSON数组 (可选)
  * - description: 房间描述 (可选)
  * - images: 房间图片列表，JSON数组 (可选)
- * - status: 状态 (可选，默认1，2，3)
- * - booked_by: 预订者（姓名或用户ID） (可选)
  */
 router.post('/create', async (req, res) => {
   try {
@@ -40,9 +38,7 @@ router.post('/create', async (req, res) => {
       available_rooms,
       facilities,
       description,
-      images,
-      status = 'available',
-      booked_by
+      images
     } = req.body;
 
     // 验证必填字段
@@ -123,10 +119,8 @@ router.post('/create', async (req, res) => {
         facilities,
         description,
         images,
-        status,
-        booked_by,
         is_deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     `;
 
     const params = [
@@ -143,9 +137,7 @@ router.post('/create', async (req, res) => {
       available_rooms,
       facilities,
       description,
-      images,
-      status,
-      booked_by
+      images
     ];
 
     const result = await query(sql, params);
@@ -157,7 +149,6 @@ router.post('/create', async (req, res) => {
         id: result.insertId,
         room_type,
         room_number,
-        status,
         is_deleted: 0
       }
     });
@@ -186,8 +177,6 @@ router.post('/create', async (req, res) => {
  * - room_number: 房间号
  * - room_type: 房型
  * - base_price: 基础价格(元/晚)
- * - booked_by: 预订者
- * - status: 状态 (1-空闲，2-已预订，3-已入住)
  */
 router.get('/list', async (req, res) => {
   try {
@@ -233,9 +222,7 @@ router.get('/list', async (req, res) => {
         hotel_id,
         room_number,
         room_type,
-        base_price,
-        booked_by,
-        status
+        base_price
       FROM rooms
       WHERE ${whereCondition}
       ORDER BY room_number ASC
@@ -301,8 +288,6 @@ router.get('/detail', async (req, res) => {
         facilities,
         description,
         images,
-        status,
-        booked_by,
         created_at,
         updated_at,
         is_deleted
@@ -416,8 +401,6 @@ router.delete('/delete', async (req, res) => {
  * - facilities: 房间设施，JSON数组 (可选)
  * - description: 房间描述 (可选)
  * - images: 房间图片列表，JSON数组 (可选)
- * - status: 状态 (可选)
- * - booked_by: 预订者 (可选)
  */
 router.put('/update', async (req, res) => {
   try {
@@ -436,9 +419,7 @@ router.put('/update', async (req, res) => {
       available_rooms,
       facilities,
       description,
-      images,
-      status,
-      booked_by
+      images
     } = req.body;
 
     // 验证必填参数
@@ -532,14 +513,6 @@ router.put('/update', async (req, res) => {
     if (images !== undefined) {
       updateFields.push('images = ?');
       updateValues.push(images);
-    }
-    if (status !== undefined) {
-      updateFields.push('status = ?');
-      updateValues.push(status);
-    }
-    if (booked_by !== undefined) {
-      updateFields.push('booked_by = ?');
-      updateValues.push(booked_by);
     }
 
     // 如果没有要更新的字段

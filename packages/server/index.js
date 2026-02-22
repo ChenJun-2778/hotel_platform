@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const PORT = 3000;
-const { testConnection } = require("./config/database");
+const { testConnection, query } = require("./config/database");
 const hotelsRouter = require("./routes/hotels");
 const roomsRouter = require("./routes/rooms");
 const loginPCRouter = require("./routes/loginPC");
@@ -10,6 +10,7 @@ const hotelsReviewRouter = require("./routes/hotelsReview");
 // 移动端
 const loginMobileRouter = require("./routes/loginMobile");
 const hotelsMobileRouter = require("./routes/hotelsMobile");
+const orderMobileRouter = require("./routes/orderMobile");
 // 中间件 - 解析 JSON 请求体
 app.use(express.json());
 
@@ -41,6 +42,7 @@ app.use("/api/hotelsReview", hotelsReviewRouter);
 // 移动端 API 路由
 app.use("/api/loginMobile", loginMobileRouter);
 app.use("/api/hotelsMobile", hotelsMobileRouter);
+app.use("/api/orderMobile", orderMobileRouter);
 
 // 根路由 - API 信息
 app.get("/", (req, res) => {
@@ -97,6 +99,24 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ── 定时任务：自动完成订单 ───────────────────────────────────────
+// 规则：退房日期（check_out_date）已到期 且 status = 3（待入住） → 自动改为 4（已完成）
+async function autoCompleteOrders() {
+  try {
+    const result = await query(
+      `UPDATE orders
+       SET status = 4
+       WHERE status = 3
+         AND check_out_date <= CURDATE()`
+    );
+    if (result.affectedRows > 0) {
+      console.log(`[定时任务] 自动完成订单：共更新 ${result.affectedRows} 条订单 → 已完成`);
+    }
+  } catch (error) {
+    console.error('[定时任务] 自动完成订单失败:', error.message);
+  }
+}
+
 // 启动服务器
 app.listen(PORT, "0.0.0.0", async () => {
   console.log(`========================================`);
@@ -106,5 +126,10 @@ app.listen(PORT, "0.0.0.0", async () => {
   console.log('\n🔍 检查数据库连接...');
   await testConnection();
   console.log('');
+
+  // 启动后立即执行一次，然后每小时轮询
+  await autoCompleteOrders();
+  setInterval(autoCompleteOrders, 60 * 60 * 1000); // 每小时执行一次
+  console.log('⏰ 订单自动完成定时任务已启动（每小时检查一次）');
 });
 
