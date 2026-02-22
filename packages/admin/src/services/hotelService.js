@@ -65,11 +65,11 @@ export const approveHotel = (id) => {
 /**
  * 审核拒绝酒店
  * @param {string|number} id - 酒店ID
- * @param {string} reason - 拒绝原因（可选）
+ * @param {string} reason - 拒绝原因
  * @returns {Promise}
  */
 export const rejectHotel = (id, reason) => {
-  return put(HOTEL_API.REJECT(id), { reason });
+  return put(HOTEL_API.REJECT(id), { rejection_reason: reason });
 };
 
 /**

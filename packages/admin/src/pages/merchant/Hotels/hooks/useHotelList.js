@@ -63,10 +63,12 @@ const useHotelList = () => {
       
       // 更新分页信息
       setPagination({
-        current: paginationData.current || page,
+        current: paginationData.page || page,
         pageSize: paginationData.pageSize || pageSize,
         total: paginationData.total || hotelsWithId.length,
       });
+      
+      console.log('✅ 加载完成，共', hotelsWithId.length, '条数据');
       
     } catch (error) {
       console.error('❌ 加载酒店列表失败:', error);

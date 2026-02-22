@@ -13,7 +13,44 @@
     - `2` - 待审批
     - `3` - 审批拒绝
 
-- **实际返回数据结构**:
+### 审核通过
+- **接口**: `PUT /api/hotelsReview/approve/{id}`
+- **返回数据**:
+```json
+{
+  "success": true,
+  "message": "酒店审批通过，状态已更新为营业中",
+  "data": {
+    "id": 5,
+    "status": 1
+  }
+}
+```
+
+### 审核拒绝
+- **接口**: `PUT /api/hotelsReview/reject/{id}`
+- **请求参数**:
+  - `id` (路径参数): 酒店ID
+- **请求体**:
+```json
+{
+  "rejection_reason": "酒店资质不符合要求，缺少营业执照"
+}
+```
+- **返回数据**:
+```json
+{
+  "success": true,
+  "message": "酒店审批已拒绝",
+  "data": {
+    "id": 5,
+    "status": 3,
+    "rejection_reason": "酒店资质不符合要求，缺少营业执照"
+  }
+}
+```
+
+- **获取审核列表返回数据结构**:
 ```json
 {
   "success": true,
