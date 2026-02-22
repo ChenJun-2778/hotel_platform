@@ -72,7 +72,6 @@ const HotelForm = ({
       }}
       initialValues={{
         star_rating: 3,
-        room_number: 1,
       }}
     >
       {/* 基本信息 */}
@@ -111,21 +110,6 @@ const HotelForm = ({
               <Option value={4}>四星级</Option>
               <Option value={5}>五星级</Option>
             </Select>
-          </Form.Item>
-
-          <Form.Item
-            label="房间数"
-            name="room_number"
-            tooltip="房间数由房间管理页面的实际房间数量决定"
-            style={{ width: 150 }}
-          >
-            <InputNumber
-              placeholder="0"
-              min={0}
-              style={{ width: '100%' }}
-              disabled={true}
-              readOnly
-            />
           </Form.Item>
         </Space>
       </FormSection>

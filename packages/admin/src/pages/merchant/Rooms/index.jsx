@@ -7,7 +7,6 @@ import RoomStatsPanel from './components/RoomStatsPanel';
 import RoomGrid from './components/RoomGrid';
 import RoomForm from './components/RoomForm';
 import RoomDetail from './components/RoomDetail';
-import StockAdjustModal from './components/StockAdjustModal';
 import { uploadImagesToOss, convertUrlsToFileList } from '../../../utils/imageUploadHelper';
 import { getRoomDetail } from '../../../services/roomService';
 import './Rooms.css';
@@ -20,7 +19,6 @@ const Rooms = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [form] = Form.useForm();
@@ -245,77 +243,6 @@ const Rooms = () => {
     });
   };
 
-  /**
-   * 打开库存调整弹窗
-   */
-  const handleAdjustStock = async (room) => {
-    try {
-      // 获取最新的房间数据
-      const response = await getRoomDetail(room.id);
-      const roomData = response.data || response;
-      
-      // 解析 JSON 字段
-      const facilities = roomData.facilities ? JSON.parse(roomData.facilities) : [];
-      const images = roomData.images ? JSON.parse(roomData.images) : [];
-      
-      setCurrentRoom({
-        ...roomData,
-        roomNumber: roomData.room_number,
-        type: roomData.room_type,
-        facilities: facilities,
-        images: images,
-      });
-      setIsStockModalOpen(true);
-    } catch (error) {
-      console.error('❌ 获取房间数据失败:', error.message);
-      message.error('获取房间数据失败，请重试');
-    }
-  };
-
-  /**
-   * 关闭库存调整弹窗
-   */
-  const handleStockModalClose = () => {
-    setIsStockModalOpen(false);
-    setCurrentRoom(null);
-  };
-
-  /**
-   * 提交库存调整
-   */
-  const handleStockAdjust = async (roomId, newAvailableRooms) => {
-    try {
-      // 构建更新数据（只更新 available_rooms）
-      const submitData = {
-        id: roomId,
-        hotel_id: currentRoom.hotel_id,
-        room_number: currentRoom.room_number,
-        room_type: currentRoom.room_type,
-        room_type_en: currentRoom.room_type_en || '',
-        bed_type: currentRoom.bed_type,
-        area: Number(currentRoom.area),
-        floor: String(currentRoom.floor),
-        max_occupancy: Number(currentRoom.max_occupancy),
-        base_price: Number(currentRoom.base_price),
-        total_rooms: Number(currentRoom.total_rooms),
-        available_rooms: Number(newAvailableRooms), // 更新库存
-        facilities: JSON.stringify(Array.isArray(currentRoom.facilities) ? currentRoom.facilities : []),
-        description: currentRoom.description || '',
-        images: JSON.stringify(Array.isArray(currentRoom.images) ? currentRoom.images : []),
-        status: Number(currentRoom.status) || 1,
-        booked_by: currentRoom.booked_by || "0",
-      };
-
-      const success = await updateRoom(roomId, submitData);
-      if (success) {
-        handleStockModalClose();
-      }
-    } catch (error) {
-      console.error('❌ 调整库存失败:', error.message);
-      message.error('调整库存失败，请重试');
-    }
-  };
-
   return (
     <PageContainer
       title="房间管理"
@@ -343,7 +270,6 @@ const Rooms = () => {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onAdjustStock={handleAdjustStock}
       />
 
       {/* 添加房间弹窗 */}
@@ -393,14 +319,6 @@ const Rooms = () => {
         room={currentRoom}
         onClose={handleDetailClose}
         loading={detailLoading}
-      />
-
-      {/* 库存调整弹窗 */}
-      <StockAdjustModal
-        visible={isStockModalOpen}
-        room={currentRoom}
-        onClose={handleStockModalClose}
-        onSubmit={handleStockAdjust}
       />
     </PageContainer>
   );
