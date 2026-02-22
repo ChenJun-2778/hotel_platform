@@ -12,10 +12,15 @@ export const createHotel = (hotelData) => {
 
 /**
  * 获取酒店列表
- * @param {object} params - 查询参数（可选）
+ * @param {object} params - 查询参数
+ * @param {number} params.page - 页码（可选，默认1）
+ * @param {number} params.pageSize - 每页数量（可选，默认10）
+ * @param {string} params.keyword - 搜索关键词（可选）
+ * @param {number} params.user_id - 用户ID（可选，用于获取指定用户的酒店）
  * @returns {Promise}
  */
-export const getHotelList = (params) => {
+export const getHotelList = (params = {}) => {
+  console.log('🔍 获取酒店列表 - 参数:', params);
   return get(HOTEL_API.LIST, params);
 };
 

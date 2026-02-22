@@ -1,39 +1,90 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Descriptions, Button, Modal, Form, Input, Upload, Avatar, Space, message } from 'antd';
 import { UserOutlined, EditOutlined, LockOutlined, CameraOutlined } from '@ant-design/icons';
+import { changePassword, getUserInfo, updateUserInfo } from '../../../services/authService';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import {
+  usernameRules,
+  emailOptionalRules,
+  phoneOptionalRules,
+  passwordLoginRules,
+  newPasswordRules,
+  confirmPasswordRules
+} from '../../../utils/formValidation';
 import './Profile.css';
 
 /**
  * 个人信息页面 - 可复用组件
- * @param {object} userInfo - 用户信息
+ * @param {object} userInfo - 用户信息（可选，如果不传则从后端获取）
  * @param {function} onUpdateProfile - 更新个人信息回调
- * @param {function} onChangePassword - 修改密码回调
  * @param {function} onUploadAvatar - 上传头像回调
  */
 const Profile = ({ 
-  userInfo = {}, 
+  userInfo: propUserInfo, 
   onUpdateProfile, 
-  onChangePassword,
   onUploadAvatar 
 }) => {
+  const { user, login, logout } = useAuth();
+  const navigate = useNavigate();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [editForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+
+  // 加载用户信息
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      console.log('🔍 开始加载用户信息...');
+      console.log('🔍 user from context:', user);
+      
+      if (propUserInfo) {
+        console.log('✅ 使用传入的 propUserInfo');
+        setUserInfo(propUserInfo);
+      } else if (user?.id) {
+        // 先使用 AuthContext 中的数据作为初始显示
+        const fallbackUserInfo = {
+          id: user.id,
+          username: user.username || 'user',
+          email: user.email || '',
+          phone: user.phone || '',
+          role_type: user.role_type || 2,
+          avatar: user.avatar_url || null,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+        };
+        
+        setUserInfo(fallbackUserInfo);
+        console.log('✅ 使用 AuthContext 中的用户信息');
+        
+        // 尝试从后端获取更完整的用户信息（如果接口可用）
+        try {
+          console.log('🔍 尝试从后端获取用户信息 - ID:', user.id);
+          const response = await getUserInfo(user.id);
+          const userData = response.data || response;
+          console.log('✅ 后端返回用户数据:', userData);
+          setUserInfo(userData);
+        } catch (error) {
+          // 后端接口不可用时，继续使用 AuthContext 中的数据
+          console.log('⚠️ 后端接口暂不可用，使用登录时保存的用户信息');
+        }
+      } else {
+        console.warn('⚠️ 没有用户ID，无法加载用户信息');
+      }
+    };
+
+    loadUserInfo();
+  }, [propUserInfo, user]);
 
   // 默认用户信息
-  const defaultUserInfo = {
-    id: 1,
-    username: 'admin',
-    realName: '管理员',
-    email: 'admin@example.com',
-    phone: '13800138000',
-    role: '系统管理员',
-    avatar: null,
-    createdAt: '2024-01-01 10:00:00',
-    lastLoginAt: '2024-01-15 14:30:00',
-    ...userInfo
+  const displayUserInfo = userInfo || {
+    id: user?.id || 1,
+    username: user?.username || 'user',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    role_type: user?.role_type || 2,
   };
 
   /**
@@ -41,9 +92,9 @@ const Profile = ({
    */
   const handleEdit = () => {
     editForm.setFieldsValue({
-      realName: defaultUserInfo.realName,
-      email: defaultUserInfo.email,
-      phone: defaultUserInfo.phone,
+      username: displayUserInfo.username,
+      email: displayUserInfo.email,
+      phone: displayUserInfo.phone,
     });
     setIsEditModalOpen(true);
   };
@@ -54,18 +105,52 @@ const Profile = ({
   const handleUpdateProfile = async (values) => {
     try {
       setLoading(true);
+      console.log('✅ 更新用户信息 - ID:', displayUserInfo.id);
+      console.log('✅ 提交的数据:', values);
+      
       if (onUpdateProfile) {
         await onUpdateProfile(values);
       } else {
-        // 模拟更新
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // 调用真实接口更新用户信息
+        const updateData = {
+          username: values.username,
+          email: values.email,
+          phone: values.phone,
+        };
+        
+        // 如果有头像URL，也一起提交
+        if (displayUserInfo.avatar_url) {
+          updateData.avatar_url = displayUserInfo.avatar_url;
+        }
+        
+        await updateUserInfo(displayUserInfo.id, updateData);
+        
+        // 更新本地状态
+        const updatedUserInfo = {
+          ...displayUserInfo,
+          username: values.username,
+          email: values.email,
+          phone: values.phone,
+        };
+        setUserInfo(updatedUserInfo);
+        
+        // 同步更新 AuthContext 中的用户信息
+        login({
+          ...user,
+          username: values.username,
+          email: values.email,
+          phone: values.phone,
+        });
+        
+        console.log('✅ 用户信息更新成功');
         message.success('个人信息更新成功！');
       }
+      
       setIsEditModalOpen(false);
       editForm.resetFields();
     } catch (err) {
-      console.error('更新失败:', err);
-      message.error('更新失败，请重试');
+      console.error('❌ 更新失败:', err);
+      message.error(err.message || '更新失败，请重试');
     } finally {
       setLoading(false);
     }
@@ -84,18 +169,48 @@ const Profile = ({
   const handleChangePassword = async (values) => {
     try {
       setLoading(true);
-      if (onChangePassword) {
-        await onChangePassword(values);
-      } else {
-        // 模拟修改密码
-        await new Promise(resolve => setTimeout(resolve, 500));
-        message.success('密码修改成功！');
-      }
+      console.log('✅ 修改密码 - 用户ID:', displayUserInfo.id);
+      
+      await changePassword(displayUserInfo.id, {
+        oldPassword: values.oldPassword,
+        newPassword: values.newPassword,
+      });
+      
+      console.log('✅ 密码修改成功');
+      
+      // 关闭弹窗
       setIsPasswordModalOpen(false);
       passwordForm.resetFields();
+      
+      // 显示成功提示
+      message.success('密码修改成功！请重新登录', 2);
+      
+      // 延迟2秒后登出并跳转
+      setTimeout(() => {
+        logout();
+        navigate('/login', { 
+          state: { 
+            message: '登录已过期，请使用新密码重新登录' 
+          } 
+        });
+      }, 2000);
+      
     } catch (err) {
-      console.error('修改失败:', err);
-      message.error('修改失败，请重试');
+      console.error('❌ 修改失败:', err);
+      
+      // 根据错误信息提供更友好的提示
+      let errorMessage = err.message || '修改失败，请重试';
+      
+      // 常见错误的友好提示
+      if (errorMessage.includes('原密码') || errorMessage.includes('旧密码') || errorMessage.includes('old password')) {
+        errorMessage = '原密码输入错误，请重新输入';
+      } else if (errorMessage.includes('新密码') || errorMessage.includes('new password')) {
+        errorMessage = '新密码格式不正确，请检查密码要求';
+      } else if (errorMessage.includes('相同') || errorMessage.includes('same')) {
+        errorMessage = '新密码不能与原密码相同';
+      }
+      
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -114,6 +229,29 @@ const Profile = ({
         if (onUploadAvatar) {
           await onUploadAvatar(info.file);
         } else {
+          // TODO: 上传到OSS获取URL
+          const avatarUrl = 'https://example.com/avatar.jpg'; // 这里应该是OSS返回的URL
+          
+          // 更新用户头像
+          await updateUserInfo(displayUserInfo.id, {
+            username: displayUserInfo.username,
+            email: displayUserInfo.email,
+            phone: displayUserInfo.phone,
+            avatar_url: avatarUrl,
+          });
+          
+          // 更新本地状态
+          setUserInfo(prev => ({
+            ...prev,
+            avatar_url: avatarUrl,
+          }));
+          
+          // 同步更新 AuthContext
+          login({
+            ...user,
+            avatar_url: avatarUrl,
+          });
+          
           message.success('头像上传成功！');
         }
       } catch (err) {
@@ -141,7 +279,7 @@ const Profile = ({
                 <Avatar 
                   size={100} 
                   icon={<UserOutlined />}
-                  src={defaultUserInfo.avatar}
+                  src={displayUserInfo.avatar}
                   className="user-avatar"
                 />
                 <div className="avatar-overlay">
@@ -151,12 +289,12 @@ const Profile = ({
             </Upload>
           </div>
           <div className="user-info-section">
-            <h2 className="user-name">{defaultUserInfo.realName}</h2>
-            <div className="user-role">{defaultUserInfo.role}</div>
+            <h2 className="user-name">{displayUserInfo.username}</h2>
+            <div className="user-role">
+              {displayUserInfo.role_type === 1 ? '管理员' : '商户'}
+            </div>
             <div className="user-meta">
-              <span>账号：{defaultUserInfo.username}</span>
-              <span className="divider">|</span>
-              <span>最后登录：{defaultUserInfo.lastLoginAt}</span>
+              <span>账号：{displayUserInfo.username}</span>
             </div>
           </div>
           <div className="action-section">
@@ -186,22 +324,16 @@ const Profile = ({
       >
         <Descriptions column={2} bordered>
           <Descriptions.Item label="用户名">
-            {defaultUserInfo.username}
-          </Descriptions.Item>
-          <Descriptions.Item label="真实姓名">
-            {defaultUserInfo.realName}
+            {displayUserInfo.username}
           </Descriptions.Item>
           <Descriptions.Item label="角色">
-            {defaultUserInfo.role}
+            {displayUserInfo.role_type === 1 ? '管理员' : '商户'}
           </Descriptions.Item>
           <Descriptions.Item label="邮箱">
-            {defaultUserInfo.email || '-'}
+            {displayUserInfo.email || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="手机号">
-            {defaultUserInfo.phone || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="注册时间">
-            {defaultUserInfo.createdAt}
+            {displayUserInfo.phone || '-'}
           </Descriptions.Item>
         </Descriptions>
       </Card>
@@ -224,19 +356,17 @@ const Profile = ({
           style={{ marginTop: 24 }}
         >
           <Form.Item
-            label="真实姓名"
-            name="realName"
-            rules={[{ required: true, message: '请输入真实姓名' }]}
+            label="用户名"
+            name="username"
+            rules={usernameRules}
           >
-            <Input placeholder="请输入真实姓名" />
+            <Input placeholder="请输入用户名" />
           </Form.Item>
 
           <Form.Item
             label="邮箱"
             name="email"
-            rules={[
-              { type: 'email', message: '请输入有效的邮箱地址' },
-            ]}
+            rules={emailOptionalRules}
           >
             <Input placeholder="请输入邮箱" />
           </Form.Item>
@@ -244,9 +374,7 @@ const Profile = ({
           <Form.Item
             label="手机号"
             name="phone"
-            rules={[
-              { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号' },
-            ]}
+            rules={phoneOptionalRules}
           >
             <Input placeholder="请输入手机号" />
           </Form.Item>
@@ -287,7 +415,7 @@ const Profile = ({
           <Form.Item
             label="原密码"
             name="oldPassword"
-            rules={[{ required: true, message: '请输入原密码' }]}
+            rules={passwordLoginRules}
           >
             <Input.Password placeholder="请输入原密码" />
           </Form.Item>
@@ -295,29 +423,16 @@ const Profile = ({
           <Form.Item
             label="新密码"
             name="newPassword"
-            rules={[
-              { required: true, message: '请输入新密码' },
-              { min: 6, message: '密码至少6位' },
-            ]}
+            rules={newPasswordRules}
           >
-            <Input.Password placeholder="请输入新密码（至少6位）" />
+            <Input.Password placeholder="请输入新密码（8-20位，包含大小写字母和数字）" />
           </Form.Item>
 
           <Form.Item
             label="确认密码"
             name="confirmPassword"
             dependencies={['newPassword']}
-            rules={[
-              { required: true, message: '请确认新密码' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('newPassword') === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('两次输入的密码不一致'));
-                },
-              }),
-            ]}
+            rules={confirmPasswordRules('newPassword')}
           >
             <Input.Password placeholder="请再次输入新密码" />
           </Form.Item>

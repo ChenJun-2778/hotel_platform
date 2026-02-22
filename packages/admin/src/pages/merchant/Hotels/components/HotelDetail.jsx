@@ -136,21 +136,21 @@ const HotelDetail = ({ hotel, loading }) => {
 
       {/* 入住信息 */}
       <Card 
-        title={<><ClockCircleOutlined /> 入住信息</>}
+        title={<><ClockCircleOutlined /> 酒店信息</>}
         bordered={false}
         style={{ marginBottom: 16 }}
       >
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>入住时间</div>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>创建时间</div>
             <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
-              {hotel.check_in_time ? dayjs(hotel.check_in_time).format('HH:mm') : '-'}
+              {hotel.created_at ? dayjs(hotel.created_at).format('YYYY-MM-DD HH:mm:ss') : '-'}
             </div>
           </Col>
           <Col span={12}>
-            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>退房时间</div>
+            <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>更新时间</div>
             <div style={{ fontSize: 15, color: '#262626', fontWeight: 500 }}>
-              {hotel.check_out_time ? dayjs(hotel.check_out_time).format('HH:mm') : '-'}
+              {hotel.updated_at ? dayjs(hotel.updated_at).format('YYYY-MM-DD HH:mm:ss') : '-'}
             </div>
           </Col>
         </Row>

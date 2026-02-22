@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Modal, Form, message, Card, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
 import SearchBar from '../../../components/common/SearchBar';
 import HotelTable from './components/HotelTable';
 import HotelForm from './components/HotelForm';
 import HotelDetail from './components/HotelDetail';
 import useHotelList from './hooks/useHotelList';
 import { getHotelDetail } from '../../../services/hotelService';
+import { getRoomList } from '../../../services/roomService';
 import { HOTEL_STATUS } from '../../../constants/hotelStatus';
 import './Hotels.css';
 
@@ -27,7 +27,16 @@ const Hotels = () => {
   const [imageFileList, setImageFileList] = useState([]);
   
   // 使用自定义 Hook
-  const { hotelList, loading, addHotel, updateHotelData, toggleHotelStatus } = useHotelList();
+  const { 
+    hotelList, 
+    loading, 
+    pagination,
+    searchHotels,
+    handlePageChange,
+    addHotel, 
+    updateHotelData, 
+    toggleHotelStatus 
+  } = useHotelList();
 
   // 打开添加弹窗
   const showModal = () => {
@@ -99,36 +108,42 @@ const Hotels = () => {
       }
 
       // 4. 处理省市区数据
-      const [province = '', city = '', district = ''] = values.area || [];
       const location = values.area ? values.area.join('') : '';
 
-      // 5. 构建提交数据
+      // 5. 获取实际房间数（编辑模式下从房间列表实时计算）
+      let actualRoomCount = 0;
+      if (isEditMode && editingHotelId) {
+        try {
+          const roomResponse = await getRoomList({ hotel_id: editingHotelId });
+          const roomList = roomResponse.data?.rooms || roomResponse.rooms || [];
+          actualRoomCount = roomList.length;
+          console.log('✅ 提交时实时计算房间数:', actualRoomCount);
+        } catch {
+          console.log('⚠️ 获取房间数失败，使用0');
+          actualRoomCount = 0;
+        }
+      }
+
+      // 6. 构建提交数据
       const submitData = {
         name: values.name,
         english_name: values.english_name,
         brand: values.brand,
         star_rating: Number(values.star_rating) || 3,
-        room_number: Number(values.room_number) || 0,
+        room_number: isEditMode ? actualRoomCount : 0, // 新建时为0，编辑时使用实际房间数
         location: location,
-        country: '中国',
-        province,
-        city,
-        district,
         address: values.address,
         hotel_phone: values.hotel_phone,
         contact: values.contact,
         contact_phone: values.contact_phone,
         hotel_facilities: values.hotel_facilities?.join(',') || '',
-        // 使用固定日期 + 时间，后端只需要时间部分
-        check_in_time: values.check_in_time?.format('2000-01-01 HH:mm:ss'),
-        check_out_time: values.check_out_time?.format('2000-01-01 HH:mm:ss'),
         description: values.description,
         cover_image: coverImage,
         images: JSON.stringify(images),
         ...(!isEditMode && { status: HOTEL_STATUS.PENDING }),
       };
 
-      // 6. 提交到后端
+      // 7. 提交到后端
       let success;
       if (isEditMode && editingHotelId) {
         console.log('更新酒店 - ID:', editingHotelId);
@@ -162,6 +177,18 @@ const Hotels = () => {
     try {
       const response = await getHotelDetail(record.id);
       const hotelData = response.data || response;
+      
+      // 获取该酒店的实际房间数（计算属性，不写入数据库）
+      try {
+        const roomResponse = await getRoomList({ hotel_id: record.id });
+        const roomList = roomResponse.data?.rooms || roomResponse.rooms || [];
+        hotelData.room_number = roomList.length;
+        console.log(`✅ 酒店详情 - 实时计算房间数: ${roomList.length}`);
+      } catch (error) {
+        console.log('⚠️ 获取房间数失败，显示为0:', error.message);
+        hotelData.room_number = 0;
+      }
+      
       setCurrentHotel(hotelData);
     } catch (error) {
       console.error('获取酒店详情失败:', error);
@@ -183,11 +210,10 @@ const Hotels = () => {
     await toggleHotelStatus(record.id, record.status);
   };
 
-  // 搜索酒店（暂未实现）
+  // 搜索酒店
   const handleSearch = (keyword) => {
-    console.log('搜索关键词:', keyword);
-    message.info(`搜索功能开发中，关键词：${keyword}`);
-    // TODO: 实现搜索逻辑
+    console.log('🔍 搜索关键词:', keyword);
+    searchHotels(keyword);
   };
 
   // 编辑酒店
@@ -203,9 +229,46 @@ const Hotels = () => {
       
       console.log('编辑酒店 - 完整数据:', hotelData);
       
-      // 构建省市区数组
-      const area = [hotelData.province, hotelData.city, hotelData.district].filter(Boolean);
-      console.log('省市区数组:', area);
+      // 获取该酒店的房间列表，计算实际房间数
+      let actualRoomCount = 0;
+      try {
+        const roomResponse = await getRoomList({ hotel_id: record.id });
+        const roomList = roomResponse.data?.rooms || roomResponse.rooms || [];
+        actualRoomCount = roomList.length;
+        console.log('✅ 编辑时实时计算房间数:', actualRoomCount);
+      } catch {
+        console.log('⚠️ 获取房间数失败，使用数据库中的值:', hotelData.room_number);
+        actualRoomCount = hotelData.room_number || 0;
+      }
+      
+      // 解析 location 字段（格式可能是：浙江省杭州市西湖区 或 上海）
+      let area = undefined;
+      if (hotelData.location) {
+        const locationStr = hotelData.location;
+        // 尝试解析省市区
+        const provinceMatch = locationStr.match(/^(.+?省)/);
+        const cityMatch = locationStr.match(/省?(.+?市)/);
+        const districtMatch = locationStr.match(/市(.+?区|县)/);
+        
+        const parts = [];
+        if (provinceMatch) parts.push(provinceMatch[1]);
+        if (cityMatch) parts.push(cityMatch[1]);
+        if (districtMatch) parts.push(districtMatch[1]);
+        
+        // 如果没有匹配到省市区格式，可能是直辖市（如：上海、北京）
+        if (parts.length === 0 && locationStr) {
+          // 检查是否是直辖市
+          const municipalities = ['北京', '上海', '天津', '重庆'];
+          const isMunicipality = municipalities.some(m => locationStr.includes(m));
+          if (isMunicipality) {
+            const city = municipalities.find(m => locationStr.includes(m));
+            parts.push(city + '市', city + '市');
+          }
+        }
+        
+        area = parts.length > 0 ? parts : undefined;
+      }
+      console.log('解析的省市区数组:', area);
       
       // 解析设施
       const facilities = hotelData.hotel_facilities 
@@ -221,20 +284,14 @@ const Hotels = () => {
         english_name: hotelData.english_name,
         brand: hotelData.brand,
         star_rating: hotelData.star_rating,
-        room_number: hotelData.room_number,
-        area: area.length > 0 ? area : undefined,
+        room_number: actualRoomCount, // 使用实际房间数
+        area: area,
+        location: hotelData.location, // 保留原始 location 用于显示
         address: hotelData.address,
         hotel_phone: hotelData.hotel_phone,
         contact: hotelData.contact,
         contact_phone: hotelData.contact_phone,
         hotel_facilities: facilities,
-        // 从 datetime 中提取时间部分（支持多种格式）
-        check_in_time: hotelData.check_in_time 
-          ? dayjs(hotelData.check_in_time)
-          : null,
-        check_out_time: hotelData.check_out_time 
-          ? dayjs(hotelData.check_out_time)
-          : null,
         description: hotelData.description,
       };
       
@@ -302,6 +359,8 @@ const Hotels = () => {
         <HotelTable
           dataSource={hotelList}
           loading={loading}
+          pagination={pagination}
+          onPageChange={handlePageChange}
           onView={handleViewDetail}
           onEdit={handleEdit}
           onToggleStatus={handleToggleStatus}

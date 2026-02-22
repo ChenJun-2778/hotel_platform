@@ -50,6 +50,16 @@ export const getHotelTableColumns = (onView, onEdit, onToggleStatus) => [
     ),
   },
   {
+    title: '房间数',
+    dataIndex: 'room_number',
+    key: 'room_number',
+    width: 100,
+    align: 'center',
+    render: (count) => (
+      <div style={{ fontWeight: 500, color: '#1890ff' }}>{count || 0}</div>
+    ),
+  },
+  {
     title: '状态',
     dataIndex: 'status',
     key: 'status',

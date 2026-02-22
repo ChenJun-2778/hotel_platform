@@ -1,56 +1,166 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Tabs, message, Select } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Form, Input, Button, Tabs, message, Select, Alert } from 'antd';
 import { UserOutlined, LockOutlined, MobileOutlined, MailOutlined, TeamOutlined } from '@ant-design/icons';
+import { login, register, sendCode, phoneLogin } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
+import {
+  accountRules,
+  passwordLoginRules,
+  phoneRules,
+  codeRules,
+  usernameRules,
+  emailRules,
+  passwordRules,
+  confirmPasswordRules,
+  roleRules
+} from '../utils/formValidation';
 import './Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login: authLogin } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [showRegister, setShowRegister] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [accountForm] = Form.useForm();
   const [phoneForm] = Form.useForm();
   const [registerForm] = Form.useForm();
+  
+  // 从路由状态中获取提示信息
+  const stateMessage = location.state?.message;
 
-  // TODO: 后续实现真实的登录逻辑
+  // 显示路由传递的提示信息
+  useEffect(() => {
+    if (stateMessage) {
+      message.warning(stateMessage, 3);
+      // 清除状态，避免刷新后重复显示
+      window.history.replaceState({}, document.title);
+    }
+  }, [stateMessage]);
+
   // 账号登录
-  const handleAccountLogin = (values) => {
-    console.log('账号登录:', values);
-    message.success('登录成功！');
-    navigate('/admin/dashboard');
-  };
-
-  // TODO: 后续实现真实的验证码登录逻辑
-  // 验证码登录
-  const handlePhoneLogin = (values) => {
-    console.log('验证码登录:', values);
-    message.success('登录成功！');
-    navigate('/merchant/dashboard');
-  };
-
-  // TODO: 后续实现真实的注册逻辑
-  // 注册
-  const handleRegister = (values) => {
-    console.log('注册:', values);
-    message.success('注册成功！');
-    
-    // 根据角色跳转
-    if (values.role === 'admin') {
-      navigate('/admin/dashboard');
-    } else {
-      navigate('/merchant/dashboard');
+  const handleAccountLogin = async (values) => {
+    try {
+      setLoading(true);
+      console.log('✅ 表单数据:', values);
+      console.log('✅ 准备发送的登录数据:', {
+        account: values.username,
+        password: values.password,
+      });
+      
+      const response = await login({
+        account: values.username,
+        password: values.password,
+      });
+      
+      console.log('✅ 登录响应完整数据:', JSON.stringify(response, null, 2));
+      
+      // 保存用户信息和 token
+      const userData = response.data || response;
+      console.log('✅ 提取的用户数据:', JSON.stringify(userData, null, 2));
+      console.log('✅ 用户ID:', userData.id);
+      console.log('✅ 用户角色:', userData.role_type);
+      
+      authLogin(userData);
+      
+      message.success('登录成功！');
+      
+      // 根据角色跳转
+      if (userData.role_type === 1 || userData.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/merchant/dashboard');
+      }
+    } catch (error) {
+      console.error('❌ 登录失败:', error);
+      console.error('❌ 错误详情:', error.message);
+      message.error(error.message || '登录失败，请检查账号和密码');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // TODO: 后续实现真实的发送验证码逻辑
+  // 验证码登录
+  const handlePhoneLogin = async (values) => {
+    try {
+      setLoading(true);
+      console.log('✅ 验证码登录:', values);
+      
+      const response = await phoneLogin({
+        phone: values.phone,
+        code: values.code,
+      });
+      
+      console.log('✅ 登录响应:', response);
+      
+      // 保存用户信息和 token
+      const userData = response.data || response;
+      authLogin(userData);
+      
+      message.success('登录成功！');
+      
+      // 根据角色跳转
+      if (userData.role_type === 1 || userData.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/merchant/dashboard');
+      }
+    } catch (error) {
+      console.error('❌ 登录失败:', error);
+      message.error(error.message || '登录失败，请检查手机号和验证码');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 注册
+  const handleRegister = async (values) => {
+    try {
+      setLoading(true);
+      console.log('✅ 注册:', values);
+      
+      const response = await register({
+        role_type: values.role === 'admin' ? 1 : 2,
+        username: values.username,
+        email: values.email,
+        phone: values.phone,
+        password: values.password,
+      });
+      
+      console.log('✅ 注册响应:', response);
+      
+      message.success('注册成功！请登录');
+      
+      // 切换到登录页面
+      setShowRegister(false);
+      registerForm.resetFields();
+      
+      // 自动填充用户名到登录表单
+      accountForm.setFieldsValue({
+        username: values.username,
+      });
+      setActiveTab('account');
+    } catch (error) {
+      console.error('❌ 注册失败:', error);
+      message.error(error.message || '注册失败，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 发送验证码
   const handleSendCode = async () => {
     try {
       const phone = phoneForm.getFieldValue('phone');
       await phoneForm.validateFields(['phone']);
       
-      console.log('发送验证码到:', phone);
+      console.log('✅ 发送验证码到:', phone);
+      
+      await sendCode(phone);
+      
       message.success('验证码已发送！');
       
       // 开始倒计时
@@ -65,7 +175,8 @@ const Login = () => {
         });
       }, 1000);
     } catch (error) {
-      console.log('验证失败:', error);
+      console.error('❌ 发送验证码失败:', error);
+      message.error(error.message || '发送验证码失败，请重试');
     }
   };
 
@@ -105,6 +216,17 @@ const Login = () => {
         <div className="auth-container">
           {!showRegister ? (
             <>
+              {/* 显示提示信息 */}
+              {stateMessage && (
+                <Alert
+                  message={stateMessage}
+                  type="warning"
+                  showIcon
+                  closable
+                  style={{ marginBottom: 16 }}
+                />
+              )}
+              
               <Tabs
                 activeKey={activeTab}
                 onChange={handleTabChange}
@@ -122,28 +244,18 @@ const Login = () => {
                 >
                   <Form.Item
                     name="username"
-                    rules={[
-                      { required: true, message: '请输入用户名' },
-                      { 
-                        pattern: /^[a-zA-Z0-9_]{4,16}$/, 
-                        message: '用户名必须是4-16位字母、数字或下划线' 
-                      }
-                    ]}
+                    rules={accountRules}
                   >
                     <Input 
                       prefix={<UserOutlined />} 
-                      placeholder="输入账号" 
+                      placeholder="输入用户名/手机号/邮箱" 
                     />
                   </Form.Item>
 
                   <Form.Item
                     name="password"
-                    rules={[
-                      { required: true, message: '请输入密码' },
-                      { 
-                        pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,20}$/, 
-                        message: '密码必须8-20位，包含大小写字母和数字' 
-                      }
+                    rules={passwordLoginRules}
+                  >
                     ]}
                   >
                     <Input.Password 
@@ -159,7 +271,7 @@ const Login = () => {
                   </Form.Item>
 
                   <Form.Item>
-                    <Button type="primary" htmlType="submit" block>
+                    <Button type="primary" htmlType="submit" block loading={loading}>
                       登录
                     </Button>
                   </Form.Item>
@@ -183,10 +295,7 @@ const Login = () => {
                 >
                   <Form.Item
                     name="phone"
-                    rules={[
-                      { required: true, message: '请输入手机号' },
-                      { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码' }
-                    ]}
+                    rules={phoneRules}
                   >
                     <Input 
                       prefix={<MobileOutlined />}
@@ -197,10 +306,7 @@ const Login = () => {
 
                   <Form.Item
                     name="code"
-                    rules={[
-                      { required: true, message: '请输入验证码' },
-                      { pattern: /^\d{6}$/, message: '请输入6位验证码' }
-                    ]}
+                    rules={codeRules}
                   >
                     <Input 
                       placeholder="输入验证码" 
@@ -217,7 +323,7 @@ const Login = () => {
                   </Form.Item>
 
                   <Form.Item>
-                    <Button type="primary" htmlType="submit" block>
+                    <Button type="primary" htmlType="submit" block loading={loading}>
                       登录
                     </Button>
                   </Form.Item>
@@ -250,9 +356,7 @@ const Login = () => {
                 <Form.Item
                   label="角色类型"
                   name="role"
-                  rules={[
-                    { required: true, message: '请选择角色类型' }
-                  ]}
+                  rules={roleRules}
                 >
                   <Select
                     placeholder="选择您的角色"
@@ -267,13 +371,7 @@ const Login = () => {
                 <Form.Item
                   label="用户名"
                   name="username"
-                  rules={[
-                    { required: true, message: '请输入用户名' },
-                    { 
-                      pattern: /^[a-zA-Z0-9_]{4,16}$/, 
-                      message: '用户名必须是4-16位字母、数字或下划线' 
-                    }
-                  ]}
+                  rules={usernameRules}
                 >
                   <Input 
                     prefix={<UserOutlined />} 
@@ -284,24 +382,18 @@ const Login = () => {
                 <Form.Item
                   label="邮箱"
                   name="email"
-                  rules={[
-                    { required: true, message: '请输入邮箱' },
-                    { type: 'email', message: '请输入有效的邮箱地址' }
-                  ]}
+                  rules={emailRules}
                 >
                   <Input 
                     prefix={<MailOutlined />} 
-                    placeholder="输入邮箱" 
+                    placeholder="输入邮箱"
                   />
                 </Form.Item>
 
                 <Form.Item
                   label="手机号"
                   name="phone"
-                  rules={[
-                    { required: true, message: '请输入手机号' },
-                    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码' }
-                  ]}
+                  rules={phoneRules}
                 >
                   <Input 
                     prefix={<MobileOutlined />}
@@ -313,13 +405,7 @@ const Login = () => {
                 <Form.Item
                   label="密码"
                   name="password"
-                  rules={[
-                    { required: true, message: '请输入密码' },
-                    { 
-                      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,20}$/, 
-                      message: '密码必须8-20位，包含大小写字母和数字' 
-                    }
-                  ]}
+                  rules={passwordRules}
                 >
                   <Input.Password 
                     prefix={<LockOutlined />} 
@@ -331,17 +417,7 @@ const Login = () => {
                   label="确认密码"
                   name="confirmPassword"
                   dependencies={['password']}
-                  rules={[
-                    { required: true, message: '请再次输入密码' },
-                    ({ getFieldValue }) => ({
-                      validator(_, value) {
-                        if (!value || getFieldValue('password') === value) {
-                          return Promise.resolve();
-                        }
-                        return Promise.reject(new Error('两次密码输入不一致'));
-                      },
-                    }),
-                  ]}
+                  rules={confirmPasswordRules('password')}
                 >
                   <Input.Password 
                     prefix={<LockOutlined />} 
@@ -350,7 +426,7 @@ const Login = () => {
                 </Form.Item>
 
                 <Form.Item style={{ marginTop: '24px', marginBottom: '0' }}>
-                  <Button type="primary" htmlType="submit" block size="large">
+                  <Button type="primary" htmlType="submit" block size="large" loading={loading}>
                     立即注册
                   </Button>
                 </Form.Item>

@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import ProtectedRoute from '../components/ProtectedRoute';
+import RootRedirect from '../components/RootRedirect';
 import PageLoading from '../components/PageLoading';
 import Layout from '../components/Layout';
 import Login from '../pages/Login';
@@ -35,7 +36,7 @@ const merchantProfile = () => import('../pages/merchant/Profile');
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/admin/dashboard" replace />,
+    element: <RootRedirect />,
   },
   {
     path: '/login',
@@ -49,7 +50,7 @@ const router = createBrowserRouter([
   {
     path: '/admin',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRole={1}>
         <Layout />
       </ProtectedRoute>
     ),
@@ -84,7 +85,7 @@ const router = createBrowserRouter([
   {
     path: '/merchant',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRole={2}>
         <Layout />
       </ProtectedRoute>
     ),

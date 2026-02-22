@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
-import { Form, Input, InputNumber, Select, TimePicker, Space, Button, Cascader, Image } from 'antd';
-import dayjs from 'dayjs';
+import { Form, Input, InputNumber, Select, Space, Button, Cascader, Image } from 'antd';
 import ImageUploader from '../../../../components/common/ImageUploader';
 import FormSection from '../../../../components/common/FormSection';
 import provinces from 'china-division/dist/provinces.json';
@@ -73,8 +72,7 @@ const HotelForm = ({
       }}
       initialValues={{
         star_rating: 3,
-        check_in_time: dayjs('14:00', 'HH:mm'),
-        check_out_time: dayjs('12:00', 'HH:mm'),
+        room_number: 0,
       }}
     >
       {/* 基本信息 */}
@@ -118,14 +116,15 @@ const HotelForm = ({
           <Form.Item
             label="房间数"
             name="room_number"
-            rules={[{ required: true, message: '请输入房间数' }]}
+            tooltip="房间数由房间管理页面的实际房间数量决定"
             style={{ width: 150 }}
           >
             <InputNumber
-              placeholder="50"
-              min={1}
+              placeholder="0"
+              min={0}
               style={{ width: '100%' }}
-              disabled={isViewMode}
+              disabled={true}
+              readOnly
             />
           </Form.Item>
         </Space>
@@ -208,27 +207,6 @@ const HotelForm = ({
             ]}
           />
         </Form.Item>
-      </FormSection>
-
-      {/* 入住信息 */}
-      <FormSection title="入住信息">
-        <Space style={{ width: '100%', display: 'flex', flexWrap: 'wrap' }} size="large">
-          <Form.Item
-            label="入住时间"
-            name="check_in_time"
-            rules={[{ required: true, message: '请选择入住时间' }]}
-          >
-            <TimePicker format="HH:mm" style={{ width: 150 }} disabled={isViewMode} />
-          </Form.Item>
-
-          <Form.Item
-            label="退房时间"
-            name="check_out_time"
-            rules={[{ required: true, message: '请选择退房时间' }]}
-          >
-            <TimePicker format="HH:mm" style={{ width: 150 }} disabled={isViewMode} />
-          </Form.Item>
-        </Space>
 
         <Form.Item label="酒店描述" name="description">
           <TextArea

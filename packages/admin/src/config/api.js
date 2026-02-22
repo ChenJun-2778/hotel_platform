@@ -1,6 +1,16 @@
 // API 基础配置
 export const API_BASE_URL = 'http://47.99.56.81:3000/api';
 
+// 认证相关接口
+export const AUTH_API = {
+  LOGIN: `${API_BASE_URL}/loginPC/login`,           // POST - 登录（账号密码/手机验证码）
+  REGISTER: `${API_BASE_URL}/loginPC/register`,     // POST - 注册
+  SEND_CODE: `${API_BASE_URL}/loginPC/sendCode`,    // POST - 发送验证码
+  CHANGE_PASSWORD: (id) => `${API_BASE_URL}/loginPC/change-password/${id}`, // PUT - 修改密码
+  GET_USER_INFO: (id) => `${API_BASE_URL}/loginPC/profile/${id}`, // GET - 获取用户信息
+  UPDATE_USER_INFO: (id) => `${API_BASE_URL}/loginPC/profile/${id}`, // PUT - 更新用户信息
+};
+
 // 酒店相关接口
 export const HOTEL_API = {
   CREATE: `${API_BASE_URL}/hotels/create`,      // POST - 创建酒店

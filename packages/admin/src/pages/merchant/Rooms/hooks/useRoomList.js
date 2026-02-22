@@ -12,6 +12,29 @@ const useRoomList = () => {
   const [loading, setLoading] = useState(false);
 
   /**
+   * 同步酒店的房间数（计算属性，不写入数据库）
+   * 返回该酒店的实际房间数
+   */
+  const syncHotelRoomCount = useCallback(async (hotelId) => {
+    try {
+      // 获取该酒店的房间列表
+      const response = await getRoomList({ hotel_id: hotelId });
+      const roomList = response.data?.rooms || response.rooms || [];
+      const roomCount = roomList.length;
+      
+      console.log(`✅ 同步酒店房间数: 酒店ID=${hotelId}, 房间数=${roomCount}`);
+      
+      // 注意：房间数作为计算属性，不写入数据库
+      // 在查看详情和编辑时会实时计算
+      
+      return roomCount;
+    } catch (error) {
+      console.error('❌ 同步酒店房间数失败:', error.message);
+      return 0;
+    }
+  }, []);
+
+  /**
    * 加载酒店列表
    */
   const loadHotels = useCallback(async () => {
@@ -47,26 +70,45 @@ const useRoomList = () => {
       const roomList = response.data?.rooms || response.rooms || [];
       
       // 转换房间数据格式
-      const formattedRooms = roomList.map(room => ({
-        id: room.id,
-        roomNumber: room.room_number,
-        type: room.room_type,
-        type_en: room.room_type_en,
-        bed_type: room.bed_type,
-        area: room.area,
-        floor: room.floor, // 字符串类型，如 "28层"
-        max_occupancy: room.max_occupancy,
-        price: room.base_price,
-        total_rooms: room.total_rooms,
-        available_rooms: room.available_rooms,
-        facilities: room.facilities ? JSON.parse(room.facilities) : [],
-        description: room.description,
-        images: room.images ? JSON.parse(room.images) : [],
-        status: room.status, // 数字类型：1=可预订, 2=已入住, 3=维护中, 4=清洁中
-        booked_by: room.booked_by, // 预定人ID，"0"表示无人预定
-      }));
+      const formattedRooms = roomList.map(room => {
+        // 确保 status 是有效的数字（1-4）
+        let status = Number(room.status);
+        if (isNaN(status) || status < 1 || status > 4) {
+          console.warn(`⚠️ 房间 ${room.room_number} 状态值无效: ${room.status}，默认设为1（可预订）`);
+          status = 1;
+        }
+        
+        const formattedRoom = {
+          id: room.id,
+          roomNumber: room.room_number,
+          type: room.room_type,
+          type_en: room.room_type_en,
+          bed_type: room.bed_type,
+          area: room.area,
+          floor: room.floor, // 字符串类型，如 "28层"
+          max_occupancy: room.max_occupancy,
+          price: room.base_price,
+          total_rooms: room.total_rooms,
+          available_rooms: room.available_rooms,
+          facilities: room.facilities ? JSON.parse(room.facilities) : [],
+          description: room.description,
+          images: room.images ? JSON.parse(room.images) : [],
+          status: status, // 确保是数字类型：1=可预订, 2=已入住, 3=已预订, 4=清洁中
+          booked_by: room.booked_by, // 预定人ID，"0"表示无人预定
+        };
+        
+        console.log(`✅ 房间 ${formattedRoom.roomNumber} - 状态: ${formattedRoom.status} (${typeof formattedRoom.status})`);
+        return formattedRoom;
+      });
       
       console.log(`✅ 加载房间列表成功: 酒店ID=${hotelId}, 房间数=${formattedRooms.length}`);
+      
+      // 输出房间状态统计，用于调试
+      const statusStats = formattedRooms.reduce((acc, room) => {
+        acc[room.status] = (acc[room.status] || 0) + 1;
+        return acc;
+      }, {});
+      console.log('📊 房间状态统计:', statusStats);
       
       setRoomsData(prev => ({
         ...prev,
@@ -145,6 +187,9 @@ const useRoomList = () => {
       // 重新加载该酒店的房间列表
       await loadRoomsByHotel(roomData.hotel_id);
       
+      // 记录房间数变化（计算属性，不写入数据库）
+      await syncHotelRoomCount(roomData.hotel_id);
+      
       return true;
     } catch (error) {
       console.error('❌ 添加房间失败:', error.message);
@@ -153,7 +198,7 @@ const useRoomList = () => {
     } finally {
       setLoading(false);
     }
-  }, [loadRoomsByHotel]);
+  }, [loadRoomsByHotel, syncHotelRoomCount]);
 
   /**
    * 更新房间
@@ -214,6 +259,8 @@ const useRoomList = () => {
       // 重新加载该酒店的房间列表
       if (hotelId) {
         await loadRoomsByHotel(hotelId);
+        // 记录房间数变化（计算属性，不写入数据库）
+        await syncHotelRoomCount(hotelId);
       }
       
       return true;
@@ -224,7 +271,7 @@ const useRoomList = () => {
     } finally {
       setLoading(false);
     }
-  }, [loadRoomsByHotel]);
+  }, [loadRoomsByHotel, syncHotelRoomCount]);
 
   /**
    * 刷新房间列表
