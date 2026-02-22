@@ -15,7 +15,7 @@ import SearchPanel from './components/SearchPanel';
 // 日历组件
 import DateRangePicker from '@/components/DateRangePicker';
 // 引入api
-import { apiGetHotelList } from '@/api/hotel';
+import { apiGetHotelList } from '@/api/hotel/index';
 
 // const TYPE_MAP_STR_TO_NUM: Record<string, number> = {
 //   'domestic': 1,
@@ -163,30 +163,40 @@ const List: React.FC = () => {
     // 3. 此时 URL 变了，useEffect 会自动监听到变化并重新请求数据
   }
   // 请求酒店列表
+  // 请求酒店列表
   useEffect(() => {
     const getHotelList = async () => {
       setLoading(true);
       try {
-        const res: any = await apiGetHotelList({
-          city,
-          beginDate: safeBeginDate, // 传安全的参数
-          endDate: safeEndDate,     // 传安全的参数
-          type,
-          sortType,
-          keyword
-        });
-        if (res && res.code === 200) {
-          setHotelList(res.data);
+        // ✅ 修改 1：参数映射翻译。把前端的变量塞给后端指定的 key
+        const params: any = {
+          destination: city,             // 前端的 city -> 后端的 destination
+          check_in_date: safeBeginDate,  // 前端的 safeBeginDate -> 后端的 check_in_date
+          check_out_date: safeEndDate,   // 前端的 safeEndDate -> 后端的 check_out_date
+          // 如果你的后端还支持 type, sort, keyword 搜索，把下面的注释打开
+          // type: Number(type) || 1,
+          // sortType: sortType,
+          // keyword: keyword
+        };
+
+        const res: any = await apiGetHotelList(params);
+        
+        // ✅ 修改 2：适配新的返回数据结构
+        // 以前是 res.code === 200，现在后端给的是 res.success === true
+        if (res && res.success) {
+          // 以前数据直接在 res.data，现在真实数据嵌套在 res.data.list 里面！
+          setHotelList(res.data.list || []); 
+        } else {
+           Toast.show({ icon: 'fail', content: res.message || '查询失败' });
         }
       } catch (error) {
-
+        Toast.show({ icon: 'fail', content: '网络异常，请重试' });
       } finally {
         setLoading(false);
       }
     }
-
     getHotelList();
-  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword]) // ✅ 依赖项也改成 safe 变量
+  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword]); // 依赖项保持前端变量名不变
 
   return (
     <div className={styles.listContainer}>
