@@ -1,12 +1,14 @@
-// 路径：src/pages/CitySelect/index.tsx
-import React from 'react';
-import { NavBar, CapsuleTabs } from 'antd-mobile';
+import React, { useState } from 'react';
+import { NavBar, CapsuleTabs, SearchBar } from 'antd-mobile';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import styles from './index.module.css'; // 确保这里面写了 .container { height: 100vh; overflow: hidden; }
+import styles from './index.module.css';
 
 const CitySelect: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // ✅ 搜索词状态上移到父组件
+  const [keyword, setKeyword] = useState('');
 
   const activeKey = location.pathname.includes('overseas') ? 'overseas' : 'domestic';
 
@@ -15,23 +17,32 @@ const CitySelect: React.FC = () => {
       <div className={styles.header}>
         <NavBar onBack={() => navigate(-1)}>选择城市</NavBar>
         
-        <div style={{ padding: '8px 12px', background: '#fff' }}>
+        {/* Tab 切换 */}
+        <div style={{ padding: '8px 12px 4px', background: '#fff' }}>
           <CapsuleTabs 
             activeKey={activeKey} 
-            onChange={(key) => {
-              // ✅ 修复 Bug 1：必须是 /city-select/，不能是 /city/
-              navigate(`/city-select/${key}${location.search}`); 
-            }}
+            onChange={(key) => navigate(`/city-select/${key}${location.search}`)}
           >
             <CapsuleTabs.Tab title="国内" key="domestic" />
             <CapsuleTabs.Tab title="海外" key="overseas" />
           </CapsuleTabs>
         </div>
+
+        {/* ✅ 搜索框统一放在这里，境内境外共用 */}
+        <div className={styles.searchWrapper}>
+          <SearchBar 
+            placeholder='输入城市名、拼音或首字母查询' 
+            style={{ '--background': '#f5f5f5' }} 
+            value={keyword}
+            onChange={val => setKeyword(val)}
+            onClear={() => setKeyword('')}
+          />
+        </div>
       </div>
 
-      {/* ✅ 修复 Bug 2：加上 minHeight: 0 彻底锁死高度，防止子组件撑爆屏幕 */}
-      <div className={styles.contentWrapper} style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <Outlet />
+      <div className={styles.contentWrapper} style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        {/* ✅ 通过 context 将 keyword 传给子路由组件 */}
+        <Outlet context={{ keyword }} />
       </div>
     </div>
   );

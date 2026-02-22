@@ -1,19 +1,28 @@
-/* =========================================
-   父级容器 (CitySelect 壳子) 专属样式
-========================================= */
-
 .container {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* ✅ 极其致命：锁定屏幕总高度！ */
-  background-color: #f5f5f9;
-  overflow: hidden; /* 防止整个网页被拉长 */
+  height: 100vh;
+  background-color: #fff;
+  overflow: hidden;
 }
 
 .header {
-  flex-shrink: 0; /* 保护头部导航不被压缩 */
+  flex-shrink: 0;
   background: #fff;
-  z-index: 10;
+  z-index: 1001;
+  /* 移除底边线，让搜索框和 Tab 视觉上更统一 */
+  border-bottom: none; 
 }
 
-/* 提示：那个 contentWrapper 的样式你在 TSX 的 style 里写了 flex: 1 和 minHeight: 0，所以这里不用写也没关系 */
+/* 统一父级搜索框的包装样式 */
+.searchWrapper {
+  padding: 4px 12px 12px 12px;
+  background: #fff;
+}
+
+.contentWrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}

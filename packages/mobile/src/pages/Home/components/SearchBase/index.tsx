@@ -48,6 +48,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
   const { goCities } = useGoCities();
 
   const handleCityClick = () => {
+    // ✅ 关键：确保 goCities 内部实现了把第二个参数 city 拼接成 ?current=xxx
     goCities(currentTypeId, city);
   }
 
@@ -76,11 +77,10 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
   // 监听城市回传 (Local Storage 方案)
   useEffect(() => {
     const checkSelectedCity = () => {
-      const selected = localStorage.getItem('selectedCity');
+      // ✅ 统一使用 HOME_CITY 键名进行双向绑定
+      const selected = localStorage.getItem('HOME_CITY');
       if (selected) {
         setCity(selected);
-        localStorage.setItem('HOME_CITY', selected);
-        localStorage.removeItem('selectedCity');
       }
     };
 
