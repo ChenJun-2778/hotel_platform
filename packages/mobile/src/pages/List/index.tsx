@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { NavBar, CapsuleTabs, DotLoading, Dropdown, Radio, Space, Toast } from 'antd-mobile';
+import React, { useState, useEffect } from 'react';
+import { NavBar, CapsuleTabs, DotLoading, Toast } from 'antd-mobile';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { EnvironmentOutline, SearchOutline, CloseCircleFill } from 'antd-mobile-icons';
@@ -15,7 +15,7 @@ import SearchPanel from './components/SearchPanel';
 // 日历组件
 import DateRangePicker from '@/components/DateRangePicker';
 // 引入api
-import { apiGetHotelList } from '@/api/hotel/index';
+import { apiGetHotelList } from '@/api/Hotel/index';
 
 // const TYPE_MAP_STR_TO_NUM: Record<string, number> = {
 //   'domestic': 1,
@@ -164,27 +164,23 @@ const List: React.FC = () => {
   }
   // 请求酒店列表
   // 请求酒店列表
+  // 请求酒店列表
   useEffect(() => {
     const getHotelList = async () => {
       setLoading(true);
       try {
-        // ✅ 修改 1：参数映射翻译。把前端的变量塞给后端指定的 key
-        const params: any = {
-          destination: city,             // 前端的 city -> 后端的 destination
-          check_in_date: safeBeginDate,  // 前端的 safeBeginDate -> 后端的 check_in_date
-          check_out_date: safeEndDate,   // 前端的 safeEndDate -> 后端的 check_out_date
-          // 如果你的后端还支持 type, sort, keyword 搜索，把下面的注释打开
-          // type: Number(type) || 1,
-          // sortType: sortType,
-          // keyword: keyword
-        };
+        // ✅ 极致清爽：直接把 UI 状态传给 api，映射逻辑在 api 内部解决！
+        const res = await apiGetHotelList({
+          city,
+          beginDate: safeBeginDate,
+          endDate: safeEndDate,
+          type, 
+          sortType,
+          keyword
+        });
 
-        const res: any = await apiGetHotelList(params);
-        
-        // ✅ 修改 2：适配新的返回数据结构
-        // 以前是 res.code === 200，现在后端给的是 res.success === true
+        // 依然处理返回的数据
         if (res && res.success) {
-          // 以前数据直接在 res.data，现在真实数据嵌套在 res.data.list 里面！
           setHotelList(res.data.list || []); 
         } else {
            Toast.show({ icon: 'fail', content: res.message || '查询失败' });
@@ -195,8 +191,9 @@ const List: React.FC = () => {
         setLoading(false);
       }
     }
+
     getHotelList();
-  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword]); // 依赖项保持前端变量名不变
+  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword]);
 
   return (
     <div className={styles.listContainer}>

@@ -3,7 +3,7 @@ import { NavBar, Swiper, Image, Toast, Tag, ImageViewer, DotLoading } from 'antd
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { StarFill, EnvironmentOutline, PictureOutline, CalendarOutline } from 'antd-mobile-icons';
 import styles from './index.module.css';
-import { apiGetHotelDetail } from '@/api/hotel'
+import { apiGetHotelDetail } from '@/api/Hotel'
 import dayjs from 'dayjs';
 // 引入日历组件
 import DateRangePicker from '@/components/DateRangePicker';
@@ -25,13 +25,62 @@ const HotelDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false); // 控制图片预览
   useEffect(() => {
+    // ✅ 新增一个安全解析 JSON 数组的工具函数
+    const safeParseArray = (str: any) => {
+      if (!str) return [];
+      if (Array.isArray(str)) return str;
+      try {
+        let parsed = JSON.parse(str);
+        // 如果 parse 一次之后发现还是字符串（比如双重 stringify 的房间图片），就再 parse 一次
+        if (typeof parsed === 'string') {
+          parsed = JSON.parse(parsed);
+        }
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        // 如果 JSON.parse 失败，兜底退化为普通的逗号切割
+        return typeof str === 'string' ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
+      }
+    };
+
     const getHotelDetail = async () => {
       if (!id) return
       setLoading(true)
       try {
-        const res: any = await apiGetHotelDetail(id)
-        if (res?.code === 200) {
-          setDetail(res.data)
+        const res = await apiGetHotelDetail(id)
+        if (res?.success) {
+          const hotelData = res.data;
+          
+          // ✅ 解析酒店主图，如果解析出来是空的，拿 cover_image 兜底
+          let parsedImages = safeParseArray(hotelData.images);
+          if (parsedImages.length === 0 && hotelData.cover_image) {
+            parsedImages = [hotelData.cover_image];
+          }
+
+          const processedData = {
+            ...hotelData,
+            images: parsedImages, // 使用处理后的正常图片数组
+            
+            // 处理房间数据
+            rooms: hotelData.rooms?.map((room: any) => {
+              // ✅ 安全解析房型图片和设施
+              const roomImages = safeParseArray(room.images);
+              const roomTags = safeParseArray(room.facilities);
+
+              return {
+                ...room,
+                // 取真实的数组的第一张作为展示图
+                image: roomImages.length > 0 ? roomImages[0] : '', 
+                name: room.room_type,
+                desc: `${room.area}㎡ | ${room.bed_type} | ${room.floor}`,
+                tags: roomTags, // 使用处理后的正常标签数组
+                price: room.base_price
+              };
+            }) || []
+          };
+          
+          setDetail(processedData);
+        } else {
+          Toast.show({ content: res?.message || '加载失败' })
         }
       } catch (error) {
         Toast.show({ content: '加载失败' })
