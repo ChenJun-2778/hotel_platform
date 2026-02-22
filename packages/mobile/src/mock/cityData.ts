@@ -93,3 +93,49 @@ export const domesticCityGroups = [
     items: ['郑州', '枣庄', '张家界', '张家口', '张掖', '漳州', '湛江', '肇庆', '昭通', '镇江', '中山', '中卫', '周口', '舟山', '珠海', '驻马店', '株洲', '淄博', '自贡', '资阳', '遵义']
   }
 ];
+
+export interface OverseasCityType {
+  name: string;
+  image: string;
+  pinyin?: string; 
+}
+
+export interface OverseasGroupType {
+  key: string;
+  title: string;
+  hotCities: OverseasCityType[]; // ✅ 存放带图的大卡片
+  otherCities?: string[];        // ✅ 存放下方纯文字的小标签
+}
+
+export const overseasCityGroups: OverseasGroupType[] = [
+  {
+    key: 'recommend',
+    title: '推荐',
+    hotCities: [
+      { name: '东京', image: 'https://pavo.elongstatic.com/i/Hotel180_120/000083Gl.jpg', pinyin: 'dongjing' },
+      { name: '大阪', image: 'https://pavo.elongstatic.com/i/Hotel180_120/00007I6L.jpg', pinyin: 'daban' },
+      { name: '首尔', image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_000c8v0U.jpg', pinyin: 'shouer' },
+    ],
+    otherCities: ['曼谷', '普吉岛', '新加坡', '吉隆坡', '巴黎', '伦敦']
+  },
+  {
+    key: 'japan-korea',
+    title: '日韩',
+    hotCities: [
+      { name: '东京', image: 'https://pavo.elongstatic.com/i/Hotel180_120/000083Gl.jpg', pinyin: 'dongjing' },
+      { name: '首尔', image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_000c8v0U.jpg', pinyin: 'shouer' },
+      { name: '大阪', image: 'https://pavo.elongstatic.com/i/Hotel180_120/00007I6L.jpg', pinyin: 'daban' },
+      { name: '京都', image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_IGXm6.jpg', pinyin: 'jingdu' },
+    ],
+    otherCities: ['济州岛', '名古屋', '福冈', '奈良', '静冈', '那霸']
+  },
+  {
+    key: 'southeast-asia',
+    title: '新马泰',
+    hotCities: [
+      { name: '曼谷', image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_000c8v0f.jpg', pinyin: 'mangu' },
+      { name: '新加坡', image: 'https://pavo.elongstatic.com/i/Hotel180_120/00006v9A.jpg', pinyin: 'xinjiapo' },
+    ],
+    otherCities: ['清迈', '芭提雅', '沙巴', '巴厘岛']
+  }
+];
