@@ -1,7 +1,7 @@
 // src/hooks/useLocation.ts
 import { useState } from 'react';
 import { Toast } from 'antd-mobile';
-
+// 使用原生api拿当前的位置，再用高德api进行翻译
 export const useLocation = () => {
   // 统一管理 loading 状态
   const [locating, setLocating] = useState(false);
@@ -38,7 +38,7 @@ export const useLocation = () => {
               
               const finalCity = rawCity.replace('市', '');
               
-              // ✅ 成功解析，把城市名 resolve 出去
+              // 把城市名 resolve 出去
               resolve(finalCity);
             } else {
               Toast.show('解析位置失败');
