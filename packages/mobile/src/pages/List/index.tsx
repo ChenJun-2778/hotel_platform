@@ -127,7 +127,7 @@ const List: React.FC = () => {
     const checkSelectedCity = () => {
       const selected = localStorage.getItem('selectedCity');
       if (selected) {
-        console.log('检测到新城市，更新草稿:', selected);
+        // console.log('检测到新城市，更新草稿:', selected);
 
         // ✅ 关键修改 A：只更新“草稿城市”，不更新 URL
         setTempCity(selected);
