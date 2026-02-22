@@ -53,14 +53,6 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
           <Descriptions.Item label="此类型房间总数">
             {room.total_rooms}间
           </Descriptions.Item>
-          <Descriptions.Item label="当前可用库存">
-            <span style={{ color: '#52c41a', fontWeight: 'bold', fontSize: 16 }}>
-              {room.available_rooms}间
-            </span>
-            <span style={{ color: '#999', marginLeft: 8 }}>
-              / {room.total_rooms}间
-            </span>
-          </Descriptions.Item>
           <Descriptions.Item label="预定人" span={2}>
             {room.booked_by && room.booked_by !== "0" ? room.booked_by : '无'}
           </Descriptions.Item>

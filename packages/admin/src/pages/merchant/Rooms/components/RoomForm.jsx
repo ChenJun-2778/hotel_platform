@@ -146,19 +146,6 @@ const RoomForm = ({
               style={{ width: '100%' }}
             />
           </Form.Item>
-
-          <Form.Item
-            label="可用房间数"
-            name="available_rooms"
-            rules={[{ required: true, message: '请输入可用房间数' }]}
-            style={{ width: 180 }}
-          >
-            <InputNumber
-              placeholder="18"
-              min={0}
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
         </Space>
       </FormSection>
 

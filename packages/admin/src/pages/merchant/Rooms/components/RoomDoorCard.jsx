@@ -24,12 +24,6 @@ const RoomDoorCard = ({ room, onView, onEdit, onDelete, onAdjustStock }) => {
       onClick: () => onEdit && onEdit(room),
     },
     {
-      key: 'stock',
-      icon: <EditOutlined />,
-      label: '调整库存',
-      onClick: () => onAdjustStock && onAdjustStock(room),
-    },
-    {
       type: 'divider',
     },
     {
