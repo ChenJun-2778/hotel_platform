@@ -4,6 +4,8 @@ import PageContainer from '../../../components/common/PageContainer';
 import HotelAuditTable from './components/HotelAuditTable';
 import HotelDetail from '../../merchant/Hotels/components/HotelDetail';
 import useHotelAudit from './hooks/useHotelAudit';
+import { getHotelDetail } from '../../../services/hotelService';
+import { getRoomList } from '../../../services/roomService';
 
 /**
  * 酒店审核管理页面
@@ -13,7 +15,16 @@ const HotelAudit = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   
-  const { hotels, loading, searchHotels, approveHotel, rejectHotel } = useHotelAudit();
+  const { 
+    hotels, 
+    loading, 
+    pagination,
+    searchHotels, 
+    filterByStatus,
+    handlePageChange,
+    approveHotel, 
+    rejectHotel 
+  } = useHotelAudit();
 
   /**
    * 搜索酒店
@@ -23,52 +34,29 @@ const HotelAudit = () => {
   };
 
   /**
-   * 查看酒店详情 - 使用假数据
+   * 查看酒店详情 - 使用真实 API（与酒店管理页面复用逻辑）
    */
   const handleViewDetail = async (record) => {
     setDetailLoading(true);
     setIsDetailModalOpen(true);
     
     try {
-      // 模拟网络延迟
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 调用真实 API 获取酒店详情
+      const response = await getHotelDetail(record.id);
+      const hotelData = response.data || response;
       
-      // 根据酒店ID生成假数据
-      const mockDetailData = {
-        id: record.id,
-        name: record.name,
-        english_name: record.name === '易宿豪华酒店' ? 'Yisu Luxury Hotel' : 
-                      record.name === '好利来酒店' ? 'Haolilai Hotel' :
-                      record.name === '海景度假酒店' ? 'Seaview Resort Hotel' :
-                      record.name === '商务快捷酒店' ? 'Business Express Hotel' :
-                      'Mountain View Inn',
-        brand: record.merchant + '连锁',
-        star_rating: record.star_rating,
-        room_number: Math.floor(Math.random() * 50) + 20,
-        location: record.address.split('省')[0] + '省' + record.address.split('省')[1]?.split('市')[0] + '市',
-        country: '中国',
-        province: record.address.split('省')[0] + '省',
-        city: record.address.split('省')[1]?.split('市')[0] + '市',
-        district: record.address.split('市')[1]?.split('区')[0] + '区',
-        address: record.address,
-        hotel_phone: record.phone,
-        contact: record.merchant.replace('商户', '经理'),
-        contact_phone: record.phone.replace(/^0/, '138'),
-        hotel_facilities: '免费WiFi,停车场,餐厅,健身房,游泳池,会议室',
-        check_in_time: '2000-01-01 14:00:00',
-        check_out_time: '2000-01-01 12:00:00',
-        description: `${record.name}位于${record.address}，交通便利，环境优雅。酒店设施齐全，服务周到，是您商务出行和休闲度假的理想选择。`,
-        cover_image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
-        images: JSON.stringify([
-          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
-          'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800',
-          'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800',
-        ]),
-        status: record.status === 'approved' ? 1 : record.status === 'pending' ? 0 : 2,
-        created_at: record.submitTime,
-      };
+      // 获取该酒店的实际房间数（计算属性，不写入数据库）
+      try {
+        const roomResponse = await getRoomList({ hotel_id: record.id });
+        const roomList = roomResponse.data?.rooms || roomResponse.rooms || [];
+        hotelData.room_number = roomList.length;
+        console.log(`✅ 酒店详情 - 实时计算房间数: ${roomList.length}`);
+      } catch (error) {
+        console.log('⚠️ 获取房间数失败，显示为0:', error.message);
+        hotelData.room_number = 0;
+      }
       
-      setSelectedHotel(mockDetailData);
+      setSelectedHotel(hotelData);
     } catch (error) {
       console.error('❌ 获取酒店详情失败:', error.message);
       message.error('获取酒店详情失败，请重试');
@@ -112,6 +100,9 @@ const HotelAudit = () => {
       <HotelAuditTable 
         hotels={hotels}
         loading={loading}
+        pagination={pagination}
+        onPageChange={handlePageChange}
+        onStatusFilter={filterByStatus}
         onViewDetail={handleViewDetail}
         onApprove={handleApprove}
         onReject={handleReject}

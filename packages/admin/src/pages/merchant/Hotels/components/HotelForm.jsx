@@ -72,7 +72,7 @@ const HotelForm = ({
       }}
       initialValues={{
         star_rating: 3,
-        room_number: 0,
+        room_number: 1,
       }}
     >
       {/* 基本信息 */}

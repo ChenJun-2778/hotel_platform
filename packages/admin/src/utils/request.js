@@ -93,9 +93,22 @@ export const get = (url, params) => {
  * POST 请求
  */
 export const post = (url, data) => {
+  // 检查数据中是否有 undefined 值
+  const cleanData = {};
+  Object.keys(data).forEach(key => {
+    if (data[key] === undefined) {
+      console.warn(`⚠️ POST请求 - 字段 ${key} 为 undefined，已跳过`);
+    } else {
+      cleanData[key] = data[key];
+    }
+  });
+  
+  console.log('📤 POST请求 - URL:', url);
+  console.log('📤 POST请求 - 清理后的数据:', JSON.stringify(cleanData, null, 2));
+  
   return request(url, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify(cleanData),
   });
 };
 

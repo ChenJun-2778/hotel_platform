@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table, Tag, Space, Button, Modal, Input, message } from 'antd';
+import { Table, Tag, Space, Button, Modal, Input, message, Tabs } from 'antd';
 import { CheckOutlined, CloseOutlined, EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import StarRating from '../../../../components/common/StarRating';
 
@@ -8,7 +8,16 @@ const { TextArea } = Input;
 /**
  * 酒店审核表格组件
  */
-const HotelAuditTable = ({ hotels, loading, onViewDetail, onApprove, onReject }) => {
+const HotelAuditTable = ({ 
+  hotels, 
+  loading, 
+  pagination,
+  onPageChange,
+  onStatusFilter,
+  onViewDetail, 
+  onApprove, 
+  onReject 
+}) => {
   /**
    * 确认通过
    */
@@ -265,18 +274,52 @@ const HotelAuditTable = ({ hotels, loading, onViewDetail, onApprove, onReject })
     },
   ];
 
+  /**
+   * 状态筛选标签页
+   */
+  const statusTabs = [
+    { key: null, label: '全部' },
+    { key: 2, label: '待审批' },
+    { key: 1, label: '营业中' },
+    { key: 3, label: '已拒绝' },
+    { key: 0, label: '已下架' },
+  ];
+
   return (
-    <Table 
-      columns={columns} 
-      dataSource={hotels}
-      loading={loading}
-      pagination={{
-        pageSize: 10,
-        showSizeChanger: true,
-        showTotal: (total) => `共 ${total} 条`,
-      }}
-      scroll={{ x: 1400 }}
-    />
+    <div>
+      {/* 状态筛选标签页 */}
+      <Tabs
+        items={statusTabs.map(tab => ({
+          key: tab.key === null ? 'all' : String(tab.key),
+          label: tab.label,
+        }))}
+        onChange={(key) => {
+          const statusValue = key === 'all' ? null : Number(key);
+          onStatusFilter && onStatusFilter(statusValue);
+        }}
+        style={{ marginBottom: 16 }}
+      />
+
+      {/* 表格 */}
+      <Table 
+        columns={columns} 
+        dataSource={hotels}
+        loading={loading}
+        pagination={{
+          current: pagination?.current || 1,
+          pageSize: pagination?.pageSize || 10,
+          total: pagination?.total || 0,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total) => `共 ${total} 条`,
+          pageSizeOptions: ['10', '20', '50', '100'],
+          onChange: (page, pageSize) => {
+            onPageChange && onPageChange(page, pageSize);
+          },
+        }}
+        scroll={{ x: 1400 }}
+      />
+    </div>
   );
 };
 

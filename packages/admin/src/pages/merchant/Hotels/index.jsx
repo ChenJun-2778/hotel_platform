@@ -60,9 +60,11 @@ const Hotels = () => {
     setSubmitting(true);
     
     try {
-      // 1. 检查封面图片
+      // 1. 先验证表单字段（Form 组件已经自动验证了必填项）
+      // 这里只需要额外验证图片
       if (coverFileList.length === 0) {
         message.error('请上传封面图片');
+        setSubmitting(false);
         return;
       }
 
@@ -83,6 +85,7 @@ const Hotels = () => {
 
       if (!coverImage) {
         message.error('封面图片上传失败');
+        setSubmitting(false);
         return;
       }
 
@@ -109,6 +112,9 @@ const Hotels = () => {
 
       // 4. 处理省市区数据
       const location = values.area ? values.area.join('') : '';
+      
+      console.log('📍 省市区数据:', values.area);
+      console.log('📍 location:', location);
 
       // 5. 获取实际房间数（编辑模式下从房间列表实时计算）
       let actualRoomCount = 0;
@@ -119,29 +125,43 @@ const Hotels = () => {
           actualRoomCount = roomList.length;
           console.log('✅ 提交时实时计算房间数:', actualRoomCount);
         } catch {
-          console.log('⚠️ 获取房间数失败，使用0');
-          actualRoomCount = 0;
+          console.log('⚠️ 获取房间数失败，使用1');
+          actualRoomCount = 1;
         }
       }
 
-      // 6. 构建提交数据
+      // 6. 构建提交数据（只提交后端需要的字段）
       const submitData = {
-        name: values.name,
-        english_name: values.english_name,
-        brand: values.brand,
+        name: values.name || '',
+        english_name: values.english_name || '',
+        brand: values.brand || '',
         star_rating: Number(values.star_rating) || 3,
-        room_number: isEditMode ? actualRoomCount : 0, // 新建时为0，编辑时使用实际房间数
-        location: location,
-        address: values.address,
-        hotel_phone: values.hotel_phone,
-        contact: values.contact,
-        contact_phone: values.contact_phone,
-        hotel_facilities: values.hotel_facilities?.join(',') || '',
-        description: values.description,
-        cover_image: coverImage,
-        images: JSON.stringify(images),
-        ...(!isEditMode && { status: HOTEL_STATUS.PENDING }),
+        room_number: isEditMode ? (actualRoomCount || 1) : 1,
+        location: location || '',
+        address: values.address || '',
+        hotel_phone: values.hotel_phone || '',
+        contact: values.contact || '',
+        contact_phone: values.contact_phone || '',
+        hotel_facilities: (values.hotel_facilities && Array.isArray(values.hotel_facilities)) 
+          ? values.hotel_facilities.join(',') 
+          : '',
+        description: values.description || '',
+        cover_image: coverImage || '',
+        images: images.length > 0 ? JSON.stringify(images) : '[]',
       };
+      
+      // 严格检查并清理所有 undefined、null 值
+      Object.keys(submitData).forEach(key => {
+        if (submitData[key] === undefined || submitData[key] === null) {
+          console.warn(`⚠️ 字段 ${key} 的值为 ${submitData[key]}，已设置为空字符串`);
+          submitData[key] = '';
+        }
+      });
+      
+      console.log('📝 提交数据:', JSON.stringify(submitData, null, 2));
+      console.log('📝 数据类型检查:', Object.keys(submitData).map(key => 
+        `${key}: ${typeof submitData[key]} = ${submitData[key]}`
+      ).join('\n'));
 
       // 7. 提交到后端
       let success;

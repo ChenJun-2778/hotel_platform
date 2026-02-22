@@ -71,3 +71,16 @@ export const approveHotel = (id) => {
 export const rejectHotel = (id, reason) => {
   return put(HOTEL_API.REJECT(id), { reason });
 };
+
+/**
+ * 获取酒店审核列表
+ * @param {object} params - 查询参数
+ * @param {number} params.page - 页码（可选，默认1）
+ * @param {number} params.pageSize - 每页数量（可选，默认10）
+ * @param {number} params.status - 状态筛选（可选）：0-已下架，1-营业中，2-待审批，3-审批拒绝
+ * @returns {Promise}
+ */
+export const getHotelAuditList = (params = {}) => {
+  console.log('🔍 获取酒店审核列表 - 参数:', params);
+  return get(HOTEL_API.AUDIT_LIST, params);
+};

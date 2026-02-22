@@ -66,7 +66,7 @@ const Profile = ({
           const userData = response.data || response;
           console.log('✅ 后端返回用户数据:', userData);
           setUserInfo(userData);
-        } catch (error) {
+        } catch {
           // 后端接口不可用时，继续使用 AuthContext 中的数据
           console.log('⚠️ 后端接口暂不可用，使用登录时保存的用户信息');
         }
@@ -217,49 +217,79 @@ const Profile = ({
   };
 
   /**
+   * 上传头像前的验证
+   */
+  const beforeAvatarUpload = (file) => {
+    // 验证文件类型
+    const isImage = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg' || file.type === 'image/webp';
+    if (!isImage) {
+      message.error('只能上传 JPG/PNG/WEBP 格式的图片！');
+      return false;
+    }
+    
+    // 验证文件大小（最大 2MB）
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      message.error('图片大小不能超过 2MB！');
+      return false;
+    }
+    
+    return true;
+  };
+
+  /**
    * 上传头像
    */
   const handleAvatarUpload = async (info) => {
-    if (info.file.status === 'uploading') {
-      setLoading(true);
+    const { file } = info;
+    
+    // 验证文件
+    if (!beforeAvatarUpload(file)) {
       return;
     }
-    if (info.file.status === 'done') {
-      try {
-        if (onUploadAvatar) {
-          await onUploadAvatar(info.file);
-        } else {
-          // TODO: 上传到OSS获取URL
-          const avatarUrl = 'https://example.com/avatar.jpg'; // 这里应该是OSS返回的URL
-          
-          // 更新用户头像
-          await updateUserInfo(displayUserInfo.id, {
-            username: displayUserInfo.username,
-            email: displayUserInfo.email,
-            phone: displayUserInfo.phone,
-            avatar_url: avatarUrl,
-          });
-          
-          // 更新本地状态
-          setUserInfo(prev => ({
-            ...prev,
-            avatar_url: avatarUrl,
-          }));
-          
-          // 同步更新 AuthContext
-          login({
-            ...user,
-            avatar_url: avatarUrl,
-          });
-          
-          message.success('头像上传成功！');
-        }
-      } catch (err) {
-        console.error('上传失败:', err);
-        message.error('上传失败，请重试');
-      } finally {
-        setLoading(false);
+    
+    try {
+      setLoading(true);
+      message.loading({ content: '正在上传头像...', key: 'uploadAvatar' });
+      
+      if (onUploadAvatar) {
+        await onUploadAvatar(file);
+      } else {
+        // 上传到 OSS
+        const { uploadToOss } = await import('../../../utils/oss');
+        const avatarUrl = await uploadToOss(file, 'avatars');
+        
+        console.log('✅ 头像上传成功:', avatarUrl);
+        
+        // 更新用户头像
+        const updateData = {
+          username: displayUserInfo.username,
+          email: displayUserInfo.email,
+          phone: displayUserInfo.phone,
+          avatar_url: avatarUrl,
+        };
+        
+        await updateUserInfo(displayUserInfo.id, updateData);
+        
+        // 更新本地状态
+        setUserInfo(prev => ({
+          ...prev,
+          avatar_url: avatarUrl,
+        }));
+        
+        // 同步更新 AuthContext
+        login({
+          ...user,
+          avatar_url: avatarUrl,
+        });
+        
+        message.success({ content: '头像上传成功！', key: 'uploadAvatar' });
       }
+    } catch (err) {
+      console.error('❌ 上传失败:', err);
+      message.error({ content: err.message || '上传失败，请重试', key: 'uploadAvatar' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -272,18 +302,21 @@ const Profile = ({
             <Upload
               name="avatar"
               showUploadList={false}
-              beforeUpload={() => false}
-              onChange={handleAvatarUpload}
+              customRequest={({ file }) => {
+                handleAvatarUpload({ file });
+              }}
+              accept="image/jpeg,image/png,image/jpg,image/webp"
             >
               <div className="avatar-wrapper">
                 <Avatar 
                   size={100} 
                   icon={<UserOutlined />}
-                  src={displayUserInfo.avatar}
+                  src={displayUserInfo.avatar_url || displayUserInfo.avatar}
                   className="user-avatar"
                 />
                 <div className="avatar-overlay">
                   <CameraOutlined style={{ fontSize: 24 }} />
+                  <div style={{ fontSize: 12, marginTop: 4 }}>更换头像</div>
                 </div>
               </div>
             </Upload>

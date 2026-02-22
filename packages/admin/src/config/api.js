@@ -20,6 +20,7 @@ export const HOTEL_API = {
   UPDATE_STATUS: (id) => `${API_BASE_URL}/hotels/${id}/status`, // PUT - 更新酒店状态
   APPROVE: (id) => `${API_BASE_URL}/hotels/${id}/approve`, // PUT - 审核通过
   REJECT: (id) => `${API_BASE_URL}/hotels/${id}/reject`,   // PUT - 审核拒绝
+  AUDIT_LIST: `${API_BASE_URL}/hotelsReview/list`, // GET - 获取审核列表
 };
 
 // 房间相关接口

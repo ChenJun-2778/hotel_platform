@@ -256,8 +256,6 @@ const Login = () => {
                     name="password"
                     rules={passwordLoginRules}
                   >
-                    ]}
-                  >
                     <Input.Password 
                       prefix={<LockOutlined />} 
                       placeholder="输入密码" 

@@ -1,89 +1,68 @@
 import { useState, useCallback, useEffect } from 'react';
 import { message } from 'antd';
+import { getHotelAuditList, approveHotel as approveHotelAPI, rejectHotel as rejectHotelAPI } from '../../../../services/hotelService';
 
 /**
- * 酒店审核管理 Hook - 使用假数据
+ * 酒店审核管理 Hook
  */
 const useHotelAudit = () => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+  const [statusFilter, setStatusFilter] = useState(null); // 状态筛选
 
   /**
-   * 加载酒店列表 - 假数据
+   * 加载酒店列表
    */
-  const loadHotels = useCallback(async () => {
+  const loadHotels = useCallback(async (page = 1, pageSize = 10, status = null) => {
     try {
       setLoading(true);
       
-      // 模拟网络延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const params = {
+        page,
+        pageSize,
+      };
       
-      // 假数据
-      const mockHotels = [
-        {
-          key: '1',
-          id: 1,
-          name: '易宿豪华酒店',
-          merchant: '张三商户',
-          phone: '0571-12345678',
-          address: '浙江省杭州市西湖区文三路123号',
-          star_rating: 5,
-          status: 'pending',
-          submitTime: '2024-01-15 10:30:00',
-          reject_reason: null,
-        },
-        {
-          key: '2',
-          id: 2,
-          name: '好利来酒店',
-          merchant: '李四商户',
-          phone: '0555-1234567',
-          address: '河北省秦皇岛市北戴河区江南水岸',
-          star_rating: 3,
-          status: 'approved',
-          submitTime: '2024-01-14 14:20:00',
-          reject_reason: null,
-        },
-        {
-          key: '3',
-          id: 3,
-          name: '海景度假酒店',
-          merchant: '王五商户',
-          phone: '0898-8888888',
-          address: '海南省三亚市天涯区海滨路88号',
-          star_rating: 4,
-          status: 'rejected',
-          submitTime: '2024-01-13 09:15:00',
-          reject_reason: '酒店资质不全，缺少消防许可证',
-        },
-        {
-          key: '4',
-          id: 4,
-          name: '商务快捷酒店',
-          merchant: '赵六商户',
-          phone: '010-66668888',
-          address: '北京市朝阳区建国路99号',
-          star_rating: 3,
-          status: 'pending',
-          submitTime: '2024-01-16 16:45:00',
-          reject_reason: null,
-        },
-        {
-          key: '5',
-          id: 5,
-          name: '山景民宿',
-          merchant: '孙七商户',
-          phone: '0571-99998888',
-          address: '浙江省杭州市西湖区龙井路168号',
-          star_rating: 4,
-          status: 'rejected',
-          submitTime: '2024-01-12 11:20:00',
-          reject_reason: '酒店图片不清晰，需要重新上传高清图片',
-        },
-      ];
+      // 如果有状态筛选，添加到参数中
+      if (status !== null && status !== undefined) {
+        params.status = status;
+      }
       
-      console.log('✅ 加载酒店列表成功:', mockHotels.length);
-      setHotels(mockHotels);
+      console.log('🔍 请求参数:', params);
+      
+      const response = await getHotelAuditList(params);
+      
+      // 处理返回数据 - 适配实际后端返回结构
+      const hotelList = response.data?.list || [];
+      const paginationData = response.data?.pagination || {};
+      const total = paginationData.total || 0;
+      
+      console.log('✅ 加载酒店审核列表成功:', hotelList.length, '条');
+      
+      // 转换数据格式 - 适配实际字段名
+      const formattedHotels = hotelList.map(hotel => ({
+        key: hotel.id,
+        id: hotel.id,
+        name: hotel.hotel_name || hotel.name || '-',
+        merchant: hotel.merchant_name || hotel.user_name || '-',
+        phone: hotel.hotel_phone || hotel.phone || '-',
+        address: hotel.address || '-',
+        star_rating: hotel.star_rating || 3,
+        status: getStatusKey(hotel.status), // 转换状态
+        submitTime: formatDate(hotel.created_at) || '-',
+        reject_reason: hotel.rejection_reason || hotel.reject_reason || null,
+      }));
+      
+      setHotels(formattedHotels);
+      setPagination({
+        current: page,
+        pageSize,
+        total,
+      });
     } catch (error) {
       console.error('❌ 加载酒店列表失败:', error.message);
       message.error('加载酒店列表失败');
@@ -93,19 +72,83 @@ const useHotelAudit = () => {
   }, []);
 
   /**
+   * 格式化日期
+   */
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  /**
+   * 转换后端状态值到前端状态key
+   * 后端：0-已下架，1-营业中，2-待审批，3-审批拒绝
+   * 前端：pending, approved, rejected
+   */
+  const getStatusKey = (status) => {
+    const statusMap = {
+      0: 'offline',    // 已下架
+      1: 'approved',   // 营业中（已通过）
+      2: 'pending',    // 待审批
+      3: 'rejected',   // 审批拒绝
+    };
+    return statusMap[status] || 'pending';
+  };
+
+  /**
+   * 转换前端状态key到后端状态值（预留，暂未使用）
+   */
+  // const getStatusValue = (statusKey) => {
+  //   const statusMap = {
+  //     'offline': 0,
+  //     'approved': 1,
+  //     'pending': 2,
+  //     'rejected': 3,
+  //   };
+  //   return statusMap[statusKey];
+  // };
+
+  /**
    * 初始化加载
    */
   useEffect(() => {
-    loadHotels();
-  }, [loadHotels]);
+    loadHotels(1, 10, null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * 搜索酒店
    */
   const searchHotels = useCallback((keyword) => {
     console.log('搜索酒店:', keyword);
-    message.info('搜索功能开发中');
+    // TODO: 后端需要支持关键词搜索
+    message.info('搜索功能待后端支持');
   }, []);
+
+  /**
+   * 切换状态筛选
+   */
+  const filterByStatus = useCallback((status) => {
+    setStatusFilter(status);
+    loadHotels(1, pagination.pageSize, status);
+  }, [pagination.pageSize, loadHotels]);
+
+  /**
+   * 分页变化
+   */
+  const handlePageChange = useCallback((page, pageSize) => {
+    loadHotels(page, pageSize, statusFilter);
+  }, [statusFilter, loadHotels]);
 
   /**
    * 审核通过
@@ -114,23 +157,20 @@ const useHotelAudit = () => {
     try {
       setLoading(true);
       
-      // 模拟网络延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // 更新本地状态
-      setHotels(prev => prev.map(hotel => 
-        hotel.key === hotelId ? { ...hotel, status: 'approved' } : hotel
-      ));
+      await approveHotelAPI(hotelId);
       
       console.log('✅ 审核通过成功');
       message.success('审核通过！');
+      
+      // 重新加载列表
+      await loadHotels(pagination.current, pagination.pageSize, statusFilter);
     } catch (error) {
       console.error('❌ 审核失败:', error.message);
-      message.error('审核失败，请重试');
+      message.error(error.message || '审核失败，请重试');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pagination, statusFilter, loadHotels]);
 
   /**
    * 审核拒绝
@@ -139,31 +179,31 @@ const useHotelAudit = () => {
     try {
       setLoading(true);
       
-      // 模拟网络延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // 更新本地状态
-      setHotels(prev => prev.map(hotel => 
-        hotel.key === hotelId ? { ...hotel, status: 'rejected', reject_reason: reason } : hotel
-      ));
+      await rejectHotelAPI(hotelId, reason);
       
       console.log('✅ 拒绝成功');
       message.success('已拒绝该酒店');
+      
+      // 重新加载列表
+      await loadHotels(pagination.current, pagination.pageSize, statusFilter);
     } catch (error) {
       console.error('❌ 拒绝失败:', error.message);
-      message.error('操作失败，请重试');
+      message.error(error.message || '操作失败，请重试');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pagination, statusFilter, loadHotels]);
 
   return {
     hotels,
     loading,
+    pagination,
     searchHotels,
+    filterByStatus,
+    handlePageChange,
     approveHotel,
     rejectHotel,
-    refreshHotels: loadHotels,
+    refreshHotels: () => loadHotels(pagination.current, pagination.pageSize, statusFilter),
   };
 };
 

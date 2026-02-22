@@ -22,10 +22,24 @@ const OrderTable = ({ orders, loading, onViewDetail }) => {
       width: 150,
     },
     {
-      title: '房间',
-      dataIndex: 'room',
-      key: 'room',
+      title: '房型',
+      dataIndex: 'roomType',
+      key: 'roomType',
+      width: 120,
+    },
+    {
+      title: '房间号',
+      dataIndex: 'assignedRoom',
+      key: 'assignedRoom',
       width: 100,
+      render: (assignedRoom, record) => {
+        // 待确认状态显示"待分配"
+        if (record.status === 'pending') {
+          return <span style={{ color: '#8c8c8c' }}>待分配</span>;
+        }
+        // 已确认状态显示房间号
+        return assignedRoom || record.room || '-';
+      },
     },
     {
       title: '客户',

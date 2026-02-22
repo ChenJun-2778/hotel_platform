@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Descriptions, Tag, Image, Spin } from 'antd';
+import { Descriptions, Tag, Image } from 'antd';
+import DetailModal from '../../../../components/common/DetailModal';
 import { getRoomStatusInfo } from '../../../../constants/roomStatus';
 
 /**
@@ -11,20 +12,18 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
   const statusInfo = room ? getRoomStatusInfo(room.status) : null;
 
   return (
-    <Modal
+    <DetailModal
+      visible={visible}
       title={`房间详情 - ${room?.room_number || room?.roomNumber || ''}`}
-      open={visible}
-      onCancel={onClose}
+      statusInfo={statusInfo}
+      onClose={onClose}
       footer={null}
       width={800}
-      styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' } }}
+      column={2}
+      loading={loading}
     >
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px 0' }}>
-          <Spin size="large" />
-        </div>
-      ) : room ? (
-        <Descriptions variant="bordered" column={2}>
+      {room && (
+        <>
           <Descriptions.Item label="房间号">
             {room.room_number}
           </Descriptions.Item>
@@ -62,10 +61,7 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
               / {room.total_rooms}间
             </span>
           </Descriptions.Item>
-          <Descriptions.Item label="状态">
-            <Tag color={statusInfo.color}>{statusInfo.text}</Tag>
-          </Descriptions.Item>
-          <Descriptions.Item label="预定人">
+          <Descriptions.Item label="预定人" span={2}>
             {room.booked_by && room.booked_by !== "0" ? room.booked_by : '无'}
           </Descriptions.Item>
           <Descriptions.Item label="房间设施" span={2}>
@@ -105,9 +101,9 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
           <Descriptions.Item label="创建时间" span={2}>
             {room.created_at ? new Date(room.created_at).toLocaleString('zh-CN') : '-'}
           </Descriptions.Item>
-        </Descriptions>
-      ) : null}
-    </Modal>
+        </>
+      )}
+    </DetailModal>
   );
 };
 

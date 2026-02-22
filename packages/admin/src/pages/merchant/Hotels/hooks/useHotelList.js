@@ -93,13 +93,37 @@ const useHotelList = () => {
   // 添加酒店
   const addHotel = async (hotelData) => {
     try {
-      await createHotel(hotelData);
+      // 检查用户信息
+      if (!user || !user.id) {
+        console.error('❌ 用户信息缺失:', user);
+        message.error('用户信息缺失，请重新登录');
+        return false;
+      }
+      
+      // 添加当前用户ID
+      const submitData = {
+        ...hotelData,
+        user_id: user.id, // 添加用户ID
+      };
+      
+      // 严格检查并清理所有 undefined、null 值
+      Object.keys(submitData).forEach(key => {
+        if (submitData[key] === undefined || submitData[key] === null) {
+          console.warn(`⚠️ useHotelList - 字段 ${key} 的值为 ${submitData[key]}，已设置为空字符串`);
+          submitData[key] = '';
+        }
+      });
+      
+      console.log('✅ 创建酒店 - 用户ID:', user.id);
+      console.log('✅ 创建酒店 - 最终提交数据:', JSON.stringify(submitData, null, 2));
+      
+      await createHotel(submitData);
       message.success('酒店添加成功！');
       await loadHotelList(); // 重新加载列表
       return true;
     } catch (error) {
       console.error('添加酒店失败:', error);
-      message.error('添加酒店失败，请重试');
+      message.error(error.message || '添加酒店失败，请重试');
       return false;
     }
   };
