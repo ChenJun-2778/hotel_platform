@@ -17,12 +17,12 @@ import DateRangePicker from '@/components/DateRangePicker';
 // 引入api
 import { apiGetHotelList } from '@/api/hotel';
 
-const TYPE_MAP_STR_TO_NUM: Record<string, number> = {
-  'domestic': 1,
-  'overseas': 2,
-  'hourly': 3,
-  'inn': 4
-};
+// const TYPE_MAP_STR_TO_NUM: Record<string, number> = {
+//   'domestic': 1,
+//   'overseas': 2,
+//   'hourly': 3,
+//   'inn': 4
+// };
 const List: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams(); // ✅ 这里需要 setSearchParams
   const navigate = useNavigate();
@@ -45,18 +45,17 @@ const List: React.FC = () => {
   // 控制排序
   const [sortType, setSortType] = useState<string>('def');
   // 控制 Dropdown 关闭
-  const dropdownRef = useRef<any>(null);
+  // const dropdownRef = useRef<any>(null);
   // 控制弹窗显示
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   // 城市跳转方法
   const handleCityClick = () => {
-    // 把 URL 里的 'domestic' 转成 1，默认 1
-    const targetTypeId = TYPE_MAP_STR_TO_NUM[type || 'domestic'] || 1;
+    // ✅ 修复：直接把 URL 里的 type 字符串转成数字，兜底为 1
+    const targetTypeId = Number(type) || 1;
 
-    // 关闭下拉面板 (为了体验好，跳走前先关掉)
     setShowSearchPanel(false);
-
-    // 跳转
+    
+    // 如果是海外，这里传过去的 targetTypeId 就是实打实的 2！
     goCities(targetTypeId, city);
   };
   // 左侧：打开弹窗
@@ -128,13 +127,12 @@ const List: React.FC = () => {
       const selected = localStorage.getItem('selectedCity');
       if (selected) {
         // console.log('检测到新城市，更新草稿:', selected);
-
         // ✅ 关键修改 A：只更新“草稿城市”，不更新 URL
         setTempCity(selected);
-
+        // 这里需要拿到最新的 safeBeginDate 和 safeEndDate
+        setTempDates([safeBeginDate, safeEndDate]);
         // ✅ 关键修改 B：强制打开 SearchPanel，让用户确认
         setShowSearchPanel(true);
-
         localStorage.removeItem('selectedCity');
       }
     };
@@ -151,7 +149,7 @@ const List: React.FC = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [safeBeginDate, safeEndDate]);
   // ✅ 清除关键词的逻辑
   const handleClearKeyword = (e: React.MouseEvent) => {
     // 1. 阻止冒泡：防止触发父级 div 的点击跳转
