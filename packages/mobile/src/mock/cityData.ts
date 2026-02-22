@@ -1,7 +1,7 @@
 // 文件路径：src/mock/cityData.ts
 
 // export const hotCities = ['北京', '上海', '广州', '深圳', '成都', '杭州', '三亚', '西安', '重庆', '武汉'];
-export const domesticHotCities = ['北京', '上海', '广州', '深圳', '成都', '杭州', '三亚', '西安', '重庆', '武汉'];
+export const domesticHotCities = ['北京', '上海', '深圳', '成都', '杭州', '三亚', '西安', '重庆'];
 
 export const domesticCityGroups = [
   {

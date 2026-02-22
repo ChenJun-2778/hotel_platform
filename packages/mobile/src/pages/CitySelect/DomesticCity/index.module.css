@@ -1,0 +1,118 @@
+/* =========================================
+   境内城市 (DomesticCity) 专属样式
+========================================= */
+
+.domesticContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%; 
+  width: 100%;
+}
+
+.searchWrapper {
+  padding: 8px 12px;
+  background: #fff;
+  flex-shrink: 0; 
+}
+
+/* ✅ 1. 锁死父级容器高度，这是 IndexBar 正常工作的前提 */
+.body {
+  flex: 1; 
+  height: 0; /* 强制高度不被撑开 */
+  position: relative; 
+}
+
+/* ✅ 1. 核心：强制提升侧边导航条的层级到最高 */
+:global(.adm-index-bar-sidebar) {
+  z-index: 1000 !important; /* 赋予绝对优先权 */
+  right: 2px !important;    /* 稍微往右靠，增加可视空间 */
+  background: rgba(255, 255, 255, 0.01); /* 极其微弱的背景色有时能辅助层级渲染 */
+}
+
+/* ✅ 2. 关键修复：降低 IndexBar 内部所有面板的层级 */
+/* 默认情况下，Panel Title 可能会带有 z-index，我们必须强行压制它 */
+:global(.adm-index-bar-panel) {
+  z-index: 1 !important;
+}
+
+:global(.adm-index-bar-panel-title) {
+  z-index: 1 !important; /* 确保灰色吸顶标题层级低于侧边栏 */
+  position: sticky !important; /* 保持吸顶，但层级变低 */
+  background-color: #f5f5f5 !important;
+}
+
+/* ✅ 3. 增强：防止列表项（List Item）在滚动时意外遮挡导航 */
+:global(.adm-list) {
+  z-index: 1 !important;
+}
+
+/* ✅ 4. 优化：隐藏 PC 原生滚动条，防止侧边栏位移 */
+:global(.adm-index-bar-body) {
+  scrollbar-width: none; 
+  -ms-overflow-style: none; 
+}
+:global(.adm-index-bar-body)::-webkit-scrollbar {
+  display: none; 
+}
+
+/* --- 下面的 UI 样式保持不变 --- */
+.sectionContent {
+  padding: 12px 16px 16px 16px;
+  background: #fff;
+}
+
+.cityTag {
+  background: #f7f8fa;
+  color: #333;
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.cityTag:active {
+  background: #e0e0e0;
+}
+
+.activeTag {
+  background: #e1f0ff;
+  color: #0086F6;
+  font-weight: bold;
+}
+
+.locationCity {
+  display: inline-flex;
+  align-items: center;
+  background: #f0f8ff;
+  color: #0086F6;
+  padding: 8px 24px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 14px;
+  border: 1px solid #e1f0ff;
+  cursor: pointer;
+}
+
+.locationIcon {
+  margin-right: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.gpsText {
+  font-size: 10px;
+  color: #999;
+  font-weight: normal;
+  margin-left: 6px;
+}
+
+/* --- 隐藏 PC 端模拟时的恶心原生滚动条 --- */
+:global(.adm-index-bar-body)::-webkit-scrollbar {
+  display: none; 
+}
+:global(.adm-index-bar-body) {
+  scrollbar-width: none; 
+  -ms-overflow-style: none; 
+}

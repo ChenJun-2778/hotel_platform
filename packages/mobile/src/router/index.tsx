@@ -19,6 +19,8 @@ import Login from '@/pages/Login';
 import List from '@/pages/List';         // 酒店列表/搜索结果页
 import Detail from '@/pages/Detail';     // 酒店详情页
 import CitySelect from '@/pages/CitySelect'; // 城市选择页
+import DomesticCity from '@/pages/CitySelect/DomesticCity/inedx'; // 国内城市选择
+import OverseasCity from '@/pages/CitySelect/OverseasCity/index'; // 境外城市选择
 import OrderFill from '@/pages/OrderFill';   // 订单填写页
 import Search from '@/pages/Search'; // Search页面
 
@@ -77,7 +79,15 @@ const router = createBrowserRouter([
   },
   {
     path: '/city-select',
-    element: <CitySelect />,
+    element: <CitySelect />, // 这里的 CitySelect 就是包含 NavBar 和 Tabs 还有 Outlet 的父组件
+    children: [
+      // 默认重定向：如果用户直接进 /city-select，自动跳转到国内页面，并携带可能的参数
+      { index: true, element: <Navigate to="domestic" replace /> },
+      // 国内城市子路由
+      { path: 'domestic', element: <DomesticCity /> },
+      // 海外城市子路由
+      { path: 'overseas', element: <OverseasCity /> },
+    ]
   },
   {
     // 填写订单页 (需要参数 id)

@@ -1,75 +1,19 @@
+/* =========================================
+   父级容器 (CitySelect 壳子) 专属样式
+========================================= */
+
 .container {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* 占满整个手机屏幕高度 */
-  background-color: #fff;
-  overflow: hidden; /* 防止最外层出现滚动条 */
+  height: 100vh; /* ✅ 极其致命：锁定屏幕总高度！ */
+  background-color: #f5f5f9;
+  overflow: hidden; /* 防止整个网页被拉长 */
 }
 
 .header {
-  flex-shrink: 0; /* 头部不被压缩 */
+  flex-shrink: 0; /* 保护头部导航不被压缩 */
   background: #fff;
   z-index: 10;
-  border-bottom: 1px solid #f5f5f5;
 }
 
-.searchWrapper {
-  padding: 0 12px 12px 12px;
-}
-
-.body {
-  flex: 1; /* 占据剩余所有空间 */
-  overflow-y: auto; /* 允许列表内部滚动 */
-  position: relative; /* 为 IndexBar 定位做准备 */
-}
-
-/* 自定义 IndexBar 侧边栏的样式（可选，调整大小使其更好点） */
-:global(.adm-index-bar-sidebar) {
-  z-index: 20;
-}
-
-/* 区块内容的内边距 */
-.sectionContent {
-  padding: 12px 16px 16px 16px;
-  background: #fff;
-}
-
-/* 热门城市的小标签 */
-.cityTag {
-  background: #f7f8fa;
-  color: #333;
-  text-align: center;
-  padding: 8px 0;
-  border-radius: 4px;
-  font-size: 13px;
-  /* 增加一点点击反馈效果 */
-  transition: background 0.2s;
-}
-
-.cityTag:active {
-  background: #e0e0e0;
-}
-
-/* 定位城市 */
-.locationCity {
-  display: inline-flex;
-  align-items: center;
-  background: #f0f8ff; /* 浅蓝色背景 */
-  color: #0086F6; /* 携程蓝 */
-  padding: 8px 24px;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 14px;
-  border: 1px solid #e1f0ff;
-}
-
-.locationIcon {
-  margin-right: 4px;
-}
-
-.gpsText {
-  font-size: 10px;
-  color: #999;
-  font-weight: normal;
-  margin-left: 6px;
-}
+/* 提示：那个 contentWrapper 的样式你在 TSX 的 style 里写了 flex: 1 和 minHeight: 0，所以这里不用写也没关系 */
