@@ -14,7 +14,15 @@ export const uploadImagesToOss = async (fileList, folder = 'images', messageKey 
     return images;
   }
 
-  message.loading({ content: '正在上传图片...', key: messageKey });
+  // 统计需要上传的新文件数量
+  const newFilesCount = fileList.filter(file => file.originFileObj).length;
+  const existingFilesCount = fileList.filter(file => file.url && !file.originFileObj).length;
+  
+  console.log(`📤 图片上传统计: 新文件=${newFilesCount}, 已有文件=${existingFilesCount}`);
+  
+  if (newFilesCount > 0) {
+    message.loading({ content: `正在上传 ${newFilesCount} 张新图片...`, key: messageKey });
+  }
   
   try {
     const { uploadToOss } = await import('./oss');
@@ -24,15 +32,21 @@ export const uploadImagesToOss = async (fileList, folder = 'images', messageKey 
       
       if (file.originFileObj) {
         // 新上传的文件，需要上传到 OSS
+        console.log(`📤 上传新文件: ${file.name}`);
         const url = await uploadToOss(file.originFileObj, folder);
         images.push(url);
       } else if (file.url) {
-        // 已有的图片 URL（编辑时）
+        // 已有的图片 URL（编辑时），直接使用，不重新上传
+        console.log(`✅ 复用已有图片: ${file.url}`);
         images.push(file.url);
       }
     }
     
-    message.success({ content: '图片上传成功', key: messageKey });
+    if (newFilesCount > 0) {
+      message.success({ content: `${newFilesCount} 张新图片上传成功`, key: messageKey });
+    }
+    
+    console.log(`✅ 图片处理完成: 共 ${images.length} 张图片`);
     return images;
   } catch (error) {
     message.error({ content: '图片上传失败', key: messageKey });

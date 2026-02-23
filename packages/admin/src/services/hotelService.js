@@ -44,13 +44,31 @@ export const updateHotel = (id, hotelData) => {
 };
 
 /**
- * 更新酒店状态
+ * 更新酒店状态（已废弃，使用 putUpHotel 和 takeDownHotel 代替）
  * @param {string|number} id - 酒店ID
  * @param {number} status - 状态值
  * @returns {Promise}
  */
 export const updateHotelStatus = (id, status) => {
   return put(HOTEL_API.UPDATE_STATUS(id), { status });
+};
+
+/**
+ * 上架酒店
+ * @param {string|number} id - 酒店ID
+ * @returns {Promise}
+ */
+export const putUpHotel = (id) => {
+  return put(HOTEL_API.PUT_UP(id));
+};
+
+/**
+ * 下架酒店
+ * @param {string|number} id - 酒店ID
+ * @returns {Promise}
+ */
+export const takeDownHotel = (id) => {
+  return put(HOTEL_API.TAKE_DOWN(id));
 };
 
 /**
@@ -65,11 +83,11 @@ export const approveHotel = (id) => {
 /**
  * 审核拒绝酒店
  * @param {string|number} id - 酒店ID
- * @param {string} reason - 拒绝原因（可选）
+ * @param {string} reason - 拒绝原因
  * @returns {Promise}
  */
 export const rejectHotel = (id, reason) => {
-  return put(HOTEL_API.REJECT(id), { reason });
+  return put(HOTEL_API.REJECT(id), { rejection_reason: reason });
 };
 
 /**

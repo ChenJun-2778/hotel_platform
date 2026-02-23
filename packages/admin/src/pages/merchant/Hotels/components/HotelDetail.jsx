@@ -31,33 +31,23 @@ const HotelDetail = ({ hotel, loading }) => {
           color: '#fff'
         }}
       >
-        <Row gutter={16} align="middle">
-          <Col flex="auto">
-            <div style={{ fontSize: 24, fontWeight: 600, marginBottom: 8 }}>
-              {hotel.name}
-            </div>
-            {hotel.english_name && (
-              <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 12 }}>
-                {hotel.english_name}
-              </div>
-            )}
-            <Space size="large">
-              <Space>
-                <StarFilled style={{ color: '#ffd700' }} />
-                <span>{hotel.star_rating}星级</span>
-              </Space>
-              {hotel.brand && (
-                <Tag color="purple" style={{ margin: 0 }}>{hotel.brand}</Tag>
-              )}
-            </Space>
-          </Col>
-          <Col>
-            <div style={{ textAlign: 'center', padding: '12px 24px', background: 'rgba(255,255,255,0.2)', borderRadius: 8 }}>
-              <div style={{ fontSize: 32, fontWeight: 600 }}>{hotel.room_number || 0}</div>
-              <div style={{ fontSize: 12, opacity: 0.9 }}>房间数</div>
-            </div>
-          </Col>
-        </Row>
+        <div style={{ fontSize: 24, fontWeight: 600, marginBottom: 8 }}>
+          {hotel.name}
+        </div>
+        {hotel.english_name && (
+          <div style={{ fontSize: 14, opacity: 0.9, marginBottom: 12 }}>
+            {hotel.english_name}
+          </div>
+        )}
+        <Space size="large">
+          <Space>
+            <StarFilled style={{ color: '#ffd700' }} />
+            <span>{hotel.star_rating}星级</span>
+          </Space>
+          {hotel.brand && (
+            <Tag color="purple" style={{ margin: 0 }}>{hotel.brand}</Tag>
+          )}
+        </Space>
       </Card>
 
       {/* 位置信息 */}

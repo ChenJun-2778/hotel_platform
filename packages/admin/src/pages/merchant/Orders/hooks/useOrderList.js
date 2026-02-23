@@ -1,185 +1,159 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { message } from 'antd';
+import { getOrderList, confirmOrder as confirmOrderAPI } from '../../../../services/orderService';
+import { ORDER_STATUS } from '../utils/orderStatus';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 /**
  * 订单列表管理 Hook
  */
 const useOrderList = () => {
-  const [orders, setOrders] = useState(mockOrders);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  /**
-   * 搜索订单
-   */
-  const searchOrders = useCallback((keyword) => {
-    if (!keyword) {
-      setOrders(mockOrders);
-      return;
-    }
-
-    setLoading(true);
-    // 模拟搜索延迟
-    setTimeout(() => {
-      const filtered = mockOrders.filter(order => 
-        order.orderNo.toLowerCase().includes(keyword.toLowerCase()) ||
-        order.customer.toLowerCase().includes(keyword.toLowerCase())
-      );
-      setOrders(filtered);
-      setLoading(false);
-    }, 300);
-  }, []);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   /**
    * 加载订单列表
    */
-  const loadOrders = useCallback(async () => {
+  const loadOrders = useCallback(async (page = pagination.current, pageSize = pagination.pageSize, keyword = searchKeyword) => {
     setLoading(true);
     try {
-      // TODO: 调用后端 API
-      // const response = await getOrderList();
-      // setOrders(response.data);
+      const params = {
+        page,
+        pageSize,
+      };
       
-      // 模拟加载
-      setTimeout(() => {
-        setOrders(mockOrders);
-        setLoading(false);
-      }, 500);
+      // 添加用户ID（商户只能看到自己的订单）
+      if (user?.id) {
+        params.userId = user.id;
+      }
+      
+      if (keyword) {
+        // 尝试按订单号搜索
+        params.order_no = keyword;
+        // 同时按客户名称搜索
+        params.guest_name = keyword;
+      }
+      
+      console.log('🔍 请求订单列表参数:', params);
+      
+      const response = await getOrderList(params);
+      console.log('✅ 后端返回的订单数据:', response);
+      
+      // 后端返回格式：{ data: { total: 0, orders: [] }, success: true, message: '' }
+      const responseData = response.data || response;
+      const orderList = responseData.orders || responseData.list || [];
+      const total = responseData.total || 0;
+      
+      console.log('✅ 解析后的订单列表:', orderList);
+      console.log('✅ 订单总数:', total);
+      
+      // 格式化订单数据以匹配前端字段
+      const formattedOrders = Array.isArray(orderList) ? orderList.map((order, index) => ({
+        key: order.id || order.order_no || `order-${index}`,
+        id: order.id,
+        orderNo: order.order_no,
+        hotelId: order.hotel_id, // 添加酒店ID
+        hotelName: order.hotel_name,
+        roomType: order.room_type,
+        assignedRoom: order.assigned_room_no,
+        customer: order.guest_name,
+        phone: order.guest_phone,
+        checkIn: order.check_in_date,
+        checkOut: order.check_out_date,
+        nights: order.nights,
+        amount: order.total_price,
+        status: order.status,
+        createdAt: order.created_at,
+        confirmedAt: order.confirmed_at,
+      })) : [];
+      
+      setOrders(formattedOrders);
+      
+      // 更新分页信息
+      setPagination({
+        current: page,
+        pageSize: pageSize,
+        total: total,
+      });
+      
+      console.log('✅ 加载完成，共', formattedOrders.length, '条订单，总数:', total);
+      
     } catch (error) {
-      console.error('❌ 加载订单列表失败:', error.message);
+      console.error('❌ 加载订单列表失败:', error);
+      message.error('加载订单列表失败，请重试');
+      setOrders([]);
+    } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pagination.current, pagination.pageSize, searchKeyword, user]);
+
+  /**
+   * 搜索订单
+   */
+  const searchOrders = useCallback(async (keyword) => {
+    console.log('🔍 搜索关键词:', keyword);
+    setSearchKeyword(keyword);
+    await loadOrders(1, pagination.pageSize, keyword);
+  }, [loadOrders, pagination.pageSize]);
+
+  /**
+   * 分页变化
+   */
+  const handlePageChange = useCallback(async (page, pageSize) => {
+    console.log('📄 分页变化 - 页码:', page, '每页数量:', pageSize);
+    await loadOrders(page, pageSize, searchKeyword);
+  }, [loadOrders, searchKeyword]);
 
   /**
    * 确认订单并分配房间
    */
-  const confirmOrder = useCallback(async (orderKey, roomNumber) => {
+  const confirmOrder = useCallback(async (orderNo, roomNumber) => {
     try {
       setLoading(true);
       
-      // TODO: 调用后端 API 确认订单
-      // await confirmOrderAPI(orderKey, roomNumber);
+      console.log('✅ 确认订单 - 订单号:', orderNo, '房间号:', roomNumber);
       
-      // 模拟 API 调用
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await confirmOrderAPI(orderNo, roomNumber);
       
-      // 更新本地订单状态
-      setOrders(prevOrders => 
-        prevOrders.map(order => 
-          order.key === orderKey 
-            ? { 
-                ...order, 
-                status: 'confirmed', 
-                assignedRoom: roomNumber,
-                confirmedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
-              }
-            : order
-        )
-      );
+      message.success('订单确认成功！');
       
-      console.log(`✅ 订单确认成功: ${orderKey}, 分配房间: ${roomNumber}`);
+      // 重新加载订单列表
+      await loadOrders();
+      
+      console.log('✅ 订单确认成功');
     } catch (error) {
-      console.error('❌ 确认订单失败:', error.message);
+      console.error('❌ 确认订单失败:', error);
+      message.error(error.message || '确认失败，请重试');
       throw error;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadOrders]);
+
+  // 组件加载时获取列表
+  useEffect(() => {
+    if (user?.id) {
+      loadOrders();
+    }
+  }, [user?.id]);
 
   return {
     orders,
     loading,
+    pagination,
+    searchKeyword,
     searchOrders,
     loadOrders,
+    handlePageChange,
     confirmOrder,
   };
 };
-
-// 模拟订单数据
-const mockOrders = [
-  {
-    key: '1',
-    orderNo: 'ORD20260211001',
-    hotelId: '1',
-    hotel: '我的豪华酒店',
-    room: '2808',
-    roomType: '豪华大床房',
-    assignedRoom: '2808', // 已分配的房间号
-    customer: '张三',
-    phone: '13800138000',
-    checkIn: '2026-02-15',
-    checkOut: '2026-02-17',
-    amount: 1776,
-    status: 'confirmed',
-    createdAt: '2026-02-11 10:30:00',
-    confirmedAt: '2026-02-11 11:00:00',
-    remark: '需要无烟房',
-  },
-  {
-    key: '2',
-    orderNo: 'ORD20260211002',
-    hotelId: '1',
-    hotel: '我的豪华酒店',
-    room: '2809',
-    roomType: '商务双床房',
-    assignedRoom: '2809', // 已分配的房间号
-    customer: '李四',
-    phone: '13900139000',
-    checkIn: '2026-02-12',
-    checkOut: '2026-02-14',
-    amount: 1196,
-    status: 'checkedIn',
-    createdAt: '2026-02-10 15:20:00',
-    confirmedAt: '2026-02-10 16:00:00',
-  },
-  {
-    key: '3',
-    orderNo: 'ORD20260210003',
-    hotelId: '2',
-    hotel: '舒适商务酒店',
-    room: '1501',
-    roomType: '标准大床房',
-    assignedRoom: '1501', // 已分配的房间号
-    customer: '王五',
-    phone: '13700137000',
-    checkIn: '2026-02-08',
-    checkOut: '2026-02-10',
-    amount: 998,
-    status: 'completed',
-    createdAt: '2026-02-07 09:15:00',
-    confirmedAt: '2026-02-07 10:00:00',
-  },
-  {
-    key: '4',
-    orderNo: 'ORD20260209004',
-    hotelId: '1',
-    hotel: '我的豪华酒店',
-    roomType: '行政套房',
-    assignedRoom: null, // 待确认订单，未分配房间号
-    customer: '赵六',
-    phone: '13600136000',
-    checkIn: '2026-02-20',
-    checkOut: '2026-02-23',
-    amount: 2664,
-    status: 'pending',
-    createdAt: '2026-02-09 14:45:00',
-    remark: '需要加床',
-  },
-  {
-    key: '5',
-    orderNo: 'ORD20260208005',
-    hotelId: '2',
-    hotel: '舒适商务酒店',
-    roomType: '经济双床房',
-    assignedRoom: null, // 已取消订单，无房间号
-    customer: '孙七',
-    phone: '13500135000',
-    checkIn: '2026-02-05',
-    checkOut: '2026-02-06',
-    amount: 499,
-    status: 'cancelled',
-    createdAt: '2026-02-04 11:00:00',
-    remark: '客户取消',
-  },
-];
 
 export default useOrderList;

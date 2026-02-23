@@ -74,12 +74,14 @@ const Hotels = () => {
       
       if (coverFile.originFileObj) {
         // 新上传的文件，需要上传到OSS
+        console.log('📤 上传新封面图片');
         message.loading({ content: '正在上传封面图片...', key: 'uploadCover' });
         const { uploadToOss } = await import('../../../utils/oss');
         coverImage = await uploadToOss(coverFile.originFileObj, 'hotels');
         message.success({ content: '封面图片上传成功', key: 'uploadCover' });
       } else if (coverFile.url) {
-        // 已有的图片URL（编辑时）
+        // 已有的图片URL（编辑时），直接使用，不重新上传
+        console.log('✅ 复用已有封面图片:', coverFile.url);
         coverImage = coverFile.url;
       }
 
@@ -92,22 +94,36 @@ const Hotels = () => {
       // 3. 上传酒店图片到OSS
       const images = [];
       if (imageFileList.length > 0) {
-        message.loading({ content: '正在上传酒店图片...', key: 'uploadImages' });
+        // 统计需要上传的新文件数量
+        const newFilesCount = imageFileList.filter(file => file.originFileObj).length;
+        const existingFilesCount = imageFileList.filter(file => file.url && !file.originFileObj).length;
+        
+        console.log(`📤 酒店图片统计: 新文件=${newFilesCount}, 已有文件=${existingFilesCount}`);
+        
+        if (newFilesCount > 0) {
+          message.loading({ content: `正在上传 ${newFilesCount} 张新图片...`, key: 'uploadImages' });
+        }
         
         for (let i = 0; i < imageFileList.length; i++) {
           const file = imageFileList[i];
           if (file.originFileObj) {
             // 新上传的文件
+            console.log(`📤 上传新文件: ${file.name}`);
             const { uploadToOss } = await import('../../../utils/oss');
             const url = await uploadToOss(file.originFileObj, 'hotels');
             images.push(url);
           } else if (file.url) {
-            // 已有的图片URL
+            // 已有的图片URL，直接使用，不重新上传
+            console.log(`✅ 复用已有图片: ${file.url}`);
             images.push(file.url);
           }
         }
         
-        message.success({ content: '酒店图片上传成功', key: 'uploadImages' });
+        if (newFilesCount > 0) {
+          message.success({ content: `${newFilesCount} 张新图片上传成功`, key: 'uploadImages' });
+        }
+        
+        console.log(`✅ 酒店图片处理完成: 共 ${images.length} 张图片`);
       }
 
       // 4. 处理省市区数据
@@ -116,14 +132,15 @@ const Hotels = () => {
       console.log('📍 省市区数据:', values.area);
       console.log('📍 location:', location);
 
-      // 5. 获取实际房间数（编辑模式下从房间列表实时计算）
+      // 5. 获取实际房间数（编辑模式下从房间列表实时计算所有房间的 total_rooms 总和）
       let actualRoomCount = 0;
       if (isEditMode && editingHotelId) {
         try {
           const roomResponse = await getRoomList({ hotel_id: editingHotelId });
           const roomList = roomResponse.data?.rooms || roomResponse.rooms || [];
-          actualRoomCount = roomList.length;
-          console.log('✅ 提交时实时计算房间数:', actualRoomCount);
+          // 计算所有房间的 total_rooms 总和
+          actualRoomCount = roomList.reduce((sum, room) => sum + (Number(room.total_rooms) || 0), 0);
+          console.log(`✅ 提交时实时计算房间数: ${roomList.length}条记录, 总房间数=${actualRoomCount}`);
         } catch {
           console.log('⚠️ 获取房间数失败，使用1');
           actualRoomCount = 1;
@@ -198,12 +215,14 @@ const Hotels = () => {
       const response = await getHotelDetail(record.id);
       const hotelData = response.data || response;
       
-      // 获取该酒店的实际房间数（计算属性，不写入数据库）
+      // 获取该酒店的实际房间数（计算所有房间的 total_rooms 总和）
       try {
         const roomResponse = await getRoomList({ hotel_id: record.id });
         const roomList = roomResponse.data?.rooms || roomResponse.rooms || [];
-        hotelData.room_number = roomList.length;
-        console.log(`✅ 酒店详情 - 实时计算房间数: ${roomList.length}`);
+        // 计算所有房间的 total_rooms 总和
+        const totalRoomCount = roomList.reduce((sum, room) => sum + (Number(room.total_rooms) || 0), 0);
+        hotelData.room_number = totalRoomCount;
+        console.log(`✅ 酒店详情 - 实时计算房间数: ${roomList.length}条记录, 总房间数=${totalRoomCount}`);
       } catch (error) {
         console.log('⚠️ 获取房间数失败，显示为0:', error.message);
         hotelData.room_number = 0;
@@ -249,13 +268,14 @@ const Hotels = () => {
       
       console.log('编辑酒店 - 完整数据:', hotelData);
       
-      // 获取该酒店的房间列表，计算实际房间数
+      // 获取该酒店的房间列表，计算实际房间数（所有房间的 total_rooms 总和）
       let actualRoomCount = 0;
       try {
         const roomResponse = await getRoomList({ hotel_id: record.id });
         const roomList = roomResponse.data?.rooms || roomResponse.rooms || [];
-        actualRoomCount = roomList.length;
-        console.log('✅ 编辑时实时计算房间数:', actualRoomCount);
+        // 计算所有房间的 total_rooms 总和
+        actualRoomCount = roomList.reduce((sum, room) => sum + (Number(room.total_rooms) || 0), 0);
+        console.log(`✅ 编辑时实时计算房间数: ${roomList.length}条记录, 总房间数=${actualRoomCount}`);
       } catch {
         console.log('⚠️ 获取房间数失败，使用数据库中的值:', hotelData.room_number);
         actualRoomCount = hotelData.room_number || 0;

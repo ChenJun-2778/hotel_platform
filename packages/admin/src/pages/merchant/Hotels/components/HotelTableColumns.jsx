@@ -1,9 +1,79 @@
-import React from 'react';
-import { Space, Button, Popconfirm } from 'antd';
-import { EyeOutlined, EditOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
+import { Space, Button, Modal, Dropdown } from 'antd';
+import { EyeOutlined, EditOutlined, CheckCircleOutlined, StopOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
 import StatusTag from '../../../../components/common/StatusTag';
 import StarRating from '../../../../components/common/StarRating';
 import { HOTEL_STATUS, HOTEL_STATUS_MAP } from '../../../../constants/hotelStatus';
+
+/**
+ * 查看拒绝原因（直接从列表数据获取）
+ */
+const viewRejectReason = (hotel) => {
+  // 后端返回字段为 rejection_reason
+  const rejectReason = hotel.rejection_reason || hotel.reject_reason || '';
+  
+  console.log('🔍 查看拒绝原因 - 酒店数据:', hotel);
+  console.log('🔍 拒绝原因内容:', rejectReason);
+  
+  Modal.info({
+    title: (
+      <div style={{ fontSize: 16, fontWeight: 600, color: '#262626' }}>
+        审核拒绝原因
+      </div>
+    ),
+    content: (
+      <div style={{ marginTop: 20 }}>
+        <div style={{ 
+          marginBottom: 16, 
+          paddingBottom: 12,
+          borderBottom: '1px solid #f0f0f0'
+        }}>
+          <div style={{ color: '#8c8c8c', fontSize: 13, marginBottom: 4 }}>
+            酒店名称
+          </div>
+          <div style={{ color: '#262626', fontSize: 15, fontWeight: 500 }}>
+            {hotel.name}
+          </div>
+        </div>
+        <div style={{ marginBottom: 8, color: '#8c8c8c', fontSize: 13 }}>
+          拒绝原因
+        </div>
+        <div style={{ 
+          padding: 16, 
+          background: '#fff1f0', 
+          border: '1px solid #ffccc7',
+          borderRadius: 6,
+          color: '#595959',
+          lineHeight: 1.8,
+          fontSize: 14,
+          minHeight: 80,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word'
+        }}>
+          {rejectReason || '暂无拒绝原因'}
+        </div>
+        <div style={{ 
+          marginTop: 16, 
+          padding: 12, 
+          background: '#e6f7ff',
+          border: '1px solid #91d5ff',
+          borderRadius: 6,
+          fontSize: 13,
+          color: '#0050b3'
+        }}>
+          <ExclamationCircleOutlined style={{ marginRight: 6 }} />
+          请根据拒绝原因修改酒店信息后重新提交审核
+        </div>
+      </div>
+    ),
+    okText: '知道了',
+    width: 540,
+    centered: true,
+    okButtonProps: {
+      size: 'large',
+      style: { minWidth: 100 }
+    },
+  });
+};
 
 /**
  * 获取酒店表格列配置
@@ -63,19 +133,87 @@ export const getHotelTableColumns = (onView, onEdit, onToggleStatus) => [
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 100,
+    width: 150,
     align: 'center',
-    render: (status) => <StatusTag status={status} statusMap={HOTEL_STATUS_MAP} />,
+    render: (status, record) => {
+      const isRejected = status === HOTEL_STATUS.REJECTED;
+      
+      return (
+        <Space direction="vertical" size={4} style={{ width: '100%' }}>
+          <StatusTag status={status} statusMap={HOTEL_STATUS_MAP} />
+          {isRejected && (
+            <Button 
+              type="link" 
+              size="small"
+              onClick={() => {
+                console.log('🔍 点击查看原因 - 完整记录:', record);
+                console.log('🔍 rejection_reason:', record.rejection_reason);
+                console.log('🔍 reject_reason:', record.reject_reason);
+                viewRejectReason(record);
+              }}
+              style={{ padding: 0, height: 'auto', fontSize: 12 }}
+            >
+              查看原因
+            </Button>
+          )}
+        </Space>
+      );
+    },
   },
   {
     title: '操作',
     key: 'action',
-    width: 200,
+    width: 150,
     align: 'center',
     render: (_, record) => {
       const isOnline = record.status === HOTEL_STATUS.ONLINE;
       const isOffline = record.status === HOTEL_STATUS.OFFLINE;
-      const canToggle = isOnline || isOffline;
+      const isRejected = record.status === HOTEL_STATUS.REJECTED;
+      // 营业中、已下架、已拒绝状态都可以切换上架/下架
+      const canToggle = isOnline || isOffline || isRejected;
+
+      // 构建下拉菜单项
+      const menuItems = [
+        {
+          key: 'view',
+          icon: <EyeOutlined />,
+          label: '查看详情',
+          onClick: () => onView(record),
+        },
+        {
+          key: 'edit',
+          icon: <EditOutlined />,
+          label: '编辑酒店',
+          onClick: () => onEdit(record),
+        },
+      ];
+
+      // 添加上架/下架操作
+      if (canToggle) {
+        menuItems.push({
+          key: 'toggle',
+          icon: isOnline ? <StopOutlined /> : <CheckCircleOutlined />,
+          label: isOnline ? (
+            <span style={{ color: '#ff4d4f' }}>下架酒店</span>
+          ) : (
+            <span style={{ color: '#52c41a' }}>上架酒店</span>
+          ),
+          onClick: () => {
+            Modal.confirm({
+              title: isOnline ? '确定要下架该酒店吗？' : '确定要上架该酒店吗？',
+              icon: <ExclamationCircleOutlined />,
+              content: isOnline 
+                ? '下架后该酒店将不再对外展示' 
+                : isRejected
+                  ? '上架后该酒店将重新提交审核'
+                  : '上架后该酒店将对外展示',
+              okText: '确定',
+              cancelText: '取消',
+              onOk: () => onToggleStatus(record),
+            });
+          },
+        });
+      }
 
       return (
         <Space size="small">
@@ -87,31 +225,18 @@ export const getHotelTableColumns = (onView, onEdit, onToggleStatus) => [
           >
             查看
           </Button>
-          <Button 
-            type="link" 
-            size="small" 
-            icon={<EditOutlined />} 
-            onClick={() => onEdit(record)}
+          <Dropdown
+            menu={{ items: menuItems.slice(1) }}
+            placement="bottomRight"
+            trigger={['click']}
           >
-            编辑
-          </Button>
-          {canToggle && (
-            <Popconfirm
-              title={isOnline ? '确定要下架该酒店吗？' : '确定要上架该酒店吗？'}
-              onConfirm={() => onToggleStatus(record)}
-              okText="确定"
-              cancelText="取消"
-            >
-              <Button 
-                type="link" 
-                size="small"
-                icon={isOnline ? <StopOutlined /> : <CheckCircleOutlined />}
-                danger={isOnline}
-              >
-                {isOnline ? '下架' : '上架'}
-              </Button>
-            </Popconfirm>
-          )}
+            <Button 
+              type="link"
+              size="small"
+              icon={<MoreOutlined />}
+              style={{ padding: '4px 8px' }}
+            />
+          </Dropdown>
         </Space>
       );
     },

@@ -17,9 +17,11 @@ export const HOTEL_API = {
   LIST: `${API_BASE_URL}/hotels/list`,          // GET - 获取酒店列表
   DETAIL: (id) => `${API_BASE_URL}/hotels/${id}`, // GET - 获取酒店详情
   UPDATE: (id) => `${API_BASE_URL}/hotels/${id}`, // PUT - 更新酒店信息
-  UPDATE_STATUS: (id) => `${API_BASE_URL}/hotels/${id}/status`, // PUT - 更新酒店状态
-  APPROVE: (id) => `${API_BASE_URL}/hotels/${id}/approve`, // PUT - 审核通过
-  REJECT: (id) => `${API_BASE_URL}/hotels/${id}/reject`,   // PUT - 审核拒绝
+  UPDATE_STATUS: (id) => `${API_BASE_URL}/hotels/${id}/status`, // PUT - 更新酒店状态（已废弃）
+  PUT_UP: (id) => `${API_BASE_URL}/hotels/${id}/putup`, // PUT - 上架酒店
+  TAKE_DOWN: (id) => `${API_BASE_URL}/hotels/${id}/takedown`, // PUT - 下架酒店
+  APPROVE: (id) => `${API_BASE_URL}/hotelsReview/approve/${id}`, // PUT - 审核通过
+  REJECT: (id) => `${API_BASE_URL}/hotelsReview/reject/${id}`,   // PUT - 审核拒绝
   AUDIT_LIST: `${API_BASE_URL}/hotelsReview/list`, // GET - 获取审核列表
 };
 
@@ -30,4 +32,11 @@ export const ROOM_API = {
   DETAIL: `${API_BASE_URL}/rooms/detail`,       // GET - 获取房间详情 (Query: id)
   UPDATE: `${API_BASE_URL}/rooms/update`,       // PUT - 更新房间信息 (Body: id + data)
   DELETE: `${API_BASE_URL}/rooms/delete`,       // DELETE - 删除房间 (Query: id)
+};
+
+// 订单相关接口
+export const ORDER_API = {
+  LIST: `${API_BASE_URL}/orderPC/list`,         // GET - 获取订单列表
+  DETAIL: `${API_BASE_URL}/orderPC/detail`,     // GET - 获取订单详情 (Query: order_no)
+  CONFIRM: (orderNo) => `${API_BASE_URL}/orderPC/confirm/${orderNo}`, // PUT - 确认订单
 };
