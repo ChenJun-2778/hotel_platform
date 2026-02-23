@@ -72,10 +72,17 @@
 }
 
 .roomName,
-.guestName {
+.guestName,
+.hotelName {
   font-size: 15px;
   color: #333;
   font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.roomType {
+  font-size: 13px;
+  color: #666;
   margin-bottom: 4px;
 }
 

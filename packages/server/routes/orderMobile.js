@@ -243,8 +243,12 @@ router.get('/list', async (req, res) => {
         o.status,
         o.guest_name,
         o.guest_phone,
+        h.cover_image AS hotel_cover_image,
+        h.name AS hotel_name,
+        r.room_type,
         r.images AS room_images
       FROM orders o
+      LEFT JOIN hotels h ON o.hotel_id = h.id
       LEFT JOIN rooms r ON o.room_id = r.id
       WHERE ${where}
       ORDER BY o.id DESC

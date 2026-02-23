@@ -110,6 +110,9 @@ export const MOCK_HOTEL_LIST = [
       status: 1, // 待付款
       guest_name: '张三',
       guest_phone: '13800138000',
+      hotel_cover_image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
+      hotel_name: '上海陆家嘴禧玥酒店',
+      room_type: '雅致大床房',
       room_images: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=60'
     },
     {
@@ -125,6 +128,9 @@ export const MOCK_HOTEL_LIST = [
       status: 2, // 待确定
       guest_name: '李四',
       guest_phone: '13900139000',
+      hotel_cover_image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
+      hotel_name: '上海陆家嘴禧玥酒店',
+      room_type: '江景豪华双床房',
       room_images: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=60'
     },
     {
@@ -140,6 +146,9 @@ export const MOCK_HOTEL_LIST = [
       status: 3, // 待入住
       guest_name: '王五',
       guest_phone: '13700137000',
+      hotel_cover_image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
+      hotel_name: '上海和平饭店',
+      room_type: '豪华套房',
       room_images: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=60'
     },
     {
@@ -155,6 +164,9 @@ export const MOCK_HOTEL_LIST = [
       status: 4, // 已完成
       guest_name: '赵六',
       guest_phone: '13600136000',
+      hotel_cover_image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60',
+      hotel_name: '上海陆家嘴禧玥酒店',
+      room_type: '雅致大床房',
       room_images: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=60'
     }
   ];

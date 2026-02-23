@@ -36,10 +36,12 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
 
   const statusInfo = getStatusInfo(data.status);
 
-  // 处理房间图片（取第一张）
-  const roomImage = data.room_images 
-    ? data.room_images.split(',')[0] 
-    : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
+  // 优先使用酒店封面图，其次是房间图片
+  const displayImage = data.hotel_cover_image 
+    ? data.hotel_cover_image 
+    : data.room_images 
+      ? data.room_images.split(',')[0] 
+      : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
 
   // 格式化日期
   const formatDate = (dateStr: string) => {
@@ -111,8 +113,10 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
 
       {/* 中间 */}
       <div className={styles.cardBody}>
-        <img src={roomImage} className={styles.roomImg} alt="" />
+        <img src={displayImage} className={styles.roomImg} alt="" />
         <div className={styles.infoCol}>
+          {data.hotel_name && <div className={styles.hotelName}>{data.hotel_name}</div>}
+          {data.room_type && <div className={styles.roomType}>{data.room_type}</div>}
           <div className={styles.guestName}>住客：{data.guest_name}</div>
           <div className={styles.guestPhone}>电话：{data.guest_phone}</div>
           <div className={styles.dateRange}>

@@ -31,7 +31,10 @@ export interface ApiResponse<T = any> {
     status: OrderStatus;
     guest_name: string;
     guest_phone: string;
-    room_images?: string; // 房间图片（逗号分隔）
+    hotel_cover_image?: string; // 酒店封面图
+    hotel_name?: string;         // 酒店名称
+    room_type?: string;          // 房型名称
+    room_images?: string;        // 房间图片（逗号分隔）
   }
   
   // 创建订单请求参数
