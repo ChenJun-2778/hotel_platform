@@ -314,7 +314,6 @@ router.get('/:id', async (req, res) => {
         max_occupancy,
         base_price,
         total_rooms,
-        available_rooms,
         facilities,
         description,
         images

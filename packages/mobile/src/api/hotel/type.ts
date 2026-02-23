@@ -55,7 +55,7 @@ export interface ApiResponse<T> {
     max_occupancy: number;
     base_price: string;
     total_rooms: number;
-    available_rooms: number;
+    // available_rooms: number;
     facilities: string;       // 房型设施字符串
     description: string;
     images: string;           // 房型图片字符串
