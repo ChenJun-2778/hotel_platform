@@ -23,6 +23,7 @@ import DomesticCity from '@/pages/CitySelect/DomesticCity/inedx'; // 国内城�
 import OverseasCity from '@/pages/CitySelect/OverseasCity/index'; // 境外城市选择
 import OrderFill from '@/pages/OrderFill';   // 订单填写页
 import Search from '@/pages/Search'; // Search页面
+import PaymentResult from '@/pages/PaymentResult'; // 支付结果页
 
 // 引入路由鉴权组件
 import { AuthRoute } from '@/components/AuthRoute';
@@ -102,6 +103,15 @@ const router = createBrowserRouter([
   {
     path: '/search',
     element: <Search />,
+  },
+  // 支付结果页
+  {
+    path: '/payment-result',
+    element: (
+      <AuthRoute>
+        <PaymentResult />
+      </AuthRoute>
+    ),
   },
   {
     // 404 兜底，跳回首页

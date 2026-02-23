@@ -1,70 +1,125 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  NavBar, Form, Input, Button, Toast, Dialog, Popup, 
+  NavBar, Form, Input, Button, Toast, Popup, 
   PasscodeInput, NumberKeyboard 
 } from 'antd-mobile';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CloseOutline } from 'antd-mobile-icons';
+import dayjs from 'dayjs';
 import styles from './index.module.css';
+// 导入订单的api
+import { apiCreateOrder, apiPayOrder } from '@/api/Order/index'
 
 const OrderFill: React.FC = () => {
   const navigate = useNavigate();
-  // const { id } = useParams(); // 暂时没用到，先注释防止报 warning
+  const { id: roomId } = useParams(); // 房间ID
   const [searchParams] = useSearchParams();
 
-  const roomName = searchParams.get('roomName') || '高级大床房';
-  const price = Number(searchParams.get('price')) || 500;
-  const hotelName = '上海陆家嘴禧玥酒店';
-  const checkIn = '02月20日';
-  const checkOut = '02月22日';
-  const nights = 2;
+  // 从 URL 获取参数
+  const hotelId = searchParams.get('hotelId');
+  const hotelName = searchParams.get('hotelName') || '酒店';
+  const roomName = searchParams.get('roomName') || '房间';
+  const price = Number(searchParams.get('price')) || 0;
+  const checkInDate = searchParams.get('beginDate') || dayjs().format('YYYY-MM-DD');
+  const checkOutDate = searchParams.get('endDate') || dayjs().add(1, 'day').format('YYYY-MM-DD');
+  
+  const nights = dayjs(checkOutDate).diff(dayjs(checkInDate), 'day');
   const totalPrice = price * nights;
 
   const [form] = Form.useForm();
-
-  // ✅ 1. 补全：控制弹窗显示的状态
   const [passwordVisible, setPasswordVisible] = useState(false);
-  
-  // ✅ 2. 补全：控制密码输入的状态
   const [password, setPassword] = useState('');
+  const [orderNo, setOrderNo] = useState(''); // 保存订单号
+  const [submitting, setSubmitting] = useState(false);
 
   // 监听密码长度，满了6位自动提交
   useEffect(() => {
     if (password.length === 6) {
-      handlePayment(password);
+      handlePayment();
     }
   }, [password]);
 
   const handleSubmit = async () => {
+    if (submitting) return;
+    
     try {
       await form.validateFields();
-      // 打开密码弹窗
-      setPasswordVisible(true);
-    } catch (error) {
-      Toast.show({ icon: 'fail', content: '请填写完整信息' });
+      const values = form.getFieldsValue();
+      
+      // 获取用户信息
+      const userInfoStr = localStorage.getItem('USER_INFO');
+      if (!userInfoStr) {
+        Toast.show({ icon: 'fail', content: '请先登录' });
+        navigate('/login');
+        return;
+      }
+      
+      const userInfo = JSON.parse(userInfoStr);
+      
+      if (!hotelId || !roomId) {
+        Toast.show({ icon: 'fail', content: '订单信息不完整' });
+        return;
+      }
+
+      setSubmitting(true);
+      Toast.show({ icon: 'loading', content: '正在创建订单...', duration: 0 });
+
+      // 创建订单
+      const res = await apiCreateOrder({
+        hotel_id: Number(hotelId),
+        room_id: Number(roomId),
+        user_id: userInfo.id,
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate,
+        guest_name: values.name,
+        guest_phone: values.mobile,
+        total_price: totalPrice
+      });
+
+      Toast.clear();
+
+      if (res.success) {
+        setOrderNo(res.data.order_no);
+        // 打开支付密码弹窗
+        setPasswordVisible(true);
+      } else {
+        Toast.show({ icon: 'fail', content: res.message || '创建订单失败' });
+      }
+    } catch (error: any) {
+      Toast.clear();
+      Toast.show({ icon: 'fail', content: error.message || '创建订单失败' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handlePayment = (value: string) => {
-    Toast.show({
-      icon: 'loading',
-      content: '支付中...',
-      duration: 1500,
-    });
+  const handlePayment = async () => {
+    if (!orderNo) return;
 
-    setTimeout(() => {
+    try {
+      Toast.show({ icon: 'loading', content: '支付中...', duration: 0 });
+
+      // 调用支付接口
+      const res = await apiPayOrder(orderNo);
+
+      Toast.clear();
       setPasswordVisible(false);
-      setPassword(''); // 清空密码
-      
-      Dialog.alert({
-        header: '🎉 支付成功',
-        title: '预订成功',
-        content: `恭喜您，订单已确认！我们会尽快发送确认短信。`,
-        onConfirm: () => {
-          navigate('/'); 
-        },
-      });
-    }, 1500);
+      setPassword('');
+
+      if (res.success) {
+        // 跳转到支付成功页面
+        navigate(`/payment-result?success=true&orderNo=${orderNo}`, { replace: true });
+      } else {
+        // 跳转到支付失败页面
+        navigate(`/payment-result?success=false&message=${encodeURIComponent(res.message)}`, { replace: true });
+      }
+    } catch (error: any) {
+      Toast.clear();
+      setPasswordVisible(false);
+      setPassword('');
+      // 跳转到支付失败页面
+      navigate(`/payment-result?success=false&message=${encodeURIComponent(error.message || '支付失败')}`, { replace: true });
+    }
   };
 
   return (
@@ -76,14 +131,10 @@ const OrderFill: React.FC = () => {
           <div className={styles.hotelName}>{hotelName}</div>
           <div className={styles.roomName}>{roomName}</div>
           <div className={styles.dateRow}>
-            <span>入住: {checkIn}</span>
+            <span>入住: {dayjs(checkInDate).format('MM月DD日')}</span>
             <span className={styles.divider}>|</span>
-            <span>离店: {checkOut}</span>
+            <span>离店: {dayjs(checkOutDate).format('MM月DD日')}</span>
             <span className={styles.nights}>共{nights}晚</span>
-          </div>
-          <div className={styles.tags}>
-            <span>早餐: 含双早</span>
-            <span>取消规则: 不可取消</span>
           </div>
         </div>
 
@@ -105,9 +156,12 @@ const OrderFill: React.FC = () => {
             <Form.Item 
               name='mobile' 
               label='手机号码' 
-              rules={[{ required: true, message: '请输入手机号' }]}
+              rules={[
+                { required: true, message: '请输入手机号' },
+                { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' }
+              ]}
             >
-              <Input placeholder='用于接收确认短信' type='number' />
+              <Input placeholder='用于接收确认短信' type='tel' maxLength={11} />
             </Form.Item>
           </Form>
         </div>
@@ -117,10 +171,6 @@ const OrderFill: React.FC = () => {
           <div className={styles.priceRow}>
             <span>房费 ({nights}晚)</span>
             <span>¥{totalPrice}</span>
-          </div>
-          <div className={styles.priceRow}>
-            <span>优惠券</span>
-            <span className={styles.discount}>-¥0</span>
           </div>
         </div>
       </div>
@@ -135,12 +185,14 @@ const OrderFill: React.FC = () => {
             color='primary' 
             className={styles.submitBtn}
             onClick={handleSubmit}
+            loading={submitting}
+            disabled={submitting}
         >
             提交订单
         </Button>
       </div>
 
-      {/* --- 支付弹窗 --- */}
+      {/* 支付弹窗 */}
       <Popup
         visible={passwordVisible}
         onMaskClick={() => {
@@ -152,7 +204,14 @@ const OrderFill: React.FC = () => {
         <div style={{ padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                 <span style={{ fontSize: '18px', fontWeight: 'bold' }}>请输入支付密码</span>
-                <CloseOutline fontSize={24} color='#999' onClick={() => setPasswordVisible(false)}/>
+                <CloseOutline 
+                  fontSize={24} 
+                  color='#999' 
+                  onClick={() => {
+                    setPasswordVisible(false);
+                    setPassword('');
+                  }}
+                />
             </div>
             
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
@@ -160,14 +219,12 @@ const OrderFill: React.FC = () => {
                 <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '8px' }}>¥{totalPrice}</div>
             </div>
 
-            {/* ✅ 修复：这里去掉了 keyboard 属性 */}
             <PasscodeInput 
                 seperated 
                 value={password}
                 length={6}
             />
 
-            {/* ✅ 数字键盘 */}
             <NumberKeyboard
                 visible={passwordVisible}
                 showCloseButton={false}

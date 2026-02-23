@@ -1,69 +1,144 @@
 import React from 'react';
-import { Button, Toast } from 'antd-mobile';
+import { Button, Toast, Dialog } from 'antd-mobile';
 import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 import styles from './index.module.css';
+import { OrderStatus } from '@/api/Order/type';
+import type { Order } from '@/api/Order/type';
+import { apiPayOrder } from '@/api/Order/index';
+
+// 读取环境变量
+const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 
 interface OrderCardProps {
-  data: any; // 实际项目中最好定义详细的 Order 类型
+  data: Order;
+  onRefresh?: () => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({ data }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
   const navigate = useNavigate();
 
-  const getStatusClass = (status: string) => {
+  // 状态映射
+  const getStatusInfo = (status: OrderStatus) => {
     switch (status) {
-      case 'pending': return styles.status_pending;
-      case 'confirmed': return styles.status_confirmed;
-      case 'completed': return styles.status_completed;
-      default: return styles.status_canceled;
+      case OrderStatus.PENDING:
+        return { text: '待付款', className: styles.status_pending };
+      case OrderStatus.CONFIRMED:
+        return { text: '待确定', className: styles.status_confirmed };
+      case OrderStatus.CHECKED_IN:
+        return { text: '待入住', className: styles.status_checked_in };
+      case OrderStatus.COMPLETED:
+        return { text: '已完成', className: styles.status_completed };
+      default:
+        return { text: '未知', className: '' };
     }
   };
 
-  // 具体的按钮点击逻辑也可以封装在这里，或者通过 props 传进来
-  const handleCancel = () => {Toast.show('订单已取消')};
-  const handlePay = () => {Toast.show('支付成功')};
-  const handleContact = () => {Toast.show('已联系客服')};
-  const handleRebook = () => navigate('/');
+  const statusInfo = getStatusInfo(data.status);
+
+  // 处理房间图片（取第一张）
+  const roomImage = data.room_images 
+    ? data.room_images.split(',')[0] 
+    : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
+
+  // 格式化日期
+  const formatDate = (dateStr: string) => {
+    return dayjs(dateStr).format('MM-DD');
+  };
+
+  // 支付按钮点击
+  const handlePay = async () => {
+    // Mock 模式下模拟支付
+    if (USE_MOCK) {
+      Toast.show({ icon: 'loading', content: '支付中...', duration: 1000 });
+      setTimeout(() => {
+        Toast.show({ icon: 'success', content: '支付成功' });
+        onRefresh?.();
+      }, 1000);
+      return;
+    }
+
+    // 真实接口
+    try {
+      Toast.show({ icon: 'loading', content: '正在跳转支付...', duration: 0 });
+      
+      const res = await apiPayOrder(data.order_no);
+      
+      Toast.clear();
+      
+      if (res.success) {
+        Toast.show({ icon: 'success', content: '支付成功' });
+        onRefresh?.();
+      } else {
+        Toast.show({ icon: 'fail', content: res.message || '支付失败' });
+      }
+    } catch (error: any) {
+      Toast.clear();
+      Toast.show({ icon: 'fail', content: error.message || '支付失败' });
+    }
+  };
+
+  // 取消订单
+  const handleCancel = () => {
+    Dialog.confirm({
+      content: '确定要取消这个订单吗？',
+      onConfirm: () => {
+        Toast.show('订单已取消');
+        onRefresh?.();
+      }
+    });
+  };
+
+  // 联系酒店
+  const handleContact = () => {
+    Toast.show('客服电话：400-123-4567');
+  };
+
+  // 再次预订
+  const handleRebook = () => {
+    navigate('/');
+  };
 
   return (
     <div className={styles.card}>
       {/* 头部 */}
       <div className={styles.cardHeader}>
-        <div className={styles.hotelName}>{data.hotelName}</div>
-        <div className={`${styles.statusTag} ${getStatusClass(data.status)}`}>
-          {data.statusText}
+        <div className={styles.orderNo}>订单号：{data.order_no}</div>
+        <div className={`${styles.statusTag} ${statusInfo.className}`}>
+          {statusInfo.text}
         </div>
       </div>
 
       {/* 中间 */}
       <div className={styles.cardBody}>
-        <img src={data.image} className={styles.roomImg} alt="" />
+        <img src={roomImage} className={styles.roomImg} alt="" />
         <div className={styles.infoCol}>
-          <div className={styles.roomName}>{data.roomName}</div>
+          <div className={styles.guestName}>住客：{data.guest_name}</div>
+          <div className={styles.guestPhone}>电话：{data.guest_phone}</div>
           <div className={styles.dateRange}>
-            {data.checkIn} 至 {data.checkOut} · {data.nights}晚
+            {formatDate(data.check_in_date)} 至 {formatDate(data.check_out_date)} · {data.nights}晚
           </div>
           <div className={styles.priceRow}>
             <span className={styles.priceLabel}>总价</span>
             <span className={styles.currency}>¥</span>
-            <span className={styles.price}>{data.price}</span>
+            <span className={styles.price}>{data.total_price}</span>
           </div>
         </div>
       </div>
 
       {/* 底部按钮 */}
       <div className={styles.cardFooter}>
-        {data.status === 'pending' && (
+        {data.status === OrderStatus.PENDING && (
           <>
             <Button size='small' onClick={handleCancel}>取消</Button>
             <div style={{ width: 8 }}></div>
             <Button size='small' color='primary' onClick={handlePay}>去支付</Button>
           </>
         )}
-        {data.status === 'confirmed' && (
+        {data.status === OrderStatus.CONFIRMED && (
           <Button size='small' onClick={handleContact}>联系酒店</Button>
         )}
-        {(data.status === 'completed' || data.status === 'canceled') && (
+        {(data.status === OrderStatus.CHECKED_IN || data.status === OrderStatus.COMPLETED) && (
           <Button size='small' color='primary' fill='outline' onClick={handleRebook}>再次预订</Button>
         )}
       </div>
