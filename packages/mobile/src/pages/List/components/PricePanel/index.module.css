@@ -1,0 +1,67 @@
+.panel {
+    padding: 16px 16px 32px 16px;
+    background-color: #fff;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  .title {
+    font-weight: bold;
+    font-size: 15px;
+    color: #333;
+  }
+  
+  .priceText {
+    color: #1677ff;
+    font-weight: bold;
+    font-size: 15px;
+  }
+  
+  .sliderContainer {
+    padding: 0 8px;
+    margin-bottom: 32px;
+  }
+  
+  .sliderLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 8px;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  
+  /* 默认未选中按钮：灰色背景，无边框 */
+  .btnNormal {
+    --background-color: #f6f7f9;
+    --border-color: transparent;
+    color: #333;
+    font-size: 12px;
+    height: 32px;
+    padding: 0;
+    border-radius: 4px;
+  }
+  
+  /* 选中按钮：保持 Antd 默认的主题蓝色 */
+  .btnActive {
+    font-size: 12px;
+    height: 32px;
+    padding: 0;
+    border-radius: 4px;
+  }
+  
+  .footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+  }

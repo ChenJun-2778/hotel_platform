@@ -5,7 +5,7 @@ import { Toast } from "antd-mobile";
 // console.log('👉 当前 Vite 运行模式:', import.meta.env.MODE);
 // console.log('当前读取的基地址是:', import.meta.env.VITE_API_BASE_URL);
 const request = axios.create({
-  baseURL: 'http://localhost:3000', // 填入你的后端真实运行地址，或者使用 vite 的 proxy 代理
+  baseURL: import.meta.env.VITE_API_BASE_URL, // 填入你的后端真实运行地址，或者使用 vite 的 proxy 代理
   timeout: 10000, // 超时时间 10 秒
 });
 // 2. 请求拦截器

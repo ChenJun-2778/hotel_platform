@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { NavBar, CapsuleTabs, DotLoading, Toast } from 'antd-mobile';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavBar, CapsuleTabs, DotLoading, Toast, Dropdown, Button, Input } from 'antd-mobile';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { EnvironmentOutline, SearchOutline, CloseCircleFill } from 'antd-mobile-icons';
@@ -14,9 +14,16 @@ import HotelCard from '@/components/HotelCard';
 import SearchPanel from './components/SearchPanel';
 // 日历组件
 import DateRangePicker from '@/components/DateRangePicker';
+// ✅ 1. 引入新抽离的智能排序组件
+import SmartSortPanel from './components/SmartSortPanel';
+// 引入价格组件
+import PricePanel from './components/PricePanel';
+// ✅ 引入评分组件
+import ScoreStarPanel from './components/ScoreStarPanel';
 // 引入api
 import { apiGetHotelList } from '@/api/Hotel/index';
-
+// 引入筛选组件
+import FilterPanel from './components/FilterPanel';
 // const TYPE_MAP_STR_TO_NUM: Record<string, number> = {
 //   'domestic': 1,
 //   'overseas': 2,
@@ -45,7 +52,23 @@ const List: React.FC = () => {
   // 控制排序
   const [sortType, setSortType] = useState<string>('def');
   // 控制 Dropdown 关闭
-  // const dropdownRef = useRef<any>(null);
+  const dropdownRef = useRef<any>(null);
+  // 排序的菜单数据保留在父组件，方便以后传给后端或做动态修改
+  const sortOptions = [
+    { label: '智能排序', value: 'def' },
+    { label: '好评优先', value: 'score_desc', desc: '根据点评分、点评条数等综合排序' },
+    { label: '低价优先', value: 'price_asc' },
+    { label: '高价优先', value: 'price_desc' },
+    { label: '高星优先', value: 'star_desc' },
+  ];
+  // 静态筛选条件的状态
+  // const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]); // 价格
+  const [filterScore, setFilterScore] = useState(''); // 分数
+  // 综合
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
+  const [selectedComment, setSelectedComment] = useState('');
+  const [filterStar, setFilterStar] = useState(''); //
   // 控制弹窗显示
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   // 城市跳转方法
@@ -241,24 +264,70 @@ const List: React.FC = () => {
         </NavBar>
 
         {/* 筛选区 */}
-        <div className={styles.sortContainer}>
-          {[
-            { key: 'def', label: '推荐' },
-            { key: 'price_asc', label: '低价优先' },
-            { key: 'score_desc', label: '高分优先' },
-            { key: 'star_desc', label: '高星优先' }
-          ].map(item => (
-            <div
-              key={item.key}
-              onClick={() => setSortType(item.key)}
-              // 动态组合 class：如果选中，就多加一个 active 的 class
-              className={`${styles.sortItem} ${sortType === item.key ? styles.sortItemActive : ''}`}
-            >
-              {item.label}
-              {/* 只有选中时才渲染底部蓝条 */}
-              {sortType === item.key && <div className={styles.activeBar} />}
-            </div>
-          ))}
+       {/* 筛选区 */}
+       <div className={styles.sortContainer}>
+          
+          {/* ✅ Dropdown 占据剩余宽度 */}
+          <div className={styles.dropdownWrapper}>
+            <Dropdown ref={dropdownRef}>
+              
+              {/* 1. 智能排序下拉框 */}
+              <Dropdown.Item 
+                key='sort' 
+                title={sortOptions.find(opt => opt.value === sortType)?.label || '智能排序'}
+              >
+                <SmartSortPanel
+                  options={sortOptions}
+                  currentSort={sortType}
+                  onSortChange={setSortType}
+                  onClose={() => dropdownRef.current?.close()}
+                />
+              </Dropdown.Item>
+
+              {/* 2. 价格下拉 (彻底干掉行内样式) */}
+              <Dropdown.Item key='price' title='价格'>
+                <PricePanel
+                  priceRange={priceRange}
+                  onChange={setPriceRange}
+                  onReset={() => { 
+                    setPriceRange([0, 1000]); // 重置就是回归无限制
+                  }}
+                  onConfirm={() => dropdownRef.current?.close()}
+                />
+              </Dropdown.Item>
+
+             {/* ✅ 3. 合并后的 评分/星级 下拉框 */}
+             <Dropdown.Item key='score_star' title='评分/星级'>
+                <ScoreStarPanel
+                  filterScore={filterScore}
+                  onScoreChange={setFilterScore}
+                  filterStar={filterStar}
+                  onStarChange={setFilterStar}
+                  onReset={() => { 
+                    setFilterScore(''); 
+                    setFilterStar(''); 
+                  }}
+                  onConfirm={() => dropdownRef.current?.close()}
+                />
+              </Dropdown.Item>
+
+              {/* 4. 综合筛选下拉框 */}
+              <Dropdown.Item key='filter' title='筛选'>
+                <FilterPanel
+                  selectedFacilities={selectedFacilities}
+                  onFacilitiesChange={setSelectedFacilities}
+                  selectedComment={selectedComment}
+                  onCommentChange={setSelectedComment}
+                  onReset={() => {
+                    // 重置时清空所有相关状态
+                    setSelectedFacilities([]);
+                    setSelectedComment('');
+                  }}
+                  onConfirm={() => dropdownRef.current?.close()}
+                />
+              </Dropdown.Item>
+            </Dropdown>
+          </div>
         </div>
         
         {/* 快捷标签区 */}

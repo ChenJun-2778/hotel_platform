@@ -130,64 +130,140 @@
 .filterSection {
   background: #fff;
   padding-bottom: 4px;
-  width: 100%; /* 确保容器撑满 */
+  width: 100%;
 }
 
 .filterRow {
   display: flex;
-  justify-content: space-between; /* 均匀分布 */
+  justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
   width: 100%;
   box-sizing: border-box;
-  flex-wrap: nowrap; /* 强制不换行，防止变成一列 */
+  flex-wrap: nowrap;
 }
 
 .filterItem {
   font-size: 13px;
   color: #333;
-  white-space: nowrap; /* 强制文字不换行 */
-  flex: 1; /* 每个项目平分空间 */
+  white-space: nowrap;
+  flex: 1;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* ✅ 修改：适配带有 Dropdown 的容器布局 */
 .sortContainer {
   display: flex;
-  justify-content: space-around;
   align-items: center;
-  height: 44px;
   background: #fff;
-  padding: 4px 8px 0;
+  border-bottom: 1px solid #eee;
 }
 
+/* ✅ 修改：智能排序/推荐 按钮的基础样式 */
 .sortItem {
-  color: #666;
+  color: #333;
   font-size: 14px;
-  padding: 6px 8px;
+  padding: 12px 16px;
   position: relative;
   transition: all 0.2s;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-/* 排序项选中状态 */
+/* ✅ 排序项选中状态 */
 .sortItemActive {
   color: #1677ff;
   font-weight: bold;
 }
 
-/* 选中项底部的小蓝条 */
+/* ✅ 选中项底部的小蓝条 */
 .activeBar {
   position: absolute;
-  bottom: -4px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
-  width: 16px;
+  width: 20px;
   height: 3px;
   background: #1677ff;
   border-radius: 2px;
+}
+
+/* --- ✅ 新增：下拉弹框内容的 UI 抽离 --- */
+.dropdownWrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.pricePanel {
+  padding: 16px;
+}
+
+.panelTitle {
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.btnGroup {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.priceInput {
+  --background: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.separator {
+  color: #999;
+}
+
+.footerBtns {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+/* 调整快速标签容器... (保持你原来的) */
+.quickTags {
+  width: 100%;
+  overflow: hidden;
+  background: #fff;
+  padding: 8px 12px 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.quickTags :global(.adm-capsule-tabs-header) {
+  padding: 0 8px;
+}
+
+/* Loading... (保持你原来的) */
+.loadingWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #999;
+  font-size: 14px;
+}
+
+.loadingWrapper :global(.adm-dot-loading) {
+  margin-bottom: 12px;
 }
 
 /* 调整快速标签容器，确保它也能横向滚动而不换行 */

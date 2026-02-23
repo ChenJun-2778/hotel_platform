@@ -1,0 +1,81 @@
+.panel {
+    display: flex;
+    flex-direction: column;
+    height: 45vh; /* 占据屏幕大约一半的高度 */
+    background-color: #fff;
+  }
+  
+  .content {
+    display: flex;
+    flex: 1;
+    overflow: hidden; /* 保证内部可以独立滚动 */
+  }
+  
+  /* 左侧边栏 */
+  .sidebar {
+    width: 90px;
+    background-color: #f6f7f9;
+    overflow-y: auto;
+  }
+  
+  .sidebarItem {
+    padding: 16px 0;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .sidebarItemActive {
+    background-color: #fff;
+    color: #333;
+    font-weight: bold;
+  }
+  
+  /* 右侧主内容区 */
+  .main {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  
+  .sectionTitle {
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 12px;
+  }
+  
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 右侧空间较小，一行2个比较合适 */
+    gap: 10px;
+  }
+  
+  /* 按钮样式复用之前的设计 */
+  .btnNormal {
+    --background-color: #f6f7f9;
+    --border-color: transparent;
+    color: #333;
+    font-size: 12px;
+    height: 32px;
+    padding: 0;
+    border-radius: 4px;
+  }
+  
+  .btnActive {
+    font-size: 12px;
+    height: 32px;
+    padding: 0;
+    border-radius: 4px;
+  }
+  
+  /* 底部操作区 */
+  .footer {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid #f5f5f5;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+  }
