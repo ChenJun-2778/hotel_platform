@@ -226,7 +226,8 @@ router.get('/list', async (req, res) => {
         address,
         room_number,
         status,
-        star_rating
+        star_rating,
+        rejection_reason
       FROM hotels
       WHERE ${whereCondition}
       ORDER BY created_at DESC
