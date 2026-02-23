@@ -1,6 +1,6 @@
 import React from 'react';
-import { Table, Tag, Space, Button, Modal, Input, message, Tabs } from 'antd';
-import { CheckOutlined, CloseOutlined, EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Table, Tag, Space, Button, Modal, Input, message, Tabs, Dropdown } from 'antd';
+import { CheckOutlined, CloseOutlined, EyeOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
 import StarRating from '../../../../components/common/StarRating';
 
 const { TextArea } = Input;
@@ -49,7 +49,11 @@ const HotelAuditTable = ({
         size: 'large',
         style: { minWidth: 100 }
       },
-      onOk: () => onApprove && onApprove(hotel.key),
+      onOk: async () => {
+        if (onApprove) {
+          await onApprove(hotel.key);
+        }
+      },
     });
   };
 
@@ -107,12 +111,14 @@ const HotelAuditTable = ({
         size: 'large',
         style: { minWidth: 100 }
       },
-      onOk: () => {
+      onOk: async () => {
         if (!rejectReason || rejectReason.trim() === '') {
           message.error('请输入拒绝原因');
-          return Promise.reject();
+          return Promise.reject(new Error('请输入拒绝原因'));
         }
-        return onReject && onReject(hotel.key, rejectReason.trim());
+        if (onReject) {
+          await onReject(hotel.key, rejectReason.trim());
+        }
       },
     });
   };
@@ -237,40 +243,63 @@ const HotelAuditTable = ({
     {
       title: '操作',
       key: 'action',
-      width: 220,
+      width: 150,
       fixed: 'right',
       align: 'center',
-      render: (_, record) => (
-        <Space size="small">
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />}
-            onClick={() => onViewDetail && onViewDetail(record)}
-          >
-            查看
-          </Button>
-          {record.status === 'pending' && (
-            <>
-              <Button 
-                type="link" 
-                icon={<CheckOutlined />} 
-                style={{ color: '#52c41a' }}
-                onClick={() => confirmApprove(record)}
+      render: (_, record) => {
+        // 构建下拉菜单项
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: '查看详情',
+            onClick: () => onViewDetail && onViewDetail(record),
+          },
+        ];
+
+        // 只在待审核状态添加审核操作
+        if (record.status === 'pending') {
+          menuItems.push(
+            {
+              key: 'approve',
+              icon: <CheckOutlined />,
+              label: <span style={{ color: '#52c41a' }}>审核通过</span>,
+              onClick: () => confirmApprove(record),
+            },
+            {
+              key: 'reject',
+              icon: <CloseOutlined />,
+              label: <span style={{ color: '#ff4d4f' }}>审核拒绝</span>,
+              onClick: () => confirmReject(record),
+            }
+          );
+        }
+
+        return (
+          <Space size="small">
+            <Button 
+              type="link" 
+              icon={<EyeOutlined />}
+              onClick={() => onViewDetail && onViewDetail(record)}
+            >
+              查看
+            </Button>
+            {record.status === 'pending' && (
+              <Dropdown
+                menu={{ items: menuItems.slice(1) }}
+                placement="bottomRight"
+                trigger={['click']}
               >
-                通过
-              </Button>
-              <Button 
-                type="link" 
-                danger 
-                icon={<CloseOutlined />}
-                onClick={() => confirmReject(record)}
-              >
-                拒绝
-              </Button>
-            </>
-          )}
-        </Space>
-      ),
+                <Button 
+                  type="link"
+                  icon={<MoreOutlined />}
+                  style={{ padding: '4px 8px' }}
+                />
+              </Dropdown>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 

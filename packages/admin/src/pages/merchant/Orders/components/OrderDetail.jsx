@@ -7,19 +7,17 @@ import { getOrderStatusInfo, ORDER_STATUS } from '../utils/orderStatus';
 /**
  * 订单详情组件
  */
-const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [] }) => {
+const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [], loadingRooms = false }) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [confirming, setConfirming] = useState(false);
 
   if (!order) return null;
 
   const statusInfo = getOrderStatusInfo(order.status);
-  const isPending = order.status === ORDER_STATUS.PENDING;
+  const isPendingConfirm = order.status === ORDER_STATUS.PENDING_CONFIRM; // 待确定状态
 
-  // 计算天数
-  const checkIn = new Date(order.checkIn);
-  const checkOut = new Date(order.checkOut);
-  const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+  // 天数从后端返回
+  const days = order.nights || 0;
 
   /**
    * 确认订单并分配房间
@@ -33,8 +31,10 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [] }
     try {
       setConfirming(true);
       
+      console.log('🔍 确认订单 - 订单号:', order.orderNo, '房间号:', selectedRoom);
+      
       if (onConfirm) {
-        await onConfirm(order.key, selectedRoom);
+        await onConfirm(order.orderNo, selectedRoom); // ⭐ 使用订单号而不是 ID
       }
       
       message.success('订单确认成功！');
@@ -59,7 +59,7 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [] }
   // 自定义底部按钮
   const footer = (
     <div style={{ textAlign: 'right' }}>
-      {isPending ? (
+      {isPendingConfirm ? (
         <Space>
           <Button onClick={handleClose}>取消</Button>
           <Button 
@@ -97,26 +97,29 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [] }
       </Descriptions.Item>
       
       <Descriptions.Item label="酒店名称" span={2}>
-        {order.hotel}
+        {order.hotelName}
       </Descriptions.Item>
       
       <Descriptions.Item label="房型">
         {order.roomType}
       </Descriptions.Item>
       
-      {/* 待确认状态：显示房间选择器 */}
-      {isPending ? (
+      {/* 待确定状态：显示房间选择器 */}
+      {isPendingConfirm ? (
         <Descriptions.Item label="分配房间号" span={2}>
           <div>
             <Select
               value={selectedRoom}
               onChange={setSelectedRoom}
-              placeholder="请选择房间号"
+              placeholder={loadingRooms ? "加载房间列表中..." : "请选择房间号"}
               style={{ width: '100%', marginBottom: 8 }}
+              loading={loadingRooms}
+              disabled={loadingRooms}
               options={availableRooms.map(room => ({
                 value: room.roomNumber,
                 label: `${room.roomNumber} - ${room.type}`,
               }))}
+              notFoundContent={loadingRooms ? "加载中..." : "暂无可用房间"}
             />
             <div style={{ 
               fontSize: 12, 
@@ -139,7 +142,7 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [] }
             color: '#1890ff',
             fontFamily: 'monospace'
           }}>
-            {order.assignedRoom || order.room || '-'}
+            {order.assignedRoom || '-'}
           </span>
         </Descriptions.Item>
       )}

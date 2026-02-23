@@ -45,12 +45,14 @@ const HotelAudit = () => {
       const response = await getHotelDetail(record.id);
       const hotelData = response.data || response;
       
-      // 获取该酒店的实际房间数（计算属性，不写入数据库）
+      // 获取该酒店的实际房间数（计算所有房间的 total_rooms 总和）
       try {
         const roomResponse = await getRoomList({ hotel_id: record.id });
         const roomList = roomResponse.data?.rooms || roomResponse.rooms || [];
-        hotelData.room_number = roomList.length;
-        console.log(`✅ 酒店详情 - 实时计算房间数: ${roomList.length}`);
+        // 计算所有房间的 total_rooms 总和
+        const totalRoomCount = roomList.reduce((sum, room) => sum + (Number(room.total_rooms) || 0), 0);
+        hotelData.room_number = totalRoomCount;
+        console.log(`✅ 酒店详情 - 实时计算房间数: ${roomList.length}条记录, 总房间数=${totalRoomCount}`);
       } catch (error) {
         console.log('⚠️ 获取房间数失败，显示为0:', error.message);
         hotelData.room_number = 0;

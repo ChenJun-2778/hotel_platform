@@ -6,20 +6,24 @@ import { getOrderStatusInfo } from '../utils/orderStatus';
 /**
  * 订单表格组件
  */
-const OrderTable = ({ orders, loading, onViewDetail }) => {
+const OrderTable = ({ orders, loading, pagination, onPageChange, onViewDetail }) => {
   const columns = [
     {
       title: '订单号',
       dataIndex: 'orderNo',
       key: 'orderNo',
-      width: 160,
+      width: 180,
       fixed: 'left',
+      render: (text) => (
+        <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{text}</span>
+      ),
     },
     {
       title: '酒店',
-      dataIndex: 'hotel',
-      key: 'hotel',
+      dataIndex: 'hotelName',
+      key: 'hotelName',
       width: 150,
+      ellipsis: true,
     },
     {
       title: '房型',
@@ -33,12 +37,12 @@ const OrderTable = ({ orders, loading, onViewDetail }) => {
       key: 'assignedRoom',
       width: 100,
       render: (assignedRoom, record) => {
-        // 待确认状态显示"待分配"
-        if (record.status === 'pending') {
+        // 待确定状态显示"待分配"
+        if (record.status === 2) {
           return <span style={{ color: '#8c8c8c' }}>待分配</span>;
         }
         // 已确认状态显示房间号
-        return assignedRoom || record.room || '-';
+        return assignedRoom || '-';
       },
     },
     {
@@ -61,14 +65,10 @@ const OrderTable = ({ orders, loading, onViewDetail }) => {
     },
     {
       title: '天数',
-      key: 'days',
+      dataIndex: 'nights',
+      key: 'nights',
       width: 80,
-      render: (_, record) => {
-        const checkIn = new Date(record.checkIn);
-        const checkOut = new Date(record.checkOut);
-        const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-        return `${days}晚`;
-      },
+      render: (nights) => `${nights}晚`,
     },
     {
       title: '金额',
@@ -116,9 +116,16 @@ const OrderTable = ({ orders, loading, onViewDetail }) => {
       dataSource={orders}
       loading={loading}
       pagination={{
-        pageSize: 10,
+        current: pagination?.current || 1,
+        pageSize: pagination?.pageSize || 10,
+        total: pagination?.total || 0,
         showSizeChanger: true,
+        showQuickJumper: true,
         showTotal: (total) => `共 ${total} 条`,
+        pageSizeOptions: ['10', '20', '50', '100'],
+        onChange: (page, pageSize) => {
+          onPageChange && onPageChange(page, pageSize);
+        },
       }}
       scroll={{ x: 1200 }}
     />

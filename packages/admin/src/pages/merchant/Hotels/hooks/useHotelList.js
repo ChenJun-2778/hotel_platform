@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { createHotel, getHotelList, updateHotel, updateHotelStatus } from '../../../../services/hotelService';
+import { createHotel, getHotelList, updateHotel, putUpHotel, takeDownHotel } from '../../../../services/hotelService';
 import { HOTEL_STATUS } from '../../../../constants/hotelStatus';
 import { useAuth } from '../../../../contexts/AuthContext';
 
@@ -43,6 +43,7 @@ const useHotelList = () => {
       
       const response = await getHotelList(params);
       console.log('✅ 后端返回的原始数据:', response);
+      console.log('✅ 后端返回的酒店列表详细数据:', JSON.stringify(response.data?.list || response.list, null, 2));
       
       // 后端返回格式：{ data: { list: [], pagination: {} }, success: true, message: '' }
       const hotels = response.data?.list || response.list || response.data || response || [];
@@ -50,6 +51,15 @@ const useHotelList = () => {
       
       console.log('✅ 解析后的酒店列表:', hotels);
       console.log('✅ 分页信息:', paginationData);
+      
+      // 检查是否有拒绝原因字段
+      hotels.forEach((hotel, index) => {
+        if (hotel.status === 3) { // 已拒绝状态
+          console.log(`🔍 酒店 ${index + 1} (${hotel.name}) - 状态: 已拒绝`);
+          console.log(`🔍 rejection_reason:`, hotel.rejection_reason);
+          console.log(`🔍 reject_reason:`, hotel.reject_reason);
+        }
+      });
       
       // 确保每条数据都有唯一的 id
       const hotelsWithId = Array.isArray(hotels) 
@@ -117,6 +127,7 @@ const useHotelList = () => {
       });
       
       console.log('✅ 创建酒店 - 用户ID:', user.id);
+      console.log('✅ 创建酒店 - 用户信息:', JSON.stringify(user, null, 2));
       console.log('✅ 创建酒店 - 最终提交数据:', JSON.stringify(submitData, null, 2));
       
       await createHotel(submitData);
@@ -124,8 +135,17 @@ const useHotelList = () => {
       await loadHotelList(); // 重新加载列表
       return true;
     } catch (error) {
-      console.error('添加酒店失败:', error);
-      message.error(error.message || '添加酒店失败，请重试');
+      console.error('❌ 添加酒店失败:', error);
+      
+      // 特殊处理外键约束错误
+      if (error.message && error.message.includes('foreign key constraint fails')) {
+        console.error('❌ 数据库外键约束错误 - 用户ID不存在于数据库中');
+        console.error('❌ 当前用户ID:', user.id);
+        console.error('❌ 请联系后端开发人员检查数据库 users 表');
+        message.error(`数据库错误：用户ID ${user.id} 不存在，请联系管理员或重新登录`);
+      } else {
+        message.error(error.message || '添加酒店失败，请重试');
+      }
       return false;
     }
   };
@@ -152,19 +172,24 @@ const useHotelList = () => {
   // 更新酒店状态（上架/下架）
   const toggleHotelStatus = async (id, currentStatus) => {
     try {
-      // 只允许在营业中(1)和已下架(0)之间切换
-      let newStatus;
+      // 营业中(1)可以下架，已下架(0)和已拒绝(3)可以上架
       if (currentStatus === HOTEL_STATUS.ONLINE) {
-        newStatus = HOTEL_STATUS.OFFLINE; // 下架
-      } else if (currentStatus === HOTEL_STATUS.OFFLINE) {
-        newStatus = HOTEL_STATUS.ONLINE; // 上架
+        // 下架
+        await takeDownHotel(id);
+        message.success('酒店已下架');
+      } else if (currentStatus === HOTEL_STATUS.OFFLINE || currentStatus === HOTEL_STATUS.REJECTED) {
+        // 上架（已下架或已拒绝状态都可以上架）
+        await putUpHotel(id);
+        if (currentStatus === HOTEL_STATUS.REJECTED) {
+          message.success('酒店已重新提交审核');
+        } else {
+          message.success('酒店已上架');
+        }
       } else {
         message.warning('当前状态不允许上架/下架操作');
         return false;
       }
-
-      await updateHotelStatus(id, newStatus);
-      message.success(newStatus === HOTEL_STATUS.ONLINE ? '酒店已上架' : '酒店已下架');
+      
       await loadHotelList(); // 重新加载列表
       return true;
     } catch (error) {

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { message } from 'antd';
 import { getHotelList } from '../../../../services/hotelService';
 import { createRoom, getRoomList, updateRoom as updateRoomAPI, deleteRoom as deleteRoomAPI } from '../../../../services/roomService';
+import { useRoomCache } from '../../../../contexts/RoomCacheContext';
 
 /**
  * 房间列表管理 Hook
@@ -10,22 +11,25 @@ const useRoomList = () => {
   const [hotels, setHotels] = useState([]);
   const [roomsData, setRoomsData] = useState({});
   const [loading, setLoading] = useState(false);
+  
+  // 使用房间缓存 Context
+  const { addHotelRooms } = useRoomCache();
 
   /**
    * 同步酒店的房间数（计算属性，不写入数据库）
-   * 返回该酒店的实际房间数
+   * 不再更新酒店列表中的房间数显示
    */
   const syncHotelRoomCount = useCallback(async (hotelId) => {
     try {
       // 获取该酒店的房间列表
       const response = await getRoomList({ hotel_id: hotelId });
       const roomList = response.data?.rooms || response.rooms || [];
-      const roomCount = roomList.length;
+      // 计算所有房间的 total_rooms 总和
+      const roomCount = roomList.reduce((sum, room) => sum + (Number(room.total_rooms) || 0), 0);
       
-      console.log(`✅ 同步酒店房间数: 酒店ID=${hotelId}, 房间数=${roomCount}`);
+      console.log(`✅ 同步酒店房间数: 酒店ID=${hotelId}, ${roomList.length}条记录, 总房间数=${roomCount}`);
       
-      // 注意：房间数作为计算属性，不写入数据库
-      // 在查看详情和编辑时会实时计算
+      // 不再更新酒店列表中的显示
       
       return roomCount;
     } catch (error) {
@@ -42,11 +46,11 @@ const useRoomList = () => {
       const response = await getHotelList();
       const hotelList = response.data?.list || response.list || [];
       
-      // 转换为下拉选项格式
+      // 转换为下拉选项格式，不显示房间数
       const hotelOptions = hotelList.map(hotel => ({
         value: hotel.id,
         label: hotel.name,
-        totalRooms: hotel.room_number || 0,
+        totalRooms: 0,
       }));
       
       setHotels(hotelOptions);
@@ -89,7 +93,6 @@ const useRoomList = () => {
           max_occupancy: room.max_occupancy,
           price: room.base_price,
           total_rooms: room.total_rooms,
-          available_rooms: room.available_rooms,
           facilities: room.facilities ? JSON.parse(room.facilities) : [],
           description: room.description,
           images: room.images ? JSON.parse(room.images) : [],
@@ -110,6 +113,32 @@ const useRoomList = () => {
       }, {});
       console.log('📊 房间状态统计:', statusStats);
       
+      // 缓存房间列表到 Context（用于订单页面）
+      if (Array.isArray(roomList) && roomList.length > 0) {
+        try {
+          // 从 API 获取酒店名称
+          let hotelName = '';
+          try {
+            const hotelResponse = await getHotelList();
+            const hotelList = hotelResponse.data?.list || hotelResponse.list || [];
+            const foundHotel = hotelList.find(h => h.id === hotelId);
+            hotelName = foundHotel?.name || '';
+            console.log('✅ 从 API 获取酒店名称:', hotelName, '酒店ID:', hotelId);
+          } catch (e) {
+            console.warn('⚠️ 从 API 获取酒店名称失败:', e);
+          }
+          
+          if (!hotelName) {
+            console.warn('⚠️ 无法获取酒店名称，酒店ID:', hotelId);
+          }
+          
+          // 使用 Context 缓存房间数据
+          addHotelRooms(hotelId, roomList, hotelName);
+        } catch (e) {
+          console.warn('⚠️ 缓存房间列表失败:', e);
+        }
+      }
+      
       setRoomsData(prev => ({
         ...prev,
         [hotelId]: formattedRooms,
@@ -124,7 +153,7 @@ const useRoomList = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [addHotelRooms]);
 
   /**
    * 初始化：加载酒店列表
@@ -160,7 +189,10 @@ const useRoomList = () => {
     try {
       setLoading(true);
       
-      // 构建提交数据
+      console.log('🔄 useRoomList v2.0 - available_rooms 字段已移除');
+      console.log('📝 原始房间数据:', roomData);
+      
+      // 构建提交数据 - 明确只包含后端需要的字段
       const submitData = {
         hotel_id: roomData.hotel_id,
         room_number: roomData.room_number,
@@ -172,13 +204,22 @@ const useRoomList = () => {
         max_occupancy: Number(roomData.max_occupancy),
         base_price: Number(roomData.base_price),
         total_rooms: Number(roomData.total_rooms),
-        available_rooms: Number(roomData.available_rooms),
         facilities: JSON.stringify(Array.isArray(roomData.facilities) ? roomData.facilities : []),
         description: roomData.description || '',
         images: JSON.stringify(roomData.images || []),
         status: 1, // 新建房间默认为1（可预订）
         booked_by: "0", // 默认无人预定
       };
+      
+      console.log('📤 提交数据字段列表:', Object.keys(submitData));
+      console.log('📤 提交数据详情:', JSON.stringify(submitData, null, 2));
+      
+      // 明确检查是否包含 available_rooms
+      if ('available_rooms' in submitData) {
+        console.error('❌ 错误：submitData 中仍包含 available_rooms 字段！');
+      } else {
+        console.log('✅ 确认：submitData 中不包含 available_rooms 字段');
+      }
       
       await createRoom(submitData);
       console.log(`✅ 添加房间成功: ${submitData.room_number}`);
@@ -220,7 +261,6 @@ const useRoomList = () => {
         max_occupancy: Number(roomData.max_occupancy),
         base_price: Number(roomData.base_price),
         total_rooms: Number(roomData.total_rooms),
-        available_rooms: Number(roomData.available_rooms),
         facilities: JSON.stringify(Array.isArray(roomData.facilities) ? roomData.facilities : []),
         description: roomData.description || '',
         images: JSON.stringify(roomData.images || []),
