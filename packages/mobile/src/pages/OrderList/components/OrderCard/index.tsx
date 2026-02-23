@@ -36,12 +36,46 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
 
   const statusInfo = getStatusInfo(data.status);
 
-  // 优先使用酒店封面图，其次是房间图片
-  const displayImage = data.hotel_cover_image 
-    ? data.hotel_cover_image 
-    : data.room_images 
-      ? data.room_images.split(',')[0] 
-      : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
+  // 处理房间图片
+  const getRoomImage = () => {
+    if (!data.room_images) {
+      // 如果没有房间图片，使用酒店封面图
+      return data.hotel_cover_image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
+    }
+
+    try {
+      // 尝试解析 JSON 数组
+      let imageList: string[] = [];
+      
+      // 如果是 JSON 数组字符串
+      if (data.room_images.startsWith('[')) {
+        imageList = JSON.parse(data.room_images);
+      } else {
+        // 如果是逗号分隔的字符串
+        imageList = data.room_images.split(',').map(img => img.trim());
+      }
+
+      if (imageList.length > 0) {
+        let firstImage = imageList[0];
+        
+        // 如果是完整的 URL（以 http 开头），直接使用
+        if (firstImage.startsWith('http')) {
+          return firstImage;
+        }
+        
+        // 如果只是文件名，拼接完整的 URL
+        // 假设图片存储在服务器的 /uploads 目录
+        return `http://47.99.56.81:3000/uploads/${firstImage}`;
+      }
+    } catch (error) {
+      console.error('解析房间图片失败:', error);
+    }
+
+    // 如果解析失败，使用酒店封面图或默认图
+    return data.hotel_cover_image || 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
+  };
+
+  const displayImage = getRoomImage();
 
   // 格式化日期
   const formatDate = (dateStr: string) => {
