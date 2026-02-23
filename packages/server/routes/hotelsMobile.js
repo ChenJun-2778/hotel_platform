@@ -28,7 +28,8 @@ router.get('/search', async (req, res) => {
       price_min, price_max,
       score_min, score_max,
       star_min,  star_max,
-      facilities
+      facilities,
+      sortType  // 新增：排序类型参数
     } = req.query;
 
     const hasDestination = destination && destination.trim() !== '';
@@ -212,7 +213,27 @@ router.get('/search', async (req, res) => {
       sql += ` HAVING ` + havingClauses.join(' AND ');
     }
 
-    sql += ` ORDER BY h.star_rating DESC, min_price ASC`;
+    // ── 动态排序逻辑 ──────────────────────────────────────────
+    let orderByClause = '';
+    switch (sortType) {
+      case 'score_desc':  // 好评优先
+        orderByClause = 'ORDER BY h.score DESC, h.review_count DESC';
+        break;
+      case 'price_asc':   // 低价优先
+        orderByClause = 'ORDER BY min_price ASC';
+        break;
+      case 'price_desc':  // 高价优先
+        orderByClause = 'ORDER BY min_price DESC';
+        break;
+      case 'star_desc':   // 高星优先
+        orderByClause = 'ORDER BY h.star_rating DESC, min_price ASC';
+        break;
+      case 'def':         // 智能排序（默认）
+      default:
+        orderByClause = 'ORDER BY h.star_rating DESC, h.score DESC, min_price ASC';
+        break;
+    }
+    sql += ` ${orderByClause}`;
 
     const hotels = await query(sql, params);
 

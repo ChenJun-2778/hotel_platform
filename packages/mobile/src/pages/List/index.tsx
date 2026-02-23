@@ -186,23 +186,53 @@ const List: React.FC = () => {
     // 3. 此时 URL 变了，useEffect 会自动监听到变化并重新请求数据
   }
   // 请求酒店列表
-  // 请求酒店列表
-  // 请求酒店列表
   useEffect(() => {
     const getHotelList = async () => {
       setLoading(true);
       try {
-        // ✅ 极致清爽：直接把 UI 状态传给 api，映射逻辑在 api 内部解决！
-        const res = await apiGetHotelList({
+        // 构建请求参数
+        const params: any = {
           city,
           beginDate: safeBeginDate,
           endDate: safeEndDate,
           type, 
           sortType,
           keyword
-        });
+        };
 
-        // 依然处理返回的数据
+        // 添加价格筛选
+        if (priceRange[0] > 0) {
+          params.price_min = priceRange[0];
+        }
+        if (priceRange[1] < 1000) {
+          params.price_max = priceRange[1];
+        }
+
+        // 添加评分筛选
+        if (filterScore) {
+          const scoreValue = parseFloat(filterScore);
+          if (!isNaN(scoreValue)) {
+            params.score_min = scoreValue;
+          }
+        }
+
+        // 添加星级筛选
+        if (filterStar) {
+          const starValue = parseInt(filterStar);
+          if (!isNaN(starValue)) {
+            params.star_min = starValue;
+          }
+        }
+
+        // 添加设施筛选（逗号分隔）
+        if (selectedFacilities.length > 0) {
+          params.facilities = selectedFacilities.join(',');
+        }
+
+        // 调用 API
+        const res = await apiGetHotelList(params);
+
+        // 处理返回的数据
         if (res && res.success) {
           setHotelList(res.data.list || []); 
         } else {
@@ -216,7 +246,7 @@ const List: React.FC = () => {
     }
 
     getHotelList();
-  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword]);
+  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword, priceRange, filterScore, filterStar, selectedFacilities]);
 
   return (
     <div className={styles.listContainer}>

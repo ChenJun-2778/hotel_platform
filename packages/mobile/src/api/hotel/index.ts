@@ -58,7 +58,13 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
     check_out_date: frontendParams.endDate,
     type: Number(frontendParams.type) || 1,
     sortType: frontendParams.sortType,
-    keyword: frontendParams.keyword
+    keyword: frontendParams.keyword,
+    // 添加筛选参数
+    price_min: frontendParams.price_min,
+    price_max: frontendParams.price_max,
+    score_min: frontendParams.score_min,
+    star_min: frontendParams.star_min,
+    facilities: frontendParams.facilities
   };
 
   return request.get<any, ApiResponse<HotelSearchResult>>('/api/hotelsMobile/search', { params });

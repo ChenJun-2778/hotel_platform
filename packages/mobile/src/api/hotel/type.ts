@@ -14,6 +14,14 @@ export interface ApiResponse<T> {
     type?: number;
     sortType?: string;
     keyword?: string;
+    // 筛选参数
+    price_min?: number;
+    price_max?: number;
+    score_min?: number;
+    score_max?: number;
+    star_min?: number;
+    star_max?: number;
+    facilities?: string;      // 逗号分隔的设施列表
   }
   
   // 3. 酒店列表里的单条酒店卡片数据
@@ -92,4 +100,10 @@ export interface FrontendSearchParams {
     type?: string | null; // URL 里拿出来的默认是 string 或 null
     sortType?: string;
     keyword?: string;
+    // 筛选参数
+    price_min?: number;
+    price_max?: number;
+    score_min?: number;
+    star_min?: number;
+    facilities?: string;
   }
