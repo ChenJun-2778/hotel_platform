@@ -4,7 +4,7 @@ import { EnvironmentOutline } from 'antd-mobile-icons';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import PinyinMatch from 'pinyin-match';
 import { useLocation } from '@/utils/useLocation';
-import { domesticHotCities, domesticCityGroups as allCityGroups } from '@/mock/cityData';
+import { domesticHotCities, domesticCityGroups as allCityGroups, provinceMap } from '@/mock/cityData';
 import styles from './index.module.css';
 
 const DomesticCity: React.FC = () => {
@@ -45,16 +45,31 @@ const DomesticCity: React.FC = () => {
     navigate(-1);
   };
 
-  // ✅ 4. 搜索过滤
+  // ✅ 4. 搜索过滤（支持省份搜索）
   const filteredCityGroups = useMemo(() => {
     if (!keyword) return allCityGroups;
+    
     const result: typeof allCityGroups = [];
+    const matchedCities = new Set<string>();
+    
+    // 先检查是否匹配省份名
+    Object.entries(provinceMap).forEach(([province, cities]) => {
+      if (PinyinMatch.match(province, keyword)) {
+        // 如果匹配省份名，添加该省所有城市
+        cities.forEach(city => matchedCities.add(city));
+      }
+    });
+    
+    // 再匹配城市名
     allCityGroups.forEach(group => {
-      const matchedItems = group.items.filter(city => PinyinMatch.match(city, keyword));
+      const matchedItems = group.items.filter(city => 
+        matchedCities.has(city) || PinyinMatch.match(city, keyword)
+      );
       if (matchedItems.length > 0) {
         result.push({ title: group.title, items: matchedItems });
       }
     });
+    
     return result;
   }, [keyword]);
 
