@@ -156,7 +156,7 @@ router.put('/approve/:id', async (req, res) => {
 
     // 1. 查询该酒店下所有未删除的房间
     const roomsSql = `
-      SELECT id AS room_id, total_rooms, available_rooms
+      SELECT id AS room_id, total_rooms
       FROM rooms
       WHERE hotel_id = ? AND is_deleted = 0
     `;
@@ -178,7 +178,8 @@ router.put('/approve/:id', async (req, res) => {
       const inventoryValues = [];
       for (const room of rooms) {
         for (const date of dateList) {
-          inventoryValues.push([room.room_id, hotelId, date, room.total_rooms, room.available_rooms]);
+          // available_rooms 初始值等于 total_rooms（新审批酒店库存全部可用）
+          inventoryValues.push([room.room_id, hotelId, date, room.total_rooms, room.total_rooms]);
         }
       }
 

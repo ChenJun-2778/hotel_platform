@@ -6,6 +6,8 @@ const hotelsRouter = require("./routes/hotels");
 const roomsRouter = require("./routes/rooms");
 const loginPCRouter = require("./routes/loginPC");
 const hotelsReviewRouter = require("./routes/hotelsReview");
+const orderPCRouter = require("./routes/orderPC");
+const controlPCRouter = require("./routes/controlPC");
 
 // 移动端
 const loginMobileRouter = require("./routes/loginMobile");
@@ -39,6 +41,9 @@ app.use("/api/hotels", hotelsRouter);
 app.use("/api/rooms", roomsRouter);
 app.use("/api/loginPC", loginPCRouter);
 app.use("/api/hotelsReview", hotelsReviewRouter);
+app.use("/api/orderPC", orderPCRouter);
+app.use("/api/controlPC", controlPCRouter);
+
 // 移动端 API 路由
 app.use("/api/loginMobile", loginMobileRouter);
 app.use("/api/hotelsMobile", hotelsMobileRouter);

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/database');
+const { query, pool } = require('../config/database');
 
 /**
  * 新增房间接口
@@ -17,7 +17,6 @@ const { query } = require('../config/database');
  * - max_occupancy: 最多入住人数 (必填)
  * - base_price: 基础价格(元/晚) (必填)
  * - total_rooms: 此类型房间总数 (必填)
- * - available_rooms: 可用房间数 (必填)
  * - facilities: 房间设施，JSON数组 (可选)
  * - description: 房间描述 (可选)
  * - images: 房间图片列表，JSON数组 (可选)
@@ -35,7 +34,6 @@ router.post('/create', async (req, res) => {
       max_occupancy,
       base_price,
       total_rooms,
-      available_rooms,
       facilities,
       description,
       images
@@ -84,15 +82,8 @@ router.post('/create', async (req, res) => {
       });
     }
 
-    if (available_rooms === undefined || available_rooms === null) {
-      return res.status(400).json({
-        success: false,
-        message: '可用房间数不能为空'
-      });
-    }
-
     // 验证酒店是否存在
-    const checkHotelSql = 'SELECT id FROM hotels WHERE id = ? AND is_deleted = 0';
+    const checkHotelSql = 'SELECT id, status FROM hotels WHERE id = ? AND is_deleted = 0';
     const existingHotels = await query(checkHotelSql, [hotel_id]);
     
     if (existingHotels.length === 0) {
@@ -102,7 +93,7 @@ router.post('/create', async (req, res) => {
       });
     }
 
-    // 插入房间数据
+    // 插入房间数据（available_rooms 自动等于 total_rooms，无需前端传入）
     const sql = `
       INSERT INTO rooms (
         hotel_id,
@@ -115,12 +106,11 @@ router.post('/create', async (req, res) => {
         max_occupancy,
         base_price,
         total_rooms,
-        available_rooms,
         facilities,
         description,
         images,
         is_deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     `;
 
     const params = [
@@ -134,13 +124,51 @@ router.post('/create', async (req, res) => {
       max_occupancy,
       base_price,
       total_rooms,
-      available_rooms,
       facilities,
       description,
       images
     ];
 
     const result = await query(sql, params);
+
+    // 将新建房间的 total_rooms 累加到对应酒店的 room_number
+    // 使用 COALESCE 处理 room_number 为 NULL 的情况（NULL + n = NULL）
+    const updateHotelSql = `
+      UPDATE hotels
+      SET room_number = COALESCE(room_number, 0) + ?
+      WHERE id = ? AND is_deleted = 0
+    `;
+    await query(updateHotelSql, [total_rooms, hotel_id]);
+
+    // ── 当酒店状态为 1（营业中）时，初始化未来 180 天库存 ───────
+    const hotelStatus = existingHotels[0].status;
+    let inventoryInserted = 0;
+
+    if (hotelStatus === 1) {
+      const DAYS = 180;
+      const today = new Date();
+      const newRoomId = result.insertId;
+      const inventoryValues = [];
+
+      for (let i = 0; i < DAYS; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        const dateStr = d.toISOString().slice(0, 10);
+        // [room_id, hotel_id, date, total_rooms, available_rooms]
+        inventoryValues.push([newRoomId, hotel_id, dateStr, total_rooms, total_rooms]);
+      }
+
+      const insertInventorySql = `
+        INSERT IGNORE INTO room_inventory (room_id, hotel_id, date, total_rooms, available_rooms)
+        VALUES ?
+      `;
+      await pool.query(insertInventorySql, [inventoryValues]);
+      inventoryInserted = inventoryValues.length;
+
+      console.log(`房间 ${newRoomId} 创建成功，酒店状态为 1，已写入 ${inventoryInserted} 条库存记录`);
+    } else {
+      console.log(`房间 ${result.insertId} 创建成功，酒店状态为 ${hotelStatus}（非营业中），跳过库存初始化`);
+    }
 
     res.status(201).json({
       success: true,
@@ -149,7 +177,10 @@ router.post('/create', async (req, res) => {
         id: result.insertId,
         room_type,
         room_number,
-        is_deleted: 0
+        total_rooms,
+        is_deleted: 0,
+        inventory_initialized: hotelStatus === 1,
+        inventory_days: inventoryInserted
       }
     });
 
@@ -284,7 +315,6 @@ router.get('/detail', async (req, res) => {
         max_occupancy,
         base_price,
         total_rooms,
-        available_rooms,
         facilities,
         description,
         images,
@@ -416,7 +446,6 @@ router.put('/update', async (req, res) => {
       max_occupancy,
       base_price,
       total_rooms,
-      available_rooms,
       facilities,
       description,
       images
@@ -497,10 +526,6 @@ router.put('/update', async (req, res) => {
     if (total_rooms !== undefined) {
       updateFields.push('total_rooms = ?');
       updateValues.push(total_rooms);
-    }
-    if (available_rooms !== undefined) {
-      updateFields.push('available_rooms = ?');
-      updateValues.push(available_rooms);
     }
     if (facilities !== undefined) {
       updateFields.push('facilities = ?');

@@ -12,7 +12,6 @@ const { query } = require('../config/database');
  * - english_name: 酒店英文名称 (可选)
  * - brand: 酒店品牌 (可选)
  * - star_rating: 酒店星级 1-5 (可选，默认3)
- * - room_number: 酒店房间数 (必填)
  * - location: 酒店地点/城市 (可选，默认'未知')
  * - address: 详细地址 (必填)
  * - hotel_phone: 酒店电话 (必填)
@@ -31,7 +30,6 @@ router.post('/create', async (req, res) => {
       english_name,
       brand,
       star_rating = 3,
-      room_number,
       location = '未知',
       address,
       hotel_phone,
@@ -39,8 +37,6 @@ router.post('/create', async (req, res) => {
       contact_phone,
       description,
       hotel_facilities,
-      check_in_time,
-      check_out_time,
       cover_image,
       images
     } = req.body;
@@ -69,13 +65,6 @@ router.post('/create', async (req, res) => {
       });
     }
 
-    if (!room_number) {
-      return res.status(400).json({
-        success: false,
-        message: '酒店房间数不能为空'
-      });
-    }
-
     if (!address) {
       return res.status(400).json({
         success: false,
@@ -98,6 +87,11 @@ router.post('/create', async (req, res) => {
       });
     }
 
+    // 随机生成模拟数据：评分（0.0-5.0）、点评数（50-5000）、收藏数（20-3000）
+    const score = parseFloat((Math.random() * 5).toFixed(1));
+    const review_count = Math.floor(Math.random() * (5000 - 50 + 1)) + 50;
+    const favorite_count = Math.floor(Math.random() * (3000 - 20 + 1)) + 20;
+
     // 插入酒店数据
     const sql = `
       INSERT INTO hotels (
@@ -106,7 +100,6 @@ router.post('/create', async (req, res) => {
         english_name, 
         brand, 
         star_rating, 
-        room_number, 
         location, 
         address, 
         hotel_phone, 
@@ -115,10 +108,13 @@ router.post('/create', async (req, res) => {
         description, 
         hotel_facilities, 
         cover_image, 
-        images, 
+        images,
+        score,
+        review_count,
+        favorite_count,
         status, 
         is_deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 0)
     `;
 
     const params = [
@@ -127,7 +123,6 @@ router.post('/create', async (req, res) => {
       english_name,
       brand,
       star_rating,
-      room_number,
       location,
       address,
       hotel_phone,
@@ -135,10 +130,11 @@ router.post('/create', async (req, res) => {
       contact_phone,
       description,
       hotel_facilities,
-      check_in_time,
-      check_out_time,
       cover_image,
-      images
+      images,
+      score,
+      review_count,
+      favorite_count
     ];
 
     const result = await query(sql, params);
@@ -190,12 +186,19 @@ router.get('/list', async (req, res) => {
     const pageSize = Math.max(1, Math.min(100, parseInt(req.query.pageSize) || 10)); // 限制最大100条
     const offset = (page - 1) * pageSize;
 
-    // 获取关键词搜索参数
+    // 获取查询参数
     const keyword = req.query.keyword ? req.query.keyword.trim() : '';
+    const user_id = req.query.user_id ? parseInt(req.query.user_id) : null;
 
     // 构建WHERE条件
     let whereCondition = 'is_deleted = 0';
     const queryParams = [];
+
+    // user_id 过滤（只查询该用户的酒店）
+    if (user_id) {
+      whereCondition += ' AND user_id = ?';
+      queryParams.push(user_id);
+    }
 
     if (keyword) {
       // 如果有关键词，添加名称或地址的模糊搜索
@@ -498,4 +501,130 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+/**
+ * 酒店下架接口
+ * PUT /api/hotels/:id/takedown
+ *
+ * 路径参数：
+ * - id: 酒店ID
+ *
+ * 操作：将对应酒店的 status 改为 0（已下架）
+ */
+router.put('/:id/takedown', async (req, res) => {
+  try {
+    const hotelId = parseInt(req.params.id);
+
+    // 验证ID是否为有效数字
+    if (!hotelId || hotelId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的酒店ID'
+      });
+    }
+
+    // 检查酒店是否存在
+    const checkSql = 'SELECT id, status FROM hotels WHERE id = ? AND is_deleted = 0';
+    const existingHotels = await query(checkSql, [hotelId]);
+
+    if (existingHotels.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: '酒店不存在或已被删除'
+      });
+    }
+
+    if (existingHotels[0].status === 0) {
+      return res.status(400).json({
+        success: false,
+        message: '该酒店已处于下架状态'
+      });
+    }
+
+    // 将酒店状态更新为 0（已下架）
+    const updateSql = 'UPDATE hotels SET status = 0 WHERE id = ? AND is_deleted = 0';
+    await query(updateSql, [hotelId]);
+
+    res.status(200).json({
+      success: true,
+      message: '酒店下架成功',
+      data: {
+        id: hotelId,
+        status: 0
+      }
+    });
+
+  } catch (error) {
+    console.error('酒店下架失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '酒店下架失败',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * 酒店上架接口
+ * PUT /api/hotels/:id/putup
+ *
+ * 路径参数：
+ * - id: 酒店ID
+ *
+ * 操作：将对应酒店的 status 改为 2（待审批/上架）
+ */
+router.put('/:id/putup', async (req, res) => {
+  try {
+    const hotelId = parseInt(req.params.id);
+
+    // 验证ID是否为有效数字
+    if (!hotelId || hotelId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的酒店ID'
+      });
+    }
+
+    // 检查酒店是否存在
+    const checkSql = 'SELECT id, status FROM hotels WHERE id = ? AND is_deleted = 0';
+    const existingHotels = await query(checkSql, [hotelId]);
+
+    if (existingHotels.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: '酒店不存在或已被删除'
+      });
+    }
+
+    if (existingHotels[0].status === 2) {
+      return res.status(400).json({
+        success: false,
+        message: '该酒店已处于上架（待审批）状态'
+      });
+    }
+
+    // 将酒店状态更新为 2（上架/待审批）
+    const updateSql = 'UPDATE hotels SET status = 2 WHERE id = ? AND is_deleted = 0';
+    await query(updateSql, [hotelId]);
+
+    res.status(200).json({
+      success: true,
+      message: '酒店上架成功',
+      data: {
+        id: hotelId,
+        status: 2
+      }
+    });
+
+  } catch (error) {
+    console.error('酒店上架失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '酒店上架失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
+
+
