@@ -196,6 +196,7 @@ router.get('/detail', async (req, res) => {
         o.user_id,
         h.name        AS hotel_name,
         r.room_type,
+        r.room_numbers,
         o.check_in_date,
         o.check_out_date,
         o.nights,

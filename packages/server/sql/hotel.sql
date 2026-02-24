@@ -11,7 +11,7 @@
  Target Server Version : 80044 (8.0.44)
  File Encoding         : 65001
 
- Date: 23/02/2026 16:31:36
+ Date: 24/02/2026 23:32:56
 */
 
 SET NAMES utf8mb4;
@@ -38,6 +38,7 @@ CREATE TABLE `hotels`  (
   `hotel_facilities` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '酒店设施',
   `cover_image` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '酒店首页图片URL',
   `images` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '酒店图片列表（JSON数组）',
+  `hotel_type` tinyint NOT NULL DEFAULT 1 COMMENT '酒店类型：1-国内酒店，2-海外酒店，3-民宿酒店',
   `status` tinyint NULL DEFAULT 1 COMMENT '状态：1-营业中，0-已下架，2-待审批，3-审批拒绝',
   `rejection_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '拒绝原因（仅当status=3时有值）',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -53,14 +54,11 @@ CREATE TABLE `hotels`  (
   INDEX `idx_star_rating`(`star_rating` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   CONSTRAINT `fk_hotels_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '酒店表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '酒店表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of hotels
 -- ----------------------------
-INSERT INTO `hotels` VALUES (10, 11, '1', '1', '1', 3, 2, '河北省保定市莲池区', '1', '1', '1', '1', '1', '健身房', 'https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1771831692929-vwng4c.png', '[\"https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1771831693597-nuok5t.png\"]', 1, NULL, '2026-02-23 15:28:13', '2026-02-23 16:24:49', 1.4, 1503, 384, 0);
-INSERT INTO `hotels` VALUES (12, 12, '环球酒店', 'huanqiu', '环球连锁', 5, NULL, '河北省秦皇岛市抚宁区', '朝阳区', '12345577', '王安石', '123000000', '很好', '免费WiFi,健身房,游泳池,餐厅', 'https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1771832880104-wk1ka5.png', '[\"https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1771832880397-5adgu2.png\"]', 1, NULL, '2026-02-23 15:48:01', '2026-02-23 16:14:11', NULL, 0, 0, 0);
-INSERT INTO `hotels` VALUES (13, 12, '好利来酒店', 'haolilai hotel', '好利来连锁', 4, NULL, '重庆市市辖区巴南区', '江南水岸', '05551234567', '唐经理', '123000000', '444', '停车场,餐厅,健身房', 'https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1771834589920-rb875a.png', '[\"https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/hotels/1771834590211-rmkyxe.png\"]', 1, NULL, '2026-02-23 16:16:31', '2026-02-23 16:16:49', NULL, 0, 0, 0);
 
 -- ----------------------------
 -- Table structure for orders
@@ -93,7 +91,7 @@ CREATE TABLE `orders`  (
   CONSTRAINT `fk_orders_hotel_id` FOREIGN KEY (`hotel_id`) REFERENCES `hotels` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_orders_room_id` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_orders_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '订单表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '订单表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of orders
@@ -117,7 +115,7 @@ CREATE TABLE `room_inventory`  (
   INDEX `idx_hotel_date`(`hotel_id` ASC, `date` ASC) USING BTREE,
   CONSTRAINT `fk_inventory_hotel_id` FOREIGN KEY (`hotel_id`) REFERENCES `hotels` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_inventory_room_id` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 1081 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '房间日历库存表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1981 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '房间日历库存表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of room_inventory
@@ -130,7 +128,8 @@ DROP TABLE IF EXISTS `rooms`;
 CREATE TABLE `rooms`  (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '房间ID',
   `hotel_id` int NOT NULL COMMENT '所属酒店ID',
-  `room_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '房间号',
+  `room_type_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '房型编号（如 RT001）',
+  `room_numbers` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '房间号列表（JSON数组）',
   `room_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '房型',
   `room_type_en` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '英文房型',
   `bed_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '大床' COMMENT '床型：大床/双床/三床/榻榻米',
@@ -150,12 +149,11 @@ CREATE TABLE `rooms`  (
   INDEX `idx_room_type`(`room_type` ASC) USING BTREE,
   INDEX `idx_base_price`(`base_price` ASC) USING BTREE,
   CONSTRAINT `fk_rooms_hotel_id` FOREIGN KEY (`hotel_id`) REFERENCES `hotels` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 16 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '房间表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '房间表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of rooms
 -- ----------------------------
-INSERT INTO `rooms` VALUES (15, 10, '2', '2', '2', '大床', 10.00, '2', 2, 2.00, 2, '[\"空调\"]', '2', '[\"https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/rooms/1771835088810-6iwv3d.png\"]', '2026-02-23 16:24:49', '2026-02-23 16:24:49', 0);
 
 -- ----------------------------
 -- Table structure for sys_user
@@ -195,13 +193,14 @@ CREATE TABLE `users`  (
   INDEX `idx_phone`(`phone` ASC) USING BTREE,
   INDEX `idx_role_type`(`role_type` ASC) USING BTREE,
   INDEX `idx_created_at`(`created_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户信息表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户信息表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of users
 -- ----------------------------
-INSERT INTO `users` VALUES (11, 'USER638581651', 'jiuwei', '2625659302@qq.com', '18281848376', '$2b$10$8iUmy82yOzjH.WpsB6gNQO7KDL/PBNBgR1Nv8M8NMhBFyyKbrIpb6', 2, NULL, '2026-02-23 15:27:18', '2026-02-23 16:20:38', '2026-02-23 16:20:38', 1, 0);
-INSERT INTO `users` VALUES (12, 'USER824794907', 'Tc0522', '1527664608@qq.com', '18005552928', '$2b$10$TpdircK3fN6tlm0r/vgHnuEAMqImUUgHiXMBHpW4MBsHtVLcms18y', 2, 'https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/avatars/1771832907796-tkd6o8.png', '2026-02-23 15:47:05', '2026-02-23 16:15:07', '2026-02-23 16:15:07', 1, 0);
-INSERT INTO `users` VALUES (13, 'USER423997982', 'admin', '123456@qq.com', '18005552929', '$2b$10$SYOFYifUFRBtpCqQwiB51.HD8YkpPm5e/DRR3y6K1KPL1b4otStuG', 1, NULL, '2026-02-23 16:13:44', '2026-02-23 16:13:49', '2026-02-23 16:13:49', 1, 0);
+INSERT INTO `users` VALUES (11, 'USER638581651', 'jiuwei', '2625659302@qq.com', '18281848376', '$2b$10$8iUmy82yOzjH.WpsB6gNQO7KDL/PBNBgR1Nv8M8NMhBFyyKbrIpb6', 2, NULL, '2026-02-23 15:27:18', '2026-02-24 20:46:10', '2026-02-24 20:46:10', 1, 0);
+INSERT INTO `users` VALUES (12, 'USER824794907', 'Tc0522', '1527664608@qq.com', '18005552928', '$2b$10$TpdircK3fN6tlm0r/vgHnuEAMqImUUgHiXMBHpW4MBsHtVLcms18y', 2, 'https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/avatars/1771832907796-tkd6o8.png', '2026-02-23 15:47:05', '2026-02-24 16:18:16', '2026-02-24 16:18:16', 1, 0);
+INSERT INTO `users` VALUES (13, 'USER423997982', 'admin', '123456@qq.com', '18005552929', '$2b$10$SYOFYifUFRBtpCqQwiB51.HD8YkpPm5e/DRR3y6K1KPL1b4otStuG', 1, 'https://hotel-xiecheng.oss-cn-beijing.aliyuncs.com/avatars/1771923067417-v8xybx.png', '2026-02-23 16:13:44', '2026-02-24 21:27:49', '2026-02-24 21:27:49', 1, 0);
+INSERT INTO `users` VALUES (14, 'MOB163894120', 'Cj', '', '18383919236', '$2b$10$MxgiEgdjVKxGn1Gwt8.2nuUS8baLmiEYaLvSdcj1.biKmFf2DPQEO', 3, 'https://www.bing.com/th/id/OIP.ossN4kneY1dySVL2gK8YOgHaHa?w=199&h=211&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2', '2026-02-23 17:49:24', '2026-02-24 21:22:50', '2026-02-24 21:22:50', 1, 0);
 
 SET FOREIGN_KEY_CHECKS = 1;

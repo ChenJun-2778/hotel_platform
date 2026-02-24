@@ -8,7 +8,7 @@ const { query, pool } = require('../config/database');
  * 
  * 请求体参数：
  * - hotel_id: 所属酒店ID (必填)
- * - room_number: 房间号 (必填)
+ * - room_type_code: 房型编号，如 RT001 (必填)
  * - room_type: 房型 (必填)
  * - room_type_en: 英文房型 (可选)
  * - bed_type: 床型 (可选，默认'大床')
@@ -17,6 +17,7 @@ const { query, pool } = require('../config/database');
  * - max_occupancy: 最多入住人数 (必填)
  * - base_price: 基础价格(元/晚) (必填)
  * - total_rooms: 此类型房间总数 (必填)
+ * - room_numbers: 房间号列表，JSON数组，如 ["101","102"] (可选)
  * - facilities: 房间设施，JSON数组 (可选)
  * - description: 房间描述 (可选)
  * - images: 房间图片列表，JSON数组 (可选)
@@ -25,7 +26,7 @@ router.post('/create', async (req, res) => {
   try {
     const {
       hotel_id,
-      room_number,
+      room_type_code,
       room_type,
       room_type_en,
       bed_type = '大床',
@@ -34,6 +35,7 @@ router.post('/create', async (req, res) => {
       max_occupancy,
       base_price,
       total_rooms,
+      room_numbers,
       facilities,
       description,
       images
@@ -47,10 +49,10 @@ router.post('/create', async (req, res) => {
       });
     }
 
-    if (!room_number) {
+    if (!room_type_code) {
       return res.status(400).json({
         success: false,
-        message: '房间号不能为空'
+        message: '房型编号不能为空'
       });
     }
 
@@ -97,7 +99,7 @@ router.post('/create', async (req, res) => {
     const sql = `
       INSERT INTO rooms (
         hotel_id,
-        room_number,
+        room_type_code,
         room_type,
         room_type_en,
         bed_type,
@@ -106,16 +108,17 @@ router.post('/create', async (req, res) => {
         max_occupancy,
         base_price,
         total_rooms,
+        room_numbers,
         facilities,
         description,
         images,
         is_deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
     `;
 
     const params = [
       hotel_id,
-      room_number,
+      room_type_code,
       room_type,
       room_type_en,
       bed_type,
@@ -124,6 +127,7 @@ router.post('/create', async (req, res) => {
       max_occupancy,
       base_price,
       total_rooms,
+      room_numbers,
       facilities,
       description,
       images
@@ -175,8 +179,8 @@ router.post('/create', async (req, res) => {
       message: '房间创建成功',
       data: {
         id: result.insertId,
+        room_type_code,
         room_type,
-        room_number,
         total_rooms,
         is_deleted: 0,
         inventory_initialized: hotelStatus === 1,
@@ -205,7 +209,8 @@ router.post('/create', async (req, res) => {
  * 返回字段：
  * - id: 房间主键ID
  * - hotel_id: 所属酒店ID
- * - room_number: 房间号
+ * - room_type_code: 房型编号
+ * - room_numbers: 房间号列表（JSON数组）
  * - room_type: 房型
  * - base_price: 基础价格(元/晚)
  */
@@ -240,8 +245,8 @@ router.get('/list', async (req, res) => {
     const queryParams = [hotel_id];
 
     if (searchKeyword) {
-      // 如果有关键词，添加房间号或房型的模糊搜索
-      whereCondition += ' AND (room_number LIKE ? OR room_type LIKE ?)';
+      // 如果有关键词，按房型或房型编号模糊搜索
+      whereCondition += ' AND (room_type LIKE ? OR room_type_code LIKE ?)';
       const searchPattern = `%${searchKeyword}%`;
       queryParams.push(searchPattern, searchPattern);
     }
@@ -251,21 +256,26 @@ router.get('/list', async (req, res) => {
       SELECT 
         id,
         hotel_id,
-        room_number,
+        room_type_code,
+        room_numbers,
         room_type,
+        total_rooms,
         base_price
       FROM rooms
       WHERE ${whereCondition}
-      ORDER BY room_number ASC
+      ORDER BY room_type_code ASC
     `;
 
     const rooms = await query(sql, queryParams);
+
+    // 累加每个房型的 total_rooms，得到该酒店真实总房间数
+    const totalRooms = rooms.reduce((sum, r) => sum + (r.total_rooms || 0), 0);
 
     res.status(200).json({
       success: true,
       message: '查询成功',
       data: {
-        total: rooms.length,
+        total: totalRooms,          // 所有房型 total_rooms 之和（真实总房间数）
         rooms: rooms
       }
     });
@@ -306,7 +316,8 @@ router.get('/detail', async (req, res) => {
       SELECT 
         id,
         hotel_id,
-        room_number,
+        room_type_code,
+        room_numbers,
         room_type,
         room_type_en,
         bed_type,
@@ -372,7 +383,7 @@ router.delete('/delete', async (req, res) => {
     }
 
     // 检查房间是否存在
-    const checkSql = 'SELECT id, room_number, room_type FROM rooms WHERE id = ? AND is_deleted = 0';
+    const checkSql = 'SELECT id, room_type_code, room_type FROM rooms WHERE id = ? AND is_deleted = 0';
     const existingRooms = await query(checkSql, [id]);
 
     if (existingRooms.length === 0) {
@@ -396,7 +407,7 @@ router.delete('/delete', async (req, res) => {
       message: '房间删除成功',
       data: {
         id: existingRooms[0].id,
-        room_number: existingRooms[0].room_number,
+        room_type_code: existingRooms[0].room_type_code,
         room_type: existingRooms[0].room_type
       }
     });
@@ -418,7 +429,7 @@ router.delete('/delete', async (req, res) => {
  * 请求体参数：
  * - id: 房间ID (必填)
  * - hotel_id: 所属酒店ID (可选)
- * - room_number: 房间号 (可选)
+ * - room_type_code: 房型编号，如 RT001 (可选)
  * - room_type: 房型 (可选)
  * - room_type_en: 英文房型 (可选)
  * - bed_type: 床型 (可选)
@@ -427,7 +438,7 @@ router.delete('/delete', async (req, res) => {
  * - max_occupancy: 最多入住人数 (可选)
  * - base_price: 基础价格(元/晚) (可选)
  * - total_rooms: 此类型房间总数 (可选)
- * - available_rooms: 可用房间数 (可选)
+ * - room_numbers: 房间号列表，JSON数组（可选）
  * - facilities: 房间设施，JSON数组 (可选)
  * - description: 房间描述 (可选)
  * - images: 房间图片列表，JSON数组 (可选)
@@ -437,7 +448,7 @@ router.put('/update', async (req, res) => {
     const {
       id,
       hotel_id,
-      room_number,
+      room_type_code,
       room_type,
       room_type_en,
       bed_type,
@@ -446,6 +457,7 @@ router.put('/update', async (req, res) => {
       max_occupancy,
       base_price,
       total_rooms,
+      room_numbers,
       facilities,
       description,
       images
@@ -491,9 +503,9 @@ router.put('/update', async (req, res) => {
       updateFields.push('hotel_id = ?');
       updateValues.push(hotel_id);
     }
-    if (room_number !== undefined) {
-      updateFields.push('room_number = ?');
-      updateValues.push(room_number);
+    if (room_type_code !== undefined) {
+      updateFields.push('room_type_code = ?');
+      updateValues.push(room_type_code);
     }
     if (room_type !== undefined) {
       updateFields.push('room_type = ?');
@@ -526,6 +538,10 @@ router.put('/update', async (req, res) => {
     if (total_rooms !== undefined) {
       updateFields.push('total_rooms = ?');
       updateValues.push(total_rooms);
+    }
+    if (room_numbers !== undefined) {
+      updateFields.push('room_numbers = ?');
+      updateValues.push(room_numbers);
     }
     if (facilities !== undefined) {
       updateFields.push('facilities = ?');
