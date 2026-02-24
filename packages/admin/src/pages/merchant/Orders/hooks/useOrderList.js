@@ -2,13 +2,13 @@ import { useState, useCallback, useEffect } from 'react';
 import { message } from 'antd';
 import { getOrderList, confirmOrder as confirmOrderAPI } from '../../../../services/orderService';
 import { ORDER_STATUS } from '../utils/orderStatus';
-import { useAuth } from '../../../../contexts/AuthContext';
+import { useAuthStore } from '../../../../stores/authStore';
 
 /**
  * 订单列表管理 Hook
  */
 const useOrderList = () => {
-  const { user } = useAuth();
+  const user = useAuthStore(state => state.user);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -59,10 +59,10 @@ const useOrderList = () => {
         key: order.id || order.order_no || `order-${index}`,
         id: order.id,
         orderNo: order.order_no,
-        hotelId: order.hotel_id, // 添加酒店ID
+        hotelId: order.hotel_id,
         hotelName: order.hotel_name,
         roomType: order.room_type,
-        assignedRoom: order.assigned_room_no,
+        assignedRoom: order.assigned_room_no, // ⭐ 房间号字段（后端返回，通常为空）
         customer: order.guest_name,
         phone: order.guest_phone,
         checkIn: order.check_in_date,

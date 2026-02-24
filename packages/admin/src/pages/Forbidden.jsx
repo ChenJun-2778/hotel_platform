@@ -1,11 +1,11 @@
 import React from 'react';
 import { Result, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../stores/authStore';
 
 const Forbidden = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const user = useAuthStore(state => state.user);
 
   const handleBackHome = () => {
     // 根据用户角色跳转到对应的首页

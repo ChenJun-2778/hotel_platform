@@ -54,13 +54,15 @@ const DetailModal = ({
           bordered 
           column={column}
           size="middle"
-          labelStyle={{ 
-            width: '120px',
-            fontWeight: 500,
-            backgroundColor: '#fafafa'
-          }}
-          contentStyle={{
-            backgroundColor: '#fff'
+          styles={{
+            label: { 
+              width: '120px',
+              fontWeight: 500,
+              backgroundColor: '#fafafa'
+            },
+            content: {
+              backgroundColor: '#fff'
+            }
           }}
         >
           {children}

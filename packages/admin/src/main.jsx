@@ -1,17 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
-import { RoomCacheProvider } from './contexts/RoomCacheContext'
 import './index.css'
 import router from './router'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <RoomCacheProvider>
-        <RouterProvider router={router} />
-      </RoomCacheProvider>
-    </AuthProvider>
+    <RouterProvider router={router} />
   </StrictMode>,
 )

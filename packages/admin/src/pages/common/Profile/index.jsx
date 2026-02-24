@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, Descriptions, Button, Modal, Form, Input, Upload, Avatar, Space, message } from 'antd';
-import { UserOutlined, EditOutlined, LockOutlined, CameraOutlined } from '@ant-design/icons';
+import { UserOutlined, EditOutlined, LockOutlined, CameraOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { changePassword, getUserInfo, updateUserInfo } from '../../../services/authService';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import {
   usernameRules,
@@ -25,7 +25,9 @@ const Profile = ({
   onUpdateProfile, 
   onUploadAvatar 
 }) => {
-  const { user, login, logout } = useAuth();
+  const user = useAuthStore(state => state.user);
+  const login = useAuthStore(state => state.login);
+  const logout = useAuthStore(state => state.logout);
   const navigate = useNavigate();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -33,6 +35,9 @@ const Profile = ({
   const [passwordForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // 加载用户信息
   useEffect(() => {
@@ -238,26 +243,55 @@ const Profile = ({
   };
 
   /**
-   * 上传头像
+   * 选择头像文件
    */
-  const handleAvatarUpload = async (info) => {
-    const { file } = info;
-    
+  const handleAvatarSelect = (file) => {
     // 验证文件
     if (!beforeAvatarUpload(file)) {
+      return false;
+    }
+    
+    // 保存选中的文件
+    setSelectedAvatar(file);
+    
+    // 生成预览
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setAvatarPreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+    
+    // 阻止自动上传
+    return false;
+  };
+
+  /**
+   * 取消选择头像
+   */
+  const handleCancelAvatar = () => {
+    setSelectedAvatar(null);
+    setAvatarPreview(null);
+  };
+
+  /**
+   * 确认上传头像
+   */
+  const handleConfirmUpload = async () => {
+    if (!selectedAvatar) {
+      message.warning('请先选择图片');
       return;
     }
     
     try {
-      setLoading(true);
+      setUploadingAvatar(true);
       message.loading({ content: '正在上传头像...', key: 'uploadAvatar' });
       
       if (onUploadAvatar) {
-        await onUploadAvatar(file);
+        await onUploadAvatar(selectedAvatar);
       } else {
         // 上传到 OSS
         const { uploadToOss } = await import('../../../utils/oss');
-        const avatarUrl = await uploadToOss(file, 'avatars');
+        const avatarUrl = await uploadToOss(selectedAvatar, 'avatars');
         
         console.log('✅ 头像上传成功:', avatarUrl);
         
@@ -285,11 +319,15 @@ const Profile = ({
         
         message.success({ content: '头像上传成功！', key: 'uploadAvatar' });
       }
+      
+      // 清除选择
+      setSelectedAvatar(null);
+      setAvatarPreview(null);
     } catch (err) {
       console.error('❌ 上传失败:', err);
       message.error({ content: err.message || '上传失败，请重试', key: 'uploadAvatar' });
     } finally {
-      setLoading(false);
+      setUploadingAvatar(false);
     }
   };
 
@@ -302,24 +340,82 @@ const Profile = ({
             <Upload
               name="avatar"
               showUploadList={false}
-              customRequest={({ file }) => {
-                handleAvatarUpload({ file });
-              }}
+              beforeUpload={handleAvatarSelect}
               accept="image/jpeg,image/png,image/jpg,image/webp"
             >
               <div className="avatar-wrapper">
                 <Avatar 
                   size={100} 
                   icon={<UserOutlined />}
-                  src={displayUserInfo.avatar_url || displayUserInfo.avatar}
+                  src={avatarPreview || displayUserInfo.avatar_url || displayUserInfo.avatar}
                   className="user-avatar"
                 />
                 <div className="avatar-overlay">
                   <CameraOutlined style={{ fontSize: 24 }} />
-                  <div style={{ fontSize: 12, marginTop: 4 }}>更换头像</div>
+                  <div style={{ fontSize: 12, marginTop: 4 }}>
+                    {selectedAvatar ? '重新选择' : '更换头像'}
+                  </div>
                 </div>
               </div>
             </Upload>
+            {selectedAvatar && (
+              <div style={{ 
+                marginTop: 16, 
+                textAlign: 'center',
+                animation: 'fadeIn 0.3s ease-in'
+              }}>
+                <Space size={16}>
+                  <Button 
+                    type="primary"
+                    shape="circle"
+                    icon={<CheckOutlined style={{ fontSize: 18 }} />}
+                    size="large"
+                    loading={uploadingAvatar}
+                    onClick={handleConfirmUpload}
+                    style={{ 
+                      backgroundColor: '#52c41a',
+                      borderColor: '#52c41a',
+                      width: 48,
+                      height: 48,
+                      boxShadow: '0 2px 8px rgba(82, 196, 26, 0.3)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(82, 196, 26, 0.5)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(82, 196, 26, 0.3)';
+                    }}
+                  />
+                  <Button 
+                    danger
+                    shape="circle"
+                    icon={<CloseOutlined style={{ fontSize: 18 }} />}
+                    size="large"
+                    onClick={handleCancelAvatar}
+                    disabled={uploadingAvatar}
+                    style={{ 
+                      width: 48,
+                      height: 48,
+                      boxShadow: '0 2px 8px rgba(255, 77, 79, 0.3)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!uploadingAvatar) {
+                        e.currentTarget.style.transform = 'scale(1.1)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 77, 79, 0.5)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(255, 77, 79, 0.3)';
+                    }}
+                  />
+                </Space>
+              </div>
+            )}
           </div>
           <div className="user-info-section">
             <h2 className="user-name">{displayUserInfo.username}</h2>

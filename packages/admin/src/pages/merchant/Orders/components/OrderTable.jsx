@@ -2,11 +2,14 @@ import React from 'react';
 import { Table, Tag, Space, Button } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import { getOrderStatusInfo } from '../utils/orderStatus';
+import { useRoomStore } from '../../../../stores/roomStore';
 
 /**
  * 订单表格组件
  */
 const OrderTable = ({ orders, loading, pagination, onPageChange, onViewDetail }) => {
+  const getAssignedRoom = useRoomStore(state => state.getAssignedRoom);
+  
   const columns = [
     {
       title: '订单号',
@@ -37,12 +40,25 @@ const OrderTable = ({ orders, loading, pagination, onPageChange, onViewDetail })
       key: 'assignedRoom',
       width: 100,
       render: (assignedRoom, record) => {
+        // 优先从 Context 获取前端分配的房间号
+        const frontendAssignedRoom = getAssignedRoom(record.orderNo);
+        const displayRoom = frontendAssignedRoom || assignedRoom;
+        
         // 待确定状态显示"待分配"
-        if (record.status === 2) {
+        if (record.status === 2 && !displayRoom) {
           return <span style={{ color: '#8c8c8c' }}>待分配</span>;
         }
-        // 已确认状态显示房间号
-        return assignedRoom || '-';
+        
+        // 显示房间号（前端分配的或后端返回的）
+        return displayRoom ? (
+          <span style={{ 
+            color: frontendAssignedRoom ? '#1890ff' : 'inherit',
+            fontWeight: frontendAssignedRoom ? 600 : 'normal',
+            fontFamily: 'monospace'
+          }}>
+            {displayRoom}
+          </span>
+        ) : '-';
       },
     },
     {

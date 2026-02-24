@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, Input, Button, Tabs, message, Select, Alert } from 'antd';
 import { UserOutlined, LockOutlined, MobileOutlined, MailOutlined, TeamOutlined } from '@ant-design/icons';
 import { login, register, sendCode, phoneLogin } from '../services/authService';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../stores/authStore';
 import {
   accountRules,
   passwordLoginRules,
@@ -20,7 +20,7 @@ import './Login.css';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login: authLogin } = useAuth();
+  const authLogin = useAuthStore(state => state.login);
   const [activeTab, setActiveTab] = useState('account');
   const [showRegister, setShowRegister] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -204,7 +204,7 @@ const Login = () => {
             <span className="logo-icon">易宿</span>
             <span className="logo-text">易宿酒店预订平台</span>
           </div>
-          <h1 className="slogan">智慧酒店管理系统</h1>
+          <h1 className="slogan">易宿酒店管理系统</h1>
           <p className="description">
             为酒店提供全方位的管理解决方案，包括订单管理、客房管理、
             会员管理、数据分析等功能，助力酒店数字化转型

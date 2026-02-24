@@ -1,12 +1,13 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../stores/authStore';
 
 /**
  * 根路径智能重定向组件
  * 根据用户登录状态和角色自动跳转到对应页面
  */
 const RootRedirect = () => {
-  const { isAuthenticated, user } = useAuth();
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated());
+  const user = useAuthStore(state => state.user);
 
   // 未登录，跳转到登录页
   if (!isAuthenticated) {

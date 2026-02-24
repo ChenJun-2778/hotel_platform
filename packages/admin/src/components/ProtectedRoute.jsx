@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../stores/authStore';
 
 /**
  * 路由守卫组件 - 保护需要登录和权限才能访问的页面
@@ -7,7 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
  * @param {number|number[]} requiredRole - 需要的角色类型 (1=管理员, 2=商户)
  */
 const ProtectedRoute = ({ children, requiredRole }) => {
-  const { isAuthenticated, user } = useAuth();
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated());
+  const user = useAuthStore(state => state.user);
   const location = useLocation();
 
   // 如果未登录，重定向到登录页

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Descriptions, Button, Select, Space, message } from 'antd';
 import { CheckCircleOutlined } from '@ant-design/icons';
 import DetailModal from '../../../../components/common/DetailModal';
 import { getOrderStatusInfo, ORDER_STATUS } from '../utils/orderStatus';
+import { useRoomStore } from '../../../../stores/roomStore';
 
 /**
  * 订单详情组件
@@ -10,6 +11,23 @@ import { getOrderStatusInfo, ORDER_STATUS } from '../utils/orderStatus';
 const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [], loadingRooms = false }) => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [confirming, setConfirming] = useState(false);
+  const getAssignedRoom = useRoomStore(state => state.getAssignedRoom);
+
+  // 获取前端分配的房间号或后端返回的房间号
+  const frontendAssignedRoom = order ? getAssignedRoom(order.orderNo) : null;
+  const displayRoom = frontendAssignedRoom || (order ? order.assignedRoom : null);
+  
+  // 当订单变化时，重置选择的房间
+  useEffect(() => {
+    if (visible && order) {
+      // 如果已经有分配的房间，设置为默认值
+      if (displayRoom) {
+        setSelectedRoom(displayRoom);
+      } else {
+        setSelectedRoom(null);
+      }
+    }
+  }, [visible, order, displayRoom]);
 
   if (!order) return null;
 
@@ -34,15 +52,14 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [], 
       console.log('🔍 确认订单 - 订单号:', order.orderNo, '房间号:', selectedRoom);
       
       if (onConfirm) {
-        await onConfirm(order.orderNo, selectedRoom); // ⭐ 使用订单号而不是 ID
+        await onConfirm(order.orderNo, selectedRoom);
       }
       
-      message.success('订单确认成功！');
+      // 成功后重置选择的房间
       setSelectedRoom(null);
-      onClose();
     } catch (error) {
       console.error('❌ 确认订单失败:', error);
-      message.error(error.message || '确认失败，请重试');
+      // 错误消息已在父组件处理
     } finally {
       setConfirming(false);
     }
@@ -130,6 +147,11 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [], 
               border: '1px solid #d6e4ff'
             }}>
               💡 确认订单后将自动分配选中的房间号
+              {displayRoom && (
+                <div style={{ marginTop: 4, color: '#1890ff' }}>
+                  当前已选: {displayRoom}
+                </div>
+              )}
             </div>
           </div>
         </Descriptions.Item>
@@ -142,8 +164,17 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [], 
             color: '#1890ff',
             fontFamily: 'monospace'
           }}>
-            {order.assignedRoom || '-'}
+            {displayRoom || '-'}
           </span>
+          {frontendAssignedRoom && (
+            <span style={{ 
+              fontSize: 12, 
+              color: '#52c41a',
+              marginLeft: 8
+            }}>
+              (前端已分配)
+            </span>
+          )}
         </Descriptions.Item>
       )}
       

@@ -1,7 +1,8 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../stores/authStore';
 
 export const usePermission = () => {
-  const { user, hasPermission } = useAuth();
+  const user = useAuthStore(state => state.user);
+  const hasPermission = useAuthStore(state => state.hasPermission);
 
   const checkPermission = (requiredRole) => {
     return hasPermission(requiredRole);

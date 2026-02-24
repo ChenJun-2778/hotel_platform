@@ -103,17 +103,40 @@ const Rooms = () => {
     setDetailLoading(true);
     setIsDetailModalOpen(true);
     try {
+      console.log(`🔍 请求房间详情: ID=${room.id}`);
       const response = await getRoomDetail(room.id);
+      console.log('📦 后端返回的原始数据:', JSON.stringify(response, null, 2));
+      
       const roomData = response.data || response;
+      console.log('📦 解析后的房间数据:', JSON.stringify(roomData, null, 2));
+      
+      // 确保 status 是有效的数字
+      // 如果后端没有返回 status，使用列表中的 status（从 room 参数获取）
+      let status = roomData.status !== undefined ? Number(roomData.status) : Number(room.status);
+      console.log(`🔍 状态字段检查: 后端值="${roomData.status}" (${typeof roomData.status}), 列表值="${room.status}" (${typeof room.status}), 最终值=${status} (${typeof status})`);
+      
+      if (isNaN(status) || status < 1 || status > 4) {
+        console.warn(`⚠️ 房间 ${roomData.room_number} 状态值无效，默认设为1（可预订）`);
+        status = 1;
+      }
       
       // 解析 JSON 字段
       const detailData = {
         ...roomData,
+        status: status, // 确保是数字类型
         facilities: roomData.facilities ? JSON.parse(roomData.facilities) : [],
         images: roomData.images ? JSON.parse(roomData.images) : [],
       };
       
-      console.log(`✅ 查看房间详情: ID=${room.id}, 房间号=${roomData.room_number}`);
+      console.log(`✅ 最终房间详情数据:`, {
+        ID: room.id,
+        房间号: roomData.room_number,
+        状态值: status,
+        状态类型: typeof status,
+        总房间数: roomData.total_rooms,
+        所有字段: Object.keys(detailData)
+      });
+      
       setCurrentRoom(detailData);
     } catch (error) {
       console.error('❌ 获取房间详情失败:', error.message);
