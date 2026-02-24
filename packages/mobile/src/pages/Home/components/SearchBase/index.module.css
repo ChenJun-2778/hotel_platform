@@ -1,23 +1,19 @@
 .searchCard {
   background: #fff;
   border-radius: 12px;
-  /* 顶部留白交给 inputItem，这里只留左右和底部的内边距 */
   padding: 0 16px 16px; 
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* 💡 核心修复 1：补上缺失的 inputItem，拉开上下间距，加分割线 */
 .inputItem {
   padding: 16px 0;
   border-bottom: 1px solid #f5f5f5;
 }
 
-/* 去掉最后一个输入项的底边框，让它和按钮过渡更自然 */
 .inputItem:last-of-type {
   border-bottom: none;
 }
 
-/* 💡 核心修复 2：补上缺失的文本右对齐，让“离店”靠右 */
 .textRight {
   text-align: right;
 }
@@ -45,63 +41,53 @@
   border-left: 1px solid #eee;
   padding-left: 16px;
   padding-right: 8px;
-  /* 💡 核心修复 1：利用顶部内边距把文字往下推，完美对齐左侧“重庆”的基线 */
   padding-top: 18px; 
   min-width: 0;
   cursor: pointer;
   min-height: 44px;
 }
 
-/* --- 新抽离的关键词容器样式 --- */
+/* 关键词容器样式 */
 .keywordWrapper {
   display: flex;
   align-items: center;
   width: 100%;
-  /* 💡 核心修复 2：不再使用 space-between，让清除按钮紧紧贴在文字右侧 */
   justify-content: flex-start; 
 }
 
-/* 关键词文本样式（有内容时） */
+/* 关键词文本样式（有内容时） - 与城市名对齐 */
 .keywordText {
-  font-size: 16px; /* 字体比重庆稍小一号，显得秀气 */
-  color: #666; /* 💡 核心修复 3：偏灰色，弱化视觉比重 */
-  font-weight: normal; /* 取消加粗 */
+  font-size: 18px;
+  color: #333;
+  font-weight: bold;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  /* 💡 核心修复 4：允许收缩，但宽度随内容自适应，不再强行占满 100% */
   flex: 0 1 auto; 
   line-height: 1.4;
 }
 
-/* --- 新抽离的清除图标样式 --- */
+/* 清除图标样式 */
 .clearIcon {
   flex-shrink: 0;
-  margin-left: 6px; /* 紧贴文字 */
-  font-size: 16px; /* 使用 ant-mobile 的默认 icon 大小，非常清晰 */
-  color: #ccc; 
+  margin-left: 8px;
+  font-size: 18px;
+  color: #999; 
   cursor: pointer;
+  transition: color 0.2s;
 }
 
+.clearIcon:active {
+  color: #666;
+}
+
+/* 占位符文本样式 */
 .placeholderText {
   font-size: 14px;
   color: #ccc;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 1.4;
-}
-
-/* 关键词文本样式（有内容时） */
-.keywordText {
-  font-size: 16px; /* 字体比重庆稍小一号，显得秀气 */
-  color: #666; /* 💡 核心修复 3：偏灰色，弱化视觉比重 */
-  font-weight: normal; /* 取消加粗 */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  /* 💡 核心修复 4：允许收缩，但宽度随内容自适应，不再强行占满 100% */
-  flex: 0 1 auto; 
   line-height: 1.4;
 }
 
@@ -112,7 +98,7 @@
   align-items: center;
   justify-content: center;
   padding-left: 16px;
-  border-left: 1px solid #eee; /* 右侧的竖线 */
+  border-left: 1px solid #eee;
   color: #1677ff;
   flex-shrink: 0;
   cursor: pointer;
@@ -127,7 +113,7 @@
 .label {
   font-size: 12px;
   color: #999;
-  margin-bottom: 6px; /* 稍微拉开和主文字的间距 */
+  margin-bottom: 6px;
 }
 
 .value, .dateValue {
@@ -148,7 +134,7 @@
   border: 1px solid #eee;
   padding: 2px 10px;
   border-radius: 10px;
-  background-color: #fcfcfc; /* 加一点非常淡的底色，更有质感 */
+  background-color: #fcfcfc;
 }
 
 /* 按钮样式精简 */
@@ -156,5 +142,5 @@
   height: 48px;
   border-radius: 24px;
   font-weight: 600;
-  margin-top: 8px; /* 距离上面的内容近一点，因为 inputItem 已经有 padding 了 */
+  margin-top: 8px;
 }

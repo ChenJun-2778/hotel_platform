@@ -49,10 +49,15 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
   const currentTypeId = TYPE_MAP[type] || 1;
 
   // 3. 城市相关
-  // 优先从缓存拿上次选的城市
-  const [city, setCity] = useState(() => {
+  // 根据类型设置不同的默认城市
+  const getDefaultCity = () => {
+    if (type === 'overseas') {
+      return localStorage.getItem('HOME_CITY_OVERSEAS') || '东京';
+    }
     return localStorage.getItem('HOME_CITY') || '上海';
-  });
+  };
+
+  const [city, setCity] = useState(getDefaultCity);
   const { goCities } = useGoCities();
 
   const handleCityClick = () => {
@@ -72,7 +77,12 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
 
       // 拿到城市名后，更新 UI 和本地存储
       setCity(resultCity);
-      localStorage.setItem('HOME_CITY', resultCity);
+      // 根据类型保存到不同的 key
+      if (type === 'overseas') {
+        localStorage.setItem('HOME_CITY_OVERSEAS', resultCity);
+      } else {
+        localStorage.setItem('HOME_CITY', resultCity);
+      }
       Toast.show({ icon: 'success', content: '定位成功' });
 
     } catch (error) {
@@ -87,7 +97,12 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
       const selected = localStorage.getItem('selectedCity');
       if (selected) {
         setCity(selected);
-        localStorage.setItem('HOME_CITY', selected);
+        // 根据类型保存到不同的 key
+        if (type === 'overseas') {
+          localStorage.setItem('HOME_CITY_OVERSEAS', selected);
+        } else {
+          localStorage.setItem('HOME_CITY', selected);
+        }
         localStorage.removeItem('selectedCity');
       }
     };
@@ -117,7 +132,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [type]);
 
   // 4. 跳转List
   const { goList } = useGoList();
