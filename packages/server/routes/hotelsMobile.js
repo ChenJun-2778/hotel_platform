@@ -168,15 +168,16 @@ router.get('/search', async (req, res) => {
       params.push(destination.trim(), destination.trim());
     }
 
-    // 关键词搜索（匹配酒店名称、品牌）
+    // 关键词搜索（匹配酒店名称、品牌、设施）
     if (hasKeyword) {
       sql += `
         AND (
           h.name LIKE CONCAT('%', ?, '%')
           OR h.brand LIKE CONCAT('%', ?, '%')
+          OR h.hotel_facilities LIKE CONCAT('%', ?, '%')
         )
       `;
-      params.push(keyword.trim(), keyword.trim());
+      params.push(keyword.trim(), keyword.trim(), keyword.trim());
     }
 
     // 评分区间过滤（WHERE 阶段，直接作用于 h.score）

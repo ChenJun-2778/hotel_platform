@@ -17,7 +17,8 @@
   flex-shrink: 0;
 }
 
-.cardLeft img {
+/* 把 .cardLeft img 改成独立的类名 */
+.hotelImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
