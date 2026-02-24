@@ -204,6 +204,7 @@ const useRoomList = () => {
         max_occupancy: Number(roomData.max_occupancy),
         base_price: Number(roomData.base_price),
         total_rooms: Number(roomData.total_rooms),
+        // room_numbers: JSON.stringify(roomData.room_numbers || []), // 暂时注释，等后端实现
         facilities: JSON.stringify(Array.isArray(roomData.facilities) ? roomData.facilities : []),
         description: roomData.description || '',
         images: JSON.stringify(roomData.images || []),
@@ -261,6 +262,7 @@ const useRoomList = () => {
         max_occupancy: Number(roomData.max_occupancy),
         base_price: Number(roomData.base_price),
         total_rooms: Number(roomData.total_rooms),
+        // room_numbers: JSON.stringify(roomData.room_numbers || []), // 暂时注释，等后端实现
         facilities: JSON.stringify(Array.isArray(roomData.facilities) ? roomData.facilities : []),
         description: roomData.description || '',
         images: JSON.stringify(roomData.images || []),

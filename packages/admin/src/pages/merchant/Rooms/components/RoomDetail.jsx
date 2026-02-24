@@ -14,7 +14,7 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
   return (
     <DetailModal
       visible={visible}
-      title={`房间详情 - ${room?.room_number || room?.roomNumber || ''}`}
+      title={`房型详情 - ${room?.room_type || ''}`}
       statusInfo={statusInfo}
       onClose={onClose}
       footer={null}
@@ -24,7 +24,7 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
     >
       {room && (
         <>
-          <Descriptions.Item label="房间号">
+          <Descriptions.Item label="房型编号">
             {room.room_number}
           </Descriptions.Item>
           <Descriptions.Item label="房型">
@@ -53,14 +53,24 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
           <Descriptions.Item label="此类型房间总数">
             {room.total_rooms}间
           </Descriptions.Item>
-          <Descriptions.Item label="预定人" span={2}>
-            {room.booked_by && room.booked_by !== "0" ? room.booked_by : '无'}
+          <Descriptions.Item label="房间号列表" span={2}>
+            {room.room_numbers && Array.isArray(room.room_numbers) && room.room_numbers.length > 0 ? (
+              <div>
+                {room.room_numbers.map((roomNum, index) => (
+                  <Tag key={index} color="blue" style={{ marginBottom: 4, marginRight: 4, fontSize: 14 }}>
+                    {roomNum}
+                  </Tag>
+                ))}
+              </div>
+            ) : (
+              '-'
+            )}
           </Descriptions.Item>
           <Descriptions.Item label="房间设施" span={2}>
             {room.facilities && Array.isArray(room.facilities) && room.facilities.length > 0 ? (
               <div>
                 {room.facilities.map((facility, index) => (
-                  <Tag key={index} color="blue" style={{ marginBottom: 4, marginRight: 4 }}>
+                  <Tag key={index} color="green" style={{ marginBottom: 4, marginRight: 4 }}>
                     {facility}
                   </Tag>
                 ))}

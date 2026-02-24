@@ -40,12 +40,12 @@ const RoomForm = ({
 
         <Space style={{ width: '100%', display: 'flex', flexWrap: 'wrap' }} size="large">
           <Form.Item
-            label="房间号"
+            label="房型编号"
             name="room_number"
-            rules={[{ required: true, message: '请输入房间号' }]}
+            rules={[{ required: true, message: '请输入房型编号' }]}
             style={{ width: 150 }}
           >
-            <Input placeholder="如：101" />
+            <Input placeholder="如：RT001" />
           </Form.Item>
 
           <Form.Item
@@ -65,6 +65,19 @@ const RoomForm = ({
             <Input placeholder="Deluxe King Room" />
           </Form.Item>
         </Space>
+
+        <Form.Item
+          label="房间号列表"
+          name="room_numbers"
+          extra="输入房间号后按回车添加，如：102、103、104（后端实现后生效）"
+        >
+          <Select
+            mode="tags"
+            placeholder="输入房间号，按回车添加"
+            style={{ width: '100%' }}
+            tokenSeparators={[',']}
+          />
+        </Form.Item>
 
         <Space style={{ width: '100%', display: 'flex', flexWrap: 'wrap' }} size="large">
           <Form.Item

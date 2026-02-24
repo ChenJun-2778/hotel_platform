@@ -8,6 +8,7 @@ import HotelDetail from './components/HotelDetail';
 import useHotelList from './hooks/useHotelList';
 import { getHotelDetail } from '../../../services/hotelService';
 import { getRoomList } from '../../../services/roomService';
+import { uploadToOss } from '../../../utils/oss';
 import { HOTEL_STATUS } from '../../../constants/hotelStatus';
 import './Hotels.css';
 
@@ -76,7 +77,6 @@ const Hotels = () => {
         // 新上传的文件，需要上传到OSS
         console.log('📤 上传新封面图片');
         message.loading({ content: '正在上传封面图片...', key: 'uploadCover' });
-        const { uploadToOss } = await import('../../../utils/oss');
         coverImage = await uploadToOss(coverFile.originFileObj, 'hotels');
         message.success({ content: '封面图片上传成功', key: 'uploadCover' });
       } else if (coverFile.url) {
@@ -109,7 +109,6 @@ const Hotels = () => {
           if (file.originFileObj) {
             // 新上传的文件
             console.log(`📤 上传新文件: ${file.name}`);
-            const { uploadToOss } = await import('../../../utils/oss');
             const url = await uploadToOss(file.originFileObj, 'hotels');
             images.push(url);
           } else if (file.url) {

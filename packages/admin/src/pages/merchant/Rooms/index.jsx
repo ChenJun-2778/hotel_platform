@@ -126,14 +126,17 @@ const Rooms = () => {
         status: status, // 确保是数字类型
         facilities: roomData.facilities ? JSON.parse(roomData.facilities) : [],
         images: roomData.images ? JSON.parse(roomData.images) : [],
+        room_numbers: roomData.room_numbers ? JSON.parse(roomData.room_numbers) : [], // 解析房间号列表
       };
       
       console.log(`✅ 最终房间详情数据:`, {
         ID: room.id,
-        房间号: roomData.room_number,
+        房型编号: roomData.room_number,
+        房型: roomData.room_type,
         状态值: status,
         状态类型: typeof status,
         总房间数: roomData.total_rooms,
+        房间号列表: detailData.room_numbers,
         所有字段: Object.keys(detailData)
       });
       
@@ -171,7 +174,24 @@ const Rooms = () => {
       const facilities = roomData.facilities ? JSON.parse(roomData.facilities) : [];
       const images = roomData.images ? JSON.parse(roomData.images) : [];
       
-      console.log(`✅ 编辑房间: ID=${room.id}, 房间号=${roomData.room_number}`);
+      // 解析房间号列表，确保是数组
+      let roomNumbers = [];
+      try {
+        if (roomData.room_numbers) {
+          roomNumbers = JSON.parse(roomData.room_numbers);
+        }
+      } catch (e) {
+        console.warn('⚠️ 解析 room_numbers 失败:', e);
+        roomNumbers = [];
+      }
+      
+      // 如果没有房间号列表，使用房间号作为默认值
+      if (!Array.isArray(roomNumbers) || roomNumbers.length === 0) {
+        roomNumbers = [roomData.room_number];
+        console.log('⚠️ 使用房间号作为默认房间号列表:', roomNumbers);
+      }
+      
+      console.log(`✅ 编辑房型: ID=${room.id}, 房型编号=${roomData.room_number}, 房间号列表=`, roomNumbers);
       
       // 填充表单数据
       form.setFieldsValue({
@@ -185,7 +205,7 @@ const Rooms = () => {
         max_occupancy: roomData.max_occupancy || 2,
         base_price: roomData.base_price,
         total_rooms: roomData.total_rooms || 1,
-        available_rooms: roomData.available_rooms || 1,
+        room_numbers: roomNumbers, // 填充房间号列表
         facilities: facilities,
         description: roomData.description || '',
         status: roomData.status,
@@ -204,6 +224,7 @@ const Rooms = () => {
         ...roomData,
         facilities,
         images,
+        room_numbers: roomNumbers,
       });
     } catch (error) {
       console.error('❌ 获取房间数据失败:', error.message);
