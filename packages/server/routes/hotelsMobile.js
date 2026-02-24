@@ -169,15 +169,26 @@ router.get('/search', async (req, res) => {
     }
 
     // 关键词搜索（匹配酒店名称、品牌、设施）
+    // 支持多关键词搜索：用空格分隔，每个关键词都要匹配
     if (hasKeyword) {
-      sql += `
-        AND (
+      // 将关键词按空格拆分，过滤空字符串
+      const keywords = keyword.trim().split(/\s+/).filter(Boolean);
+      
+      // 为每个关键词构建 OR 条件（匹配名称、品牌、设施任一字段）
+      const keywordConditions = keywords.map(() => {
+        return `(
           h.name LIKE CONCAT('%', ?, '%')
           OR h.brand LIKE CONCAT('%', ?, '%')
           OR h.hotel_facilities LIKE CONCAT('%', ?, '%')
-        )
-      `;
-      params.push(keyword.trim(), keyword.trim(), keyword.trim());
+        )`;
+      }).join(' AND ');
+      
+      sql += ` AND (${keywordConditions})`;
+      
+      // 为每个关键词添加 3 个参数（name, brand, facilities）
+      keywords.forEach(kw => {
+        params.push(kw, kw, kw);
+      });
     }
 
     // 评分区间过滤（WHERE 阶段，直接作用于 h.score）

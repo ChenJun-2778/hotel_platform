@@ -73,22 +73,40 @@ const Home = () => {
     const beginDate = dayjs(dateRange[0]).format('YYYY-MM-DD');
     const endDate = dayjs(dateRange[1]).format('YYYY-MM-DD');
     
+    // 检查是否有用户输入的关键词草稿
+    const existingKeyword = localStorage.getItem('SEARCH_KEYWORD_DRAFT') || '';
+    
     // 基础参数
     const baseParams = `city=${city}&beginDate=${beginDate}&endDate=${endDate}&type=1`;
     
     // 根据类型构建额外参数
     let extraParams = '';
     if (entry.type === 'discount' && entry.params) {
-      // 特价酒店：使用自定义参数
+      // 特价酒店：使用自定义参数（不涉及关键词）
       extraParams = Object.entries(entry.params)
         .map(([key, value]) => `${key}=${value}`)
         .join('&');
+      
+      // 如果有用户输入的关键词，也带上
+      if (existingKeyword.trim()) {
+        extraParams += `&keyword=${encodeURIComponent(existingKeyword.trim())}`;
+      }
     } else if (entry.type === 'keyword' && entry.keyword) {
-      // 关键词搜索
-      extraParams = `keyword=${encodeURIComponent(entry.keyword)}`;
+      // 关键词搜索：合并用户输入的关键词和快捷入口的关键词
+      let finalKeyword = entry.keyword;
+      
+      if (existingKeyword.trim()) {
+        // 如果用户已经输入了关键词，合并两个关键词（用空格分隔）
+        finalKeyword = `${existingKeyword.trim()} ${entry.keyword}`;
+      }
+      
+      extraParams = `keyword=${encodeURIComponent(finalKeyword)}`;
     }
     
     navigate(`/list?${baseParams}&${extraParams}`);
+    
+    // 跳转后清除关键词草稿（因为已经用于搜索了）
+    localStorage.removeItem('SEARCH_KEYWORD_DRAFT');
   };
 
   // 制作假数据
