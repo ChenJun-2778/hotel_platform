@@ -229,6 +229,18 @@ const List: React.FC = () => {
           params.facilities = selectedFacilities.join(',');
         }
 
+        // 添加评价数筛选
+        if (selectedComment) {
+          // 从 "200条以上" 中提取数字 200
+          const match = selectedComment.match(/(\d+)/);
+          if (match) {
+            params.review_count_min = parseInt(match[1]);
+          }
+        }
+
+        // 调试：打印请求参数
+        console.log('🔍 请求参数:', params);
+
         // 调用 API
         const res = await apiGetHotelList(params);
 
@@ -246,7 +258,7 @@ const List: React.FC = () => {
     }
 
     getHotelList();
-  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword, priceRange, filterScore, filterStar, selectedFacilities]);
+  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword, priceRange, filterScore, filterStar, selectedFacilities, selectedComment]);
 
   return (
     <div className={styles.listContainer}>

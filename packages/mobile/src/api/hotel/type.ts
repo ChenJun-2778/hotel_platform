@@ -22,6 +22,7 @@ export interface ApiResponse<T> {
     star_min?: number;
     star_max?: number;
     facilities?: string;      // 逗号分隔的设施列表
+    review_count_min?: number; // 最低评价数
   }
   
   // 3. 酒店列表里的单条酒店卡片数据
@@ -106,4 +107,5 @@ export interface FrontendSearchParams {
     score_min?: number;
     star_min?: number;
     facilities?: string;
+    review_count_min?: number; // 最低评价数
   }

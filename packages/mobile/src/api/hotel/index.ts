@@ -64,7 +64,8 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
     price_max: frontendParams.price_max,
     score_min: frontendParams.score_min,
     star_min: frontendParams.star_min,
-    facilities: frontendParams.facilities
+    facilities: frontendParams.facilities,
+    review_count_min: frontendParams.review_count_min
   };
 
   return request.get<any, ApiResponse<HotelSearchResult>>('/api/hotelsMobile/search', { params });

@@ -29,8 +29,12 @@ router.get('/search', async (req, res) => {
       score_min, score_max,
       star_min,  star_max,
       facilities,
-      sortType  // 新增：排序类型参数
+      sortType,  // 排序类型参数
+      review_count_min  // 新增：最低评价数
     } = req.query;
+
+    // 调试：打印接收到的参数
+    console.log('🔍 后端接收到的查询参数:', req.query);
 
     const hasDestination = destination && destination.trim() !== '';
     const hasDates       = check_in_date && check_out_date;
@@ -42,6 +46,7 @@ router.get('/search', async (req, res) => {
     const scoreMax = score_max !== undefined && score_max !== '' ? parseFloat(score_max) : null;
     const starMin  = star_min  !== undefined && star_min  !== '' ? parseInt(star_min)   : null;
     const starMax  = star_max  !== undefined && star_max  !== '' ? parseInt(star_max)   : null;
+    const reviewCountMin = review_count_min !== undefined && review_count_min !== '' ? parseInt(review_count_min) : null;
 
     // ── 设施筛选参数解析（逗号分隔 → 数组）─────────────────────
     const facilityList = facilities && facilities.trim() !== ''
@@ -187,6 +192,12 @@ router.get('/search', async (req, res) => {
       params.push(facility);
     }
 
+    // 评价数筛选（WHERE 阶段）
+    if (reviewCountMin !== null) {
+      sql += ` AND h.review_count >= ?`;
+      params.push(reviewCountMin);
+    }
+
     sql += `
       GROUP BY
         h.id, h.name, h.cover_image, h.brand,
@@ -235,6 +246,10 @@ router.get('/search', async (req, res) => {
     }
     sql += ` ${orderByClause}`;
 
+    // 调试：打印 SQL 和参数
+    console.log('🔍 执行的 SQL:', sql);
+    console.log('🔍 SQL 参数:', params);
+
     const hotels = await query(sql, params);
 
     res.status(200).json({
@@ -253,7 +268,8 @@ router.get('/search', async (req, res) => {
           score_max:      scoreMax,
           star_min:       starMin,
           star_max:       starMax,
-          facilities:     facilityList.length > 0 ? facilityList : null
+          facilities:     facilityList.length > 0 ? facilityList : null,
+          review_count_min: reviewCountMin
         },
         total: hotels.length
       }
