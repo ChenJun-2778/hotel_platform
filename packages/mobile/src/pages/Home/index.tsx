@@ -12,35 +12,59 @@ import type { HomeContextType } from './type/homeContextType';
 
 
 const Home = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // 1. 在这里定义日期状态 (Source of Truth)
-  // 优先从 sessionStorage 读取
+  // 1. 普通酒店（国内、海外、民宿）的日期状态
   const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
     try {
       const cached = sessionStorage.getItem('HOME_DATE_RANGE');
       if (cached) {
         const [start, end] = JSON.parse(cached);
-        // 注意：JSON 取出来是字符串，必须转回 Date 对象
-        // 还要防止存储的是过期日期（可选优化，这里先不加，保持简单）
         return [new Date(start), new Date(end)];
       }
     } catch (e) {
       console.error('日期解析失败', e);
     }
-    // 没缓存，才用默认值
+    // 默认：今天入住，明天离店（1晚）
     return [new Date(), dayjs().add(1, 'day').toDate()];
   });
-  // 跳转到list页面
-  // const goList = () => navigate('/list')
-  const location = useLocation();
+
+  // 2. 钟点房的日期状态（单独维护）
+  const [hourlyDate, setHourlyDate] = useState<[Date, Date]>(() => {
+    try {
+      const cached = sessionStorage.getItem('HOME_HOURLY_DATE');
+      if (cached) {
+        const [start] = JSON.parse(cached);
+        const date = new Date(start);
+        return [date, date]; // 钟点房入住和离店是同一天
+      }
+    } catch (e) {
+      console.error('钟点房日期解析失败', e);
+    }
+    // 默认：今天
+    const today = new Date();
+    return [today, today];
+  });
 
   // 根据当前路由确定激活哪个 Tab
   const activeKey = location.pathname.split('/').pop() || 'domestic';
-  // 新增监听：日期一变，立马存入 sessionStorage
+  
+  // 判断当前是否是钟点房
+  const isHourly = activeKey === 'hourly';
+  
+  // 根据类型选择对应的日期状态
+  const currentDateRange = isHourly ? hourlyDate : dateRange;
+  const setCurrentDateRange = isHourly ? setHourlyDate : setDateRange;
+
+  // 监听日期变化，分别存储到不同的 sessionStorage key
   useEffect(() => {
     sessionStorage.setItem('HOME_DATE_RANGE', JSON.stringify(dateRange));
   }, [dateRange]);
+
+  useEffect(() => {
+    sessionStorage.setItem('HOME_HOURLY_DATE', JSON.stringify(hourlyDate));
+  }, [hourlyDate]);
 
   // 快捷入口配置（方便后续修改词条）
   const quickEntries = [
@@ -70,8 +94,9 @@ const Home = () => {
   const handleQuickEntry = (entry: typeof quickEntries[0]) => {
     // 获取当前城市（从 localStorage 读取，默认上海）
     const city = localStorage.getItem('HOME_CITY') || '上海';
-    const beginDate = dayjs(dateRange[0]).format('YYYY-MM-DD');
-    const endDate = dayjs(dateRange[1]).format('YYYY-MM-DD');
+    // 使用当前类型对应的日期
+    const beginDate = dayjs(currentDateRange[0]).format('YYYY-MM-DD');
+    const endDate = dayjs(currentDateRange[1]).format('YYYY-MM-DD');
     
     // 检查是否有用户输入的关键词草稿
     const existingKeyword = localStorage.getItem('SEARCH_KEYWORD_DRAFT') || '';
@@ -137,7 +162,7 @@ const Home = () => {
       </div>
       {/* 2. 子路由占位符：这里会根据路由显示 Domestic/Overseas/etc. */}
       <div className={styles.searchCardWrapper}>
-        <Outlet context={{ dateRange, setDateRange } satisfies HomeContextType} />
+        <Outlet context={{ dateRange: currentDateRange, setDateRange: setCurrentDateRange } satisfies HomeContextType} />
       </div>
 
       {/* 4. 快捷入口金刚区 */}
@@ -167,9 +192,9 @@ const Home = () => {
                 key={`${item.id}-${index}`} 
                 className={styles.cardWrapper}
                 onClick={() => {
-                  // 1. 格式化日期
-                  const beginStr = dayjs(dateRange[0]).format('YYYY-MM-DD');
-                  const endStr = dayjs(dateRange[1]).format('YYYY-MM-DD');
+                  // 1. 格式化日期（使用当前类型对应的日期）
+                  const beginStr = dayjs(currentDateRange[0]).format('YYYY-MM-DD');
+                  const endStr = dayjs(currentDateRange[1]).format('YYYY-MM-DD');
                   
                   // 2. 带着参数跳转
                   navigate(`/detail/${item.id}?beginDate=${beginStr}&endDate=${endStr}`);
