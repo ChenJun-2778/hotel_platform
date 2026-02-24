@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Toast, DotLoading } from 'antd-mobile';
-import { EnvironmentOutline } from 'antd-mobile-icons';
-import styles from './index.module.css'; // 注意这里的引入路径，通常是同级
+import { EnvironmentOutline, CloseCircleOutline } from 'antd-mobile-icons';
+import { useNavigate } from 'react-router-dom';
+import styles from './index.module.css';
 import dayjs from 'dayjs';
 // 导入日历组件
-import DateRangePicker from '@/components/DateRangePicker'; // 确保路径正确
+import DateRangePicker from '@/components/DateRangePicker';
 import { useGoCities, useGoList } from '@/utils/routerUtils';
 // 引入定位hook函数
 import { useLocation } from '@/utils/useLocation';
@@ -25,8 +26,15 @@ const TYPE_MAP: Record<string, number> = {
 };
 
 const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, dateRange, onDateChange }) => {
+  const navigate = useNavigate();
+  
   // 1. 控制日历弹窗显隐
   const [visible, setVisible] = useState(false);
+
+  // 关键词状态 - 初始化时从 localStorage 读取
+  const [keyword, setKeyword] = useState(() => {
+    return localStorage.getItem('SEARCH_KEYWORD_DRAFT') || '';
+  });
 
   // 2. 存储选中的日期范围
   // const [dateRange, setDateRange] = useState<[Date, Date]>([
@@ -73,7 +81,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
     }
   };
 
-  // 监听城市回传 (Local Storage 方案)
+  // 监听城市回传和关键词草稿
   useEffect(() => {
     const checkSelectedCity = () => {
       const selected = localStorage.getItem('selectedCity');
@@ -84,13 +92,27 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
       }
     };
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        checkSelectedCity();
+    const checkKeywordDraft = () => {
+      const keywordDraft = localStorage.getItem('SEARCH_KEYWORD_DRAFT');
+      console.log('🔍 检查关键词草稿:', keywordDraft);
+      if (keywordDraft) {
+        setKeyword(keywordDraft);
       }
     };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('📱 页面可见，检查数据...');
+        checkSelectedCity();
+        checkKeywordDraft();
+      }
+    };
+    
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // 初始化时也检查一次
     checkSelectedCity();
+    checkKeywordDraft();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -101,12 +123,43 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
   const { goList } = useGoList();
 
   const handelSearch = () => {
-    const params = {
+    const params: any = {
       city: city,
       beginDate: dayjs(dateRange[0]).format('YYYY-MM-DD'),
       endDate: dayjs(dateRange[1]).format('YYYY-MM-DD'),
+    };
+    
+    // 只有关键词不为空时才添加
+    if (keyword.trim()) {
+      params.keyword = keyword.trim();
     }
+    
+    console.log('🔍 查询酒店参数:', params);
+    
     goList(params, currentTypeId);
+    
+    // 清除关键词草稿
+    localStorage.removeItem('SEARCH_KEYWORD_DRAFT');
+    setKeyword('');
+  }
+
+  // 5. 跳转到搜索页
+  const handleSearchClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // 带上城市、日期、类型参数跳转到搜索页
+    const searchUrl = `/search?` +
+      `city=${city}&` +
+      `beginDate=${dayjs(dateRange[0]).format('YYYY-MM-DD')}&` +
+      `endDate=${dayjs(dateRange[1]).format('YYYY-MM-DD')}&` +
+      `type=${currentTypeId}`;
+    navigate(searchUrl);
+  }
+
+  // 6. 清除关键词
+  const handleClearKeyword = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setKeyword('');
+    localStorage.removeItem('SEARCH_KEYWORD_DRAFT');
   }
 
   return (
@@ -120,10 +173,19 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
           <div className={styles.value}>{city}</div>
         </div>
 
-        {/* 2. 中栏：搜索伪装框 (按你的 UI 只有竖线和文字) */}
-        {/* 💡 提示：如果想点击这里跳转搜索页，可以加上 onClick={() => navigate('/search')} */}
-        <div className={styles.searchMockCenter}>
-          <span className={styles.placeholderText}>位置/品牌/酒店</span>
+        {/* 2. 中栏：搜索伪装框 */}
+        <div className={styles.searchMockCenter} onClick={handleSearchClick}>
+          {keyword ? (
+            <div className={styles.keywordWrapper}>
+              <span className={styles.keywordText}>{keyword}</span>
+              <CloseCircleOutline 
+                className={styles.clearIcon}
+                onClick={handleClearKeyword}
+              />
+            </div>
+          ) : (
+            <span className={styles.placeholderText}>位置/品牌/酒店</span>
+          )}
         </div>
 
         {/* 3. 右栏：一键定位按钮 (完全保留了你原有的逻辑和上下结构) */}

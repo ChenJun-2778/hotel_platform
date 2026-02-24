@@ -27,6 +27,15 @@ const SearchPage: React.FC = () => {
     setHistoryList(history);
   }, []);
 
+  // 监听关键词变化，保存到 localStorage（用于返回主页时回显）
+  useEffect(() => {
+    if (keyword.trim()) {
+      localStorage.setItem('SEARCH_KEYWORD_DRAFT', keyword.trim());
+    } else {
+      localStorage.removeItem('SEARCH_KEYWORD_DRAFT');
+    }
+  }, [keyword]);
+
   // 实时搜索：当用户输入关键词时，调用后端接口搜索
   useEffect(() => {
     const searchHotels = async () => {

@@ -33,16 +33,53 @@
   padding-right: 16px;
   flex-shrink: 0;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 2. 中间搜索伪装框 */
+/* 2. 中栏：搜索伪装框 */
 .searchMockCenter {
-  flex: 1; /* 撑满中间的所有剩余空间 */
+  flex: 1;
+  display: flex;
+  align-items: center; 
+  border-left: 1px solid #eee;
+  padding-left: 16px;
+  padding-right: 8px;
+  /* 💡 核心修复 1：利用顶部内边距把文字往下推，完美对齐左侧“重庆”的基线 */
+  padding-top: 18px; 
+  min-width: 0;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+/* --- 新抽离的关键词容器样式 --- */
+.keywordWrapper {
   display: flex;
   align-items: center;
-  border-left: 1px solid #eee; /* 左侧的竖线 */
-  padding-left: 16px;
-  min-width: 0; /* 极其关键：防止文字过长撑破容器 */
+  width: 100%;
+  /* 💡 核心修复 2：不再使用 space-between，让清除按钮紧紧贴在文字右侧 */
+  justify-content: flex-start; 
+}
+
+/* 关键词文本样式（有内容时） */
+.keywordText {
+  font-size: 16px; /* 字体比重庆稍小一号，显得秀气 */
+  color: #666; /* 💡 核心修复 3：偏灰色，弱化视觉比重 */
+  font-weight: normal; /* 取消加粗 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* 💡 核心修复 4：允许收缩，但宽度随内容自适应，不再强行占满 100% */
+  flex: 0 1 auto; 
+  line-height: 1.4;
+}
+
+/* --- 新抽离的清除图标样式 --- */
+.clearIcon {
+  flex-shrink: 0;
+  margin-left: 6px; /* 紧贴文字 */
+  font-size: 16px; /* 使用 ant-mobile 的默认 icon 大小，非常清晰 */
+  color: #ccc; 
   cursor: pointer;
 }
 
@@ -52,6 +89,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* 关键词文本样式（有内容时） */
+.keywordText {
+  font-size: 16px; /* 字体比重庆稍小一号，显得秀气 */
+  color: #666; /* 💡 核心修复 3：偏灰色，弱化视觉比重 */
+  font-weight: normal; /* 取消加粗 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* 💡 核心修复 4：允许收缩，但宽度随内容自适应，不再强行占满 100% */
+  flex: 0 1 auto; 
+  line-height: 1.4;
 }
 
 /* 3. 右侧定位按钮区 */
