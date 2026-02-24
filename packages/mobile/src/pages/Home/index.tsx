@@ -66,6 +66,22 @@ const Home = () => {
     sessionStorage.setItem('HOME_HOURLY_DATE', JSON.stringify(hourlyDate));
   }, [hourlyDate]);
 
+  // 智能同步：切换到钟点房时，如果钟点房日期是今天，则自动同步国内的入住日期
+  useEffect(() => {
+    if (isHourly) {
+      const today = dayjs().startOf('day');
+      const hourlyDateDay = dayjs(hourlyDate[0]).startOf('day');
+      
+      // 如果钟点房日期是今天（初始值），则同步国内的入住日期
+      if (hourlyDateDay.isSame(today, 'day')) {
+        const normalCheckInDate = dayjs(dateRange[0]).startOf('day').toDate();
+        setHourlyDate([normalCheckInDate, normalCheckInDate]);
+      }
+    }
+    // 注意：这里只监听 isHourly 和 dateRange[0]，不监听 hourlyDate，避免无限循环
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHourly, dateRange[0]]);
+
   // 快捷入口配置（方便后续修改词条）
   const quickEntries = [
     { 
