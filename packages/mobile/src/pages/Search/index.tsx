@@ -58,9 +58,9 @@ const SearchPage: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100vh', background: '#fff' }}>
-      <NavBar onBack={() => navigate(-1)} backArrow={false}>
-        <div style={{ paddingRight: 12 }}>
+    <div className={styles.container}>
+      <NavBar onBack={() => navigate(-1)}>
+        <div className={styles.searchBarWrapper}>
           <SearchBar
             placeholder="位置/品牌/酒店"
             value={keyword}
@@ -75,12 +75,12 @@ const SearchPage: React.FC = () => {
 
       {/* 历史记录区域 */}
       {historyList.length > 0 && (
-        <div style={{ padding: 16 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontWeight: 'bold' }}>历史搜索</span>
-            <DeleteOutline onClick={clearHistory} style={{ color: '#999' }} />
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionTitle}>历史搜索</span>
+            <DeleteOutline onClick={clearHistory} className={styles.deleteIcon} />
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div className={styles.tagContainer}>
             {historyList.map(item => (
               <Tag 
                 key={item} 
@@ -96,9 +96,9 @@ const SearchPage: React.FC = () => {
       )}
       
       {/* 热门推荐（静态假数据） */}
-      <div style={{ padding: 16 }}>
-        <div style={{ fontWeight: 'bold', marginBottom: 12 }}>热门推荐</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      <div className={styles.section}>
+        <div className={styles.sectionTitle}>热门推荐</div>
+        <div className={styles.tagContainer}>
           {['外滩', '迪士尼', '全季', '亚朵', '南京路'].map(item => (
              <Tag key={item} color='primary' fill='outline' onClick={() => doSearch(item)}>
                {item}
