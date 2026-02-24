@@ -15,6 +15,8 @@ interface Props {
 const DateRangePicker: React.FC<Props> = ({ visible, onClose, defaultDate, onConfirm }) => {
   const [selection, setSelection] = useState<[Date, Date] | null>(null);
 
+  // 新增：计算最大可选日期（今天起往后 180 天）
+  const maxDate = dayjs().add(180, 'day').toDate();
   // 打开时，把父组件传进来的日期设为选中状态
   useEffect(() => {
     if (visible && defaultDate) {
@@ -65,7 +67,9 @@ const DateRangePicker: React.FC<Props> = ({ visible, onClose, defaultDate, onCon
             selectionMode='range'
             value={selection}
             onChange={(val) => setSelection(val)}
+            // 最大和最小日期传给日历组件
             min={new Date()} 
+            max={maxDate}
             renderLabel={renderLabel}
             style={{ '--cell-height': '60px' } as React.CSSProperties}
           />

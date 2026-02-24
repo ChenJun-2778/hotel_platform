@@ -42,6 +42,55 @@ const Home = () => {
     sessionStorage.setItem('HOME_DATE_RANGE', JSON.stringify(dateRange));
   }, [dateRange]);
 
+  // 快捷入口配置（方便后续修改词条）
+  const quickEntries = [
+    { 
+      label: '特价酒店', 
+      type: 'discount',
+      params: { sortType: 'price_asc', price_max: '300' }  // 特殊逻辑：价格筛选
+    },
+    { 
+      label: '亲子房', 
+      type: 'keyword',
+      keyword: '亲子'  // 关键词搜索
+    },
+    { 
+      label: '免费停车', 
+      type: 'keyword',
+      keyword: '停车'  // 关键词搜索
+    },
+    { 
+      label: '游泳池', 
+      type: 'keyword',
+      keyword: '游泳'  // 关键词搜索
+    }
+  ];
+
+  // 快捷入口点击处理
+  const handleQuickEntry = (entry: typeof quickEntries[0]) => {
+    // 获取当前城市（从 localStorage 读取，默认上海）
+    const city = localStorage.getItem('HOME_CITY') || '上海';
+    const beginDate = dayjs(dateRange[0]).format('YYYY-MM-DD');
+    const endDate = dayjs(dateRange[1]).format('YYYY-MM-DD');
+    
+    // 基础参数
+    const baseParams = `city=${city}&beginDate=${beginDate}&endDate=${endDate}&type=1`;
+    
+    // 根据类型构建额外参数
+    let extraParams = '';
+    if (entry.type === 'discount' && entry.params) {
+      // 特价酒店：使用自定义参数
+      extraParams = Object.entries(entry.params)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('&');
+    } else if (entry.type === 'keyword' && entry.keyword) {
+      // 关键词搜索
+      extraParams = `keyword=${encodeURIComponent(entry.keyword)}`;
+    }
+    
+    navigate(`/list?${baseParams}&${extraParams}`);
+  };
+
   // 制作假数据
   const recommendList = [
     ...MOCK_HOTEL_LIST,
@@ -73,12 +122,16 @@ const Home = () => {
         <Outlet context={{ dateRange, setDateRange } satisfies HomeContextType} />
       </div>
 
-      {/* 4. 快捷入口金刚区 (静态展示) */}
+      {/* 4. 快捷入口金刚区 */}
       <div className={styles.gridContainer}>
-        {['特价酒店', '亲子房', '免费停车', '滑雪季'].map(item => (
-          <div key={item} className={styles.gridItem}>
+        {quickEntries.map(entry => (
+          <div 
+            key={entry.label} 
+            className={styles.gridItem}
+            onClick={() => handleQuickEntry(entry)}
+          >
             <div className={styles.gridIcon}></div>
-            <div className={styles.gridLabel}>{item}</div>
+            <div className={styles.gridLabel}>{entry.label}</div>
           </div>
         ))}
       </div>
