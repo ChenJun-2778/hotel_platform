@@ -17,6 +17,7 @@ const { query } = require('../config/database');
  * - star_min:         最低星级 1-5（必选，与 star_max 组成区间）
  * - star_max:         最高星级（可选）
  * - facilities:       酒店设施，逗号分隔，如 "停车场,游泳池"（全匹配）
+ * - hotel_type:       酒店类型（1=国内酒店 2=海外酒店 3=民宿酒店）（可选）
  *
  * 价格区间作用于每家酒店的最低房价（min_price）
  * 设施筛选通过 FIND_IN_SET 逐项匹配 hotel_facilities 字段
@@ -31,7 +32,8 @@ router.get('/search', async (req, res) => {
       facilities,
       sortType,  // 排序类型参数
       review_count_min,  // 最低评价数
-      keyword  // 新增：关键词搜索（匹配酒店名称、品牌）
+      keyword,  // 新增：关键词搜索（匹配酒店名称、品牌）
+      hotel_type  // 酒店类型：1-国内 2-海外 3-民宿
     } = req.query;
 
     // 调试：打印接收到的参数
@@ -223,6 +225,13 @@ router.get('/search', async (req, res) => {
       params.push(reviewCountMin);
     }
 
+    // 酒店类型精确筛选（可选）
+    const hotelTypeVal = hotel_type !== undefined && hotel_type !== '' ? parseInt(hotel_type) : null;
+    if (hotelTypeVal !== null && [1, 2, 3].includes(hotelTypeVal)) {
+      sql += ` AND h.hotel_type = ?`;
+      params.push(hotelTypeVal);
+    }
+
     sql += `
       GROUP BY
         h.id, h.name, h.cover_image, h.brand,
@@ -294,7 +303,8 @@ router.get('/search', async (req, res) => {
           star_min:       starMin,
           star_max:       starMax,
           facilities:     facilityList.length > 0 ? facilityList : null,
-          review_count_min: reviewCountMin
+          review_count_min: reviewCountMin,
+          hotel_type:     hotelTypeVal
         },
         total: hotels.length
       }
