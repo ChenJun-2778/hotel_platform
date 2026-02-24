@@ -111,30 +111,28 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
 
   return (
     <div className={styles.searchCard}>
-      {/* 目的地 */}
-      <div className={styles.inputItem} style={{ display: 'flex', alignItems: 'center' }}>
+      {/* 目的地、搜索、定位 (三栏布局) */}
+      <div className={`${styles.inputItem} ${styles.inputItemRow}`}>
 
-        {/* 左侧：原本的城市名字，占据剩余空间 */}
-        <div style={{ flex: 1 }} onClick={handleCityClick}>
+        {/* 1. 左栏：城市名字 */}
+        <div className={styles.citySection} onClick={handleCityClick}>
           <div className={styles.label}>{type === 'overseas' ? '目的地 (英文/拼音)' : '目的地'}</div>
           <div className={styles.value}>{city}</div>
         </div>
 
-        {/* 右侧：新增的一键定位按钮 */}
-        <div
-          onClick={handleLocate}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingLeft: '16px',
-            borderLeft: '1px solid #eee', // 加一条分割线更美观
-            color: '#1677ff'
-          }}
-        >
+        {/* 2. 中栏：搜索伪装框 (按你的 UI 只有竖线和文字) */}
+        {/* 💡 提示：如果想点击这里跳转搜索页，可以加上 onClick={() => navigate('/search')} */}
+        <div className={styles.searchMockCenter}>
+          <span className={styles.placeholderText}>位置/品牌/酒店</span>
+        </div>
+
+        {/* 3. 右栏：一键定位按钮 (完全保留了你原有的逻辑和上下结构) */}
+        <div className={styles.locateBtnCenter} onClick={handleLocate}>
           {locating ? <DotLoading color="primary" /> : <EnvironmentOutline fontSize={20} />}
-          <span style={{ fontSize: '11px', marginTop: '4px', color: locating ? '#999' : '#1677ff' }}>
+          <span 
+            className={styles.locateText} 
+            style={{ color: locating ? '#999' : '#1677ff' }} 
+          >
             {locating ? '定位中' : '我的位置'}
           </span>
         </div>

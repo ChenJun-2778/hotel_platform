@@ -1,22 +1,82 @@
 .searchCard {
   background: #fff;
   border-radius: 12px;
-  padding: 16px;
-  /* 仅保留核心视觉：投影和内衬 */
+  /* 顶部留白交给 inputItem，这里只留左右和底部的内边距 */
+  padding: 0 16px 16px; 
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+/* 💡 核心修复 1：补上缺失的 inputItem，拉开上下间距，加分割线 */
 .inputItem {
-  padding: 12px 0;
-  /* 使用简写属性 */
-  border-bottom: 1px solid #eee;
+  padding: 16px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+/* 去掉最后一个输入项的底边框，让它和按钮过渡更自然 */
+.inputItem:last-of-type {
+  border-bottom: none;
+}
+
+/* 💡 核心修复 2：补上缺失的文本右对齐，让“离店”靠右 */
+.textRight {
+  text-align: right;
+}
+
+.inputItemRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 1. 左侧城市区 */
+.citySection {
+  padding-right: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* 2. 中间搜索伪装框 */
+.searchMockCenter {
+  flex: 1; /* 撑满中间的所有剩余空间 */
+  display: flex;
+  align-items: center;
+  border-left: 1px solid #eee; /* 左侧的竖线 */
+  padding-left: 16px;
+  min-width: 0; /* 极其关键：防止文字过长撑破容器 */
+  cursor: pointer;
+}
+
+.placeholderText {
+  font-size: 14px;
+  color: #ccc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 3. 右侧定位按钮区 */
+.locateBtnCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-left: 16px;
+  border-left: 1px solid #eee; /* 右侧的竖线 */
+  color: #1677ff;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.locateText {
+  font-size: 11px;
+  margin-top: 4px;
 }
 
 /* 合并相似的字体样式 */
 .label {
   font-size: 12px;
   color: #999;
-  margin-bottom: 4px;
+  margin-bottom: 6px; /* 稍微拉开和主文字的间距 */
 }
 
 .value, .dateValue {
@@ -35,17 +95,15 @@
   font-size: 12px;
   color: #666;
   border: 1px solid #eee;
-  padding: 2px 8px;
+  padding: 2px 10px;
   border-radius: 10px;
+  background-color: #fcfcfc; /* 加一点非常淡的底色，更有质感 */
 }
 
 /* 按钮样式精简 */
 .searchBtn {
-   /* 这样能直接覆盖 antd-mobile 的组件颜色 */
-  /* --adm-color-primary: #FF9A14; */
   height: 48px;
   border-radius: 24px;
   font-weight: 600;
-  margin-top: 20px;
+  margin-top: 8px; /* 距离上面的内容近一点，因为 inputItem 已经有 padding 了 */
 }
-
