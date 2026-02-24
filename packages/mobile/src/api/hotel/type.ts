@@ -10,6 +10,7 @@ export interface ApiResponse<T> {
     destination: string;      // 对应之前的 city
     check_in_date: string;    // 对应之前的 beginDate
     check_out_date: string;   // 对应之前的 endDate
+    hotel_type?: number;      // 酒店类型（1=国内, 2=海外, 3=民宿）
     // 下面这些如果是可选的查询条件，加上 ? 
     type?: number;
     sortType?: string;
@@ -86,7 +87,6 @@ export interface ApiResponse<T> {
     contact_phone: string;
     cover_image: string;
     images: string;           // 注意：酒店多图这里也是字符串，使用时需要 split(',')
-    room_number: number;
     rooms: Room[];            // 嵌套了上方的 Room 数组
   }
 

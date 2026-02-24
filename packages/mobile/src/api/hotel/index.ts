@@ -52,10 +52,23 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
   }
 
   // 真实接口
+  // 真实接口
+  // 酒店类型映射：国内(1)和钟点房(3)都属于国内酒店，所以都传 hotel_type=1
+  let hotelType: number | undefined;
+  const typeNum = Number(frontendParams.type);
+  if (typeNum === 1 || typeNum === 3) {
+    hotelType = 1;  // 国内酒店（包括国内和钟点房）
+  } else if (typeNum === 2) {
+    hotelType = 2;  // 海外酒店
+  } else if (typeNum === 4) {
+    hotelType = 3;  // 民宿酒店
+  }
+
   const params: HotelSearchParams = {
     destination: frontendParams.city,
     check_in_date: frontendParams.beginDate,
     check_out_date: frontendParams.endDate,
+    hotel_type: hotelType,  // 酒店类型（1=国内, 2=海外, 3=民宿）
     type: Number(frontendParams.type) || 1,
     sortType: frontendParams.sortType,
     keyword: frontendParams.keyword,

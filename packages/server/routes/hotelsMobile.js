@@ -358,7 +358,7 @@ router.get('/:id', async (req, res) => {
         contact,
         contact_phone,
         cover_image,
-        images,
+        images
       FROM hotels
       WHERE id = ? AND is_deleted = 0 AND status = 1
     `;
