@@ -359,7 +359,6 @@ router.get('/:id', async (req, res) => {
         contact_phone,
         cover_image,
         images,
-        room_number
       FROM hotels
       WHERE id = ? AND is_deleted = 0 AND status = 1
     `;
@@ -377,7 +376,6 @@ router.get('/:id', async (req, res) => {
       SELECT
         id,
         hotel_id,
-        room_number,
         room_type,
         room_type_en,
         bed_type,
