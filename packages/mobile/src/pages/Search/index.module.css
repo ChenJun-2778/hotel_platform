@@ -1,6 +1,6 @@
 /* 搜索页面容器 */
 .container {
-  height: 100vh;
+  min-height: 100vh;
   background: #f5f5f5;
   display: flex;
   flex-direction: column;
@@ -8,20 +8,176 @@
 
 /* 搜索框包裹器 */
 .searchBarWrapper {
-  padding-right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 搜索输入框 */
+.searchInput {
+  flex: 1;
+}
+
+/* 搜索按钮 */
+.searchButton {
+  color: #1677ff;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+
+.searchButton:active {
+  opacity: 0.6;
+}
+
+/* 搜索结果容器 */
+.resultsContainer {
+  flex: 1;
+  background: #fff;
+  overflow-y: auto;
+}
+
+/* 加载中 */
+.loadingWrapper {
+  padding: 60px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 搜索结果列表 */
+.resultsList {
+  padding: 0;
+}
+
+/* 搜索结果项 */
+.resultItem {
+  display: flex;
+  padding: 16px;
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  transition: background 0.2s;
+  background: #fff;
+}
+
+.resultItem:active {
+  background: #fafafa;
+}
+
+/* 结果左侧图片 */
+.resultLeft {
+  width: 90px;
+  height: 90px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.resultImage {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* 结果中间信息 */
+.resultMiddle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  min-height: 90px;
+}
+
+.resultName {
+  font-size: 17px;
+  font-weight: 500;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.resultLocation {
+  font-size: 13px;
+  color: #999;
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultTags {
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}
+
+/* 结果右侧价格 */
+.resultRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-left: 12px;
+  min-height: 90px;
+}
+
+.resultPrice {
+  color: #ff6a00;
+  font-weight: bold;
+  display: flex;
+  align-items: baseline;
+}
+
+.priceUnit {
+  font-size: 14px;
+  margin-right: 2px;
+}
+
+.priceNum {
+  font-size: 22px;
+}
+
+/* 空状态 */
+.emptyWrapper {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.emptyText {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.emptyHint {
+  font-size: 14px;
+  color: #999;
 }
 
 /* 内容区块 */
 .section {
   padding: 16px;
   background: #fff;
-  margin-bottom: 8px;
+  margin-top: 8px;
 }
 
 /* 区块标题 */
 .sectionTitle {
-  font-weight: bold;
+  font-weight: 600;
   font-size: 16px;
   color: #333;
   margin-bottom: 12px;
@@ -39,9 +195,10 @@
 /* 删除图标 */
 .deleteIcon {
   color: #999;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   transition: color 0.2s;
+  padding: 4px;
 }
 
 .deleteIcon:active {
@@ -52,5 +209,5 @@
 .tagContainer {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }

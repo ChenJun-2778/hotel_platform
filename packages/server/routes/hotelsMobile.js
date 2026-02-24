@@ -30,13 +30,15 @@ router.get('/search', async (req, res) => {
       star_min,  star_max,
       facilities,
       sortType,  // 排序类型参数
-      review_count_min  // 新增：最低评价数
+      review_count_min,  // 最低评价数
+      keyword  // 新增：关键词搜索（匹配酒店名称、品牌）
     } = req.query;
 
     // 调试：打印接收到的参数
     console.log('🔍 后端接收到的查询参数:', req.query);
 
     const hasDestination = destination && destination.trim() !== '';
+    const hasKeyword = keyword && keyword.trim() !== '';
     const hasDates       = check_in_date && check_out_date;
 
     // ── 价格 / 评分 / 星级 区间参数解析 ────────────────────────
@@ -164,6 +166,17 @@ router.get('/search', async (req, res) => {
         )
       `;
       params.push(destination.trim(), destination.trim());
+    }
+
+    // 关键词搜索（匹配酒店名称、品牌）
+    if (hasKeyword) {
+      sql += `
+        AND (
+          h.name LIKE CONCAT('%', ?, '%')
+          OR h.brand LIKE CONCAT('%', ?, '%')
+        )
+      `;
+      params.push(keyword.trim(), keyword.trim());
     }
 
     // 评分区间过滤（WHERE 阶段，直接作用于 h.score）
