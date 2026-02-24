@@ -317,6 +317,7 @@ const List: React.FC = () => {
               <Dropdown.Item 
                 key='sort' 
                 title={sortOptions.find(opt => opt.value === sortType)?.label || '智能排序'}
+                highlight={sortType !== 'def'}
               >
                 <SmartSortPanel
                   options={sortOptions}
@@ -327,7 +328,11 @@ const List: React.FC = () => {
               </Dropdown.Item>
 
               {/* 2. 价格下拉 (彻底干掉行内样式) */}
-              <Dropdown.Item key='price' title='价格'>
+              <Dropdown.Item 
+                key='price' 
+                title='价格'
+                highlight={priceRange[0] > 0 || priceRange[1] < 1000}
+              >
                 <PricePanel
                   priceRange={priceRange}
                   onChange={setPriceRange}
@@ -339,7 +344,11 @@ const List: React.FC = () => {
               </Dropdown.Item>
 
              {/* ✅ 3. 合并后的 评分/星级 下拉框 */}
-             <Dropdown.Item key='score_star' title='评分/星级'>
+             <Dropdown.Item 
+               key='score_star' 
+               title='评分/星级'
+               highlight={!!filterScore || !!filterStar}
+             >
                 <ScoreStarPanel
                   filterScore={filterScore}
                   onScoreChange={setFilterScore}
@@ -354,7 +363,11 @@ const List: React.FC = () => {
               </Dropdown.Item>
 
               {/* 4. 综合筛选下拉框 */}
-              <Dropdown.Item key='filter' title='筛选'>
+              <Dropdown.Item 
+                key='filter' 
+                title='筛选'
+                highlight={selectedFacilities.length > 0 || !!selectedComment}
+              >
                 <FilterPanel
                   selectedFacilities={selectedFacilities}
                   onFacilitiesChange={setSelectedFacilities}

@@ -23,7 +23,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   const [activeTab, setActiveTab] = useState<'facility' | 'comment'>('facility');
 
   // 静态选项数据
-  const facilityOptions = ['停车场', '洗衣房', '健身房', '游泳池', '会议室', '充电车位'];
+  const facilityOptions = ['停车场', '洗衣房', '健身房', '游泳池', '空调', 'WIFI'];
   const commentOptions = ['200条以上', '100条以上', '50条以上'];
 
   // 处理设施的【多选】逻辑

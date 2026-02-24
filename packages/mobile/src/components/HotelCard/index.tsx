@@ -1,26 +1,43 @@
 import React from 'react';
 import styles from './index.module.css';
-import type { Hotel } from './type'; // 注意：你可能需要去 type.ts 里更新一下接口字段
-// 引入懒加载组件
+// import type { Hotel } from './type'; 
 import LazyImage from '@/components/LazyImage';
 
 const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
-  // 安全处理标签。把后端的逗号字符串转成数组，如果没有就给空数组兜底
+  // 安全处理标签
   const tagsArray = hotel.hotel_facilities 
     ? hotel.hotel_facilities.split(',') 
     : (hotel.tags || []);
+
+  // 根据评分自动生成文案 (补充后端缺失的 scoreText)
+  const getScoreText = (score: string | number | null) => {
+    // 1. 拦截 null, undefined, "", 0
+    if (!score) return '等你评价'; 
+    
+    const num = Number(score);
+    // 2. 拦截那些无法转换成数字的乱码字符串
+    if (isNaN(num)) return '暂无评分'; 
+
+    // 3. 正常打分逻辑
+    if (num >= 4.5) {
+      return '超棒';
+    } else if (num >= 4.0) {
+      return '很好';
+    } else {
+      return '不错';
+    }
+  };
 
   return (
     <div className={styles.hotelCard}>
       {/* 左侧图片区 */}
       <div className={styles.cardLeft}>
-        {/* 字段替换：image -> cover_image */}
         <LazyImage 
           src={hotel.cover_image || hotel.image} 
           alt={hotel.name} 
-          // 确保把原来 img 标签上的 className 传进去，保证样式不丢
+          // 🚨 务必确认你的 css 里图片类名叫什么，这里假设叫 hotelImage
+          className={styles.hotelImage} 
         />
-        {/* <img src={hotel.cover_image || hotel.image} alt={hotel.name} /> */}
         <div className={styles.videoIcon}>▶</div>
       </div>
 
@@ -28,31 +45,31 @@ const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
       <div className={styles.cardRight}>
         <div className={styles.hotelNameRow}>
           <span className={styles.hotelName}>{hotel.name}</span>
-          {/* 字段替换：star -> star_rating，加兜底防止报错 */}
           <span className={styles.hotelStar}>{'◆'.repeat(hotel.star_rating || hotel.star || 0)}</span>
         </div>
 
         <div className={styles.scoreRow}>
-          {/* 后端目前没返回评分点评数据，先用假数据兜底，防止页面太秃 */}
-          <span className={styles.scoreNum}>{hotel.score || '4.8'}</span>
-          <span className={styles.scoreText}>{hotel.scoreText || '超棒'}</span>
-          <span className={styles.commentInfo}>{hotel.commentCount || '100+'}点评</span>
+          <span className={styles.scoreNum}>{hotel.score || '暂无'}</span>
+          {/* ✅ 修复：动态计算评分文案 */}
+          <span className={styles.scoreText}>{getScoreText(hotel.score)}</span>
+          {/* ✅ 修复：0 点评也能正确渲染 */}
+          <span className={styles.commentInfo}>
+            {hotel.review_count !== undefined ? hotel.review_count : '暂无'}点评
+          </span>
         </div>
 
-        {/* position -> location 或 address */}
-        <div className={styles.positionText}>{hotel.location || hotel.position}</div>
+        {/* ✅ 修复：优先使用具体 address，没有再降级使用 location */}
+        <div className={styles.positionText}>{hotel.address || hotel.location || '位置不详'}</div>
         
-        {/* 描述文本兜底 */}
-        <div className={styles.recommendText}>{hotel.description || hotel.recommend || '热门精选酒店'}</div>
+        <div className={styles.recommendText}>{hotel.description || '热门精选酒店'}</div>
 
-        {/* 安全渲染 map */}
         <div className={styles.tagRow}>
           {tagsArray.map((tag: string, index: number) => (
-            // 建议使用 index 作为 key，因为设施里可能有重复或者特殊字符
             <span key={index} className={styles.hotelTag}>{tag}</span>
           ))}
         </div>
 
+        {/* 只有后端真正传了 rank 才会显示 */}
         {hotel.rank && (
           <div className={styles.rankBadge}>
             <span className={styles.rankIcon}>🏆</span> {hotel.rank}
@@ -65,10 +82,8 @@ const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
           </div>
           <div className={styles.priceRight}>
             <span className={styles.priceUnit}>¥</span>
-            {/* 字段替换：price -> min_price */}
             <span className={styles.priceNum}>
-              {/* 将字符串 "2323.00" 转换为整数，如果有小数则保留，视你的 UI 需求而定 */}
-              {hotel.min_price ? parseInt(hotel.min_price) : (hotel.price || 0)}
+              {hotel.min_price ? parseInt(hotel.min_price) : 0}
             </span>
             <span className={styles.priceTail}>起</span>
           </div>

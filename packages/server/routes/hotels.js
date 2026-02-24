@@ -19,6 +19,7 @@ const { query } = require('../config/database');
  * - contact_phone: 联系电话 (可选)
  * - description: 酒店备注/描述 (可选)
  * - hotel_facilities: 酒店设施 (可选)
+ * - hotel_type: 酒店类型 (可选，1=国内酒店 2=海外酒店 3=民宿酒店，默认1)
  * - cover_image: 酒店首页图片URL (必填)
  * - images: 酒店图片列表，JSON数组 (可选)
  */
@@ -38,7 +39,8 @@ router.post('/create', async (req, res) => {
       description,
       hotel_facilities,
       cover_image,
-      images
+      images,
+      hotel_type = 1
     } = req.body;
 
     // 验证必填字段
@@ -109,12 +111,13 @@ router.post('/create', async (req, res) => {
         hotel_facilities, 
         cover_image, 
         images,
+        hotel_type,
         score,
         review_count,
         favorite_count,
         status, 
         is_deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 0)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 0)
     `;
 
     const params = [
@@ -132,6 +135,7 @@ router.post('/create', async (req, res) => {
       hotel_facilities,
       cover_image,
       images,
+      hotel_type,
       score,
       review_count,
       favorite_count
@@ -299,6 +303,7 @@ router.get('/:id', async (req, res) => {
         hotel_facilities,
         cover_image,
         images,
+        hotel_type,
         created_at,
         updated_at
       FROM hotels
@@ -351,6 +356,7 @@ router.get('/:id', async (req, res) => {
  * - contact_phone: 联系电话
  * - description: 酒店备注/描述
  * - hotel_facilities: 酒店设施
+ * - hotel_type: 酒店类型 (1=国内酒店 2=海外酒店 3=民宿酒店)
  * - cover_image: 酒店首页图片URL
  * - images: 酒店图片列表
  * - status: 状态（1-营业中，0-已下架，2-待审批，3-审批拒绝）
@@ -396,6 +402,7 @@ router.put('/:id', async (req, res) => {
       check_out_time,
       cover_image,
       images,
+      hotel_type,
       status
     } = req.body;
 
@@ -458,6 +465,10 @@ router.put('/:id', async (req, res) => {
     if (images !== undefined) {
       updateFields.push('images = ?');
       updateParams.push(images);
+    }
+    if (hotel_type !== undefined) {
+      updateFields.push('hotel_type = ?');
+      updateParams.push(hotel_type);
     }
     if (status !== undefined) {
       updateFields.push('status = ?');

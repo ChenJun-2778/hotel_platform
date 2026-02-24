@@ -17,6 +17,7 @@ const { query } = require('../config/database');
  * - star_min:         最低星级 1-5（必选，与 star_max 组成区间）
  * - star_max:         最高星级（可选）
  * - facilities:       酒店设施，逗号分隔，如 "停车场,游泳池"（全匹配）
+ * - hotel_type:       酒店类型（1=国内酒店 2=海外酒店 3=民宿酒店）（可选）
  *
  * 价格区间作用于每家酒店的最低房价（min_price）
  * 设施筛选通过 FIND_IN_SET 逐项匹配 hotel_facilities 字段
@@ -30,13 +31,16 @@ router.get('/search', async (req, res) => {
       star_min,  star_max,
       facilities,
       sortType,  // 排序类型参数
-      review_count_min  // 新增：最低评价数
+      review_count_min,  // 最低评价数
+      keyword,  // 新增：关键词搜索（匹配酒店名称、品牌）
+      hotel_type  // 酒店类型：1-国内 2-海外 3-民宿
     } = req.query;
 
     // 调试：打印接收到的参数
     console.log('🔍 后端接收到的查询参数:', req.query);
 
     const hasDestination = destination && destination.trim() !== '';
+    const hasKeyword = keyword && keyword.trim() !== '';
     const hasDates       = check_in_date && check_out_date;
 
     // ── 价格 / 评分 / 星级 区间参数解析 ────────────────────────
@@ -166,6 +170,29 @@ router.get('/search', async (req, res) => {
       params.push(destination.trim(), destination.trim());
     }
 
+    // 关键词搜索（匹配酒店名称、品牌、设施）
+    // 支持多关键词搜索：用空格分隔，每个关键词都要匹配
+    if (hasKeyword) {
+      // 将关键词按空格拆分，过滤空字符串
+      const keywords = keyword.trim().split(/\s+/).filter(Boolean);
+      
+      // 为每个关键词构建 OR 条件（匹配名称、品牌、设施任一字段）
+      const keywordConditions = keywords.map(() => {
+        return `(
+          h.name LIKE CONCAT('%', ?, '%')
+          OR h.brand LIKE CONCAT('%', ?, '%')
+          OR h.hotel_facilities LIKE CONCAT('%', ?, '%')
+        )`;
+      }).join(' AND ');
+      
+      sql += ` AND (${keywordConditions})`;
+      
+      // 为每个关键词添加 3 个参数（name, brand, facilities）
+      keywords.forEach(kw => {
+        params.push(kw, kw, kw);
+      });
+    }
+
     // 评分区间过滤（WHERE 阶段，直接作用于 h.score）
     if (scoreMin !== null) {
       sql += ` AND h.score >= ?`;
@@ -196,6 +223,13 @@ router.get('/search', async (req, res) => {
     if (reviewCountMin !== null) {
       sql += ` AND h.review_count >= ?`;
       params.push(reviewCountMin);
+    }
+
+    // 酒店类型精确筛选（可选）
+    const hotelTypeVal = hotel_type !== undefined && hotel_type !== '' ? parseInt(hotel_type) : null;
+    if (hotelTypeVal !== null && [1, 2, 3].includes(hotelTypeVal)) {
+      sql += ` AND h.hotel_type = ?`;
+      params.push(hotelTypeVal);
     }
 
     sql += `
@@ -269,7 +303,8 @@ router.get('/search', async (req, res) => {
           star_min:       starMin,
           star_max:       starMax,
           facilities:     facilityList.length > 0 ? facilityList : null,
-          review_count_min: reviewCountMin
+          review_count_min: reviewCountMin,
+          hotel_type:     hotelTypeVal
         },
         total: hotels.length
       }
@@ -323,8 +358,7 @@ router.get('/:id', async (req, res) => {
         contact,
         contact_phone,
         cover_image,
-        images,
-        room_number
+        images
       FROM hotels
       WHERE id = ? AND is_deleted = 0 AND status = 1
     `;
@@ -342,7 +376,6 @@ router.get('/:id', async (req, res) => {
       SELECT
         id,
         hotel_id,
-        room_number,
         room_type,
         room_type_en,
         bed_type,
