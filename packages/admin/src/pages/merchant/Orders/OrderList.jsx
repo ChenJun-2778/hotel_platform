@@ -14,68 +14,11 @@ const OrderList = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [availableRooms, setAvailableRooms] = useState([]);
-  const [loadingRooms, setLoadingRooms] = useState(false);
   
   const { orders, loading, pagination, searchOrders, handlePageChange, confirmOrder } = useOrderList();
   
-  // 使用 Zustand Store
-  const getRoomsByHotelAndType = useRoomStore(state => state.getRoomsByHotelAndType);
-  const getCacheStats = useRoomStore(state => state.getCacheStats);
-  const isCacheExpired = useRoomStore(state => state.isCacheExpired);
+  // 使用 Zustand Store（仅用于前端房间分配状态管理）
   const assignRoomToOrder = useRoomStore(state => state.assignRoomToOrder);
-
-  /**
-   * 从酒店名称和房型匹配房间
-   * 使用 Context 中的房间列表
-   */
-  const loadAvailableRoomsByHotelName = async (order) => {
-    if (!order || !order.hotelName || !order.roomType) {
-      setAvailableRooms([]);
-      return;
-    }
-    
-    setLoadingRooms(true);
-    try {
-      console.log('🔍 根据酒店名称和房型加载房间');
-      console.log('🔍 酒店名称:', order.hotelName);
-      console.log('🔍 房型:', order.roomType);
-      
-      // 从 Context 获取房间列表
-      const matchedRooms = getRoomsByHotelAndType(order.hotelName, order.roomType);
-      
-      // 获取缓存统计信息
-      const stats = getCacheStats();
-      console.log('📊 缓存统计:', stats);
-      
-      // 检查缓存是否过期
-      if (isCacheExpired()) {
-        console.warn('⚠️ 房间缓存已过期，建议重新访问房间管理页面');
-        message.warning('房间数据可能已过期，建议重新访问"房间管理"页面刷新数据');
-      }
-      
-      if (matchedRooms.length === 0) {
-        console.warn('⚠️ 没有匹配的房间');
-        message.warning(`暂无可用的"${order.roomType}"房间，请先在房间管理中添加该类型的房间`);
-      } else {
-        console.log('✅ 匹配的房间:', matchedRooms);
-      }
-      
-      // 格式化房间数据
-      const formattedRooms = matchedRooms.map(room => ({
-        roomNumber: room.room_number,
-        type: room.room_type,
-        hotelName: room.hotel_name,
-      }));
-      
-      setAvailableRooms(formattedRooms);
-    } catch (error) {
-      console.error('❌ 加载房间列表失败:', error);
-      message.error('加载房间列表失败');
-      setAvailableRooms([]);
-    } finally {
-      setLoadingRooms(false);
-    }
-  };
 
   /**
    * 搜索订单
@@ -98,6 +41,20 @@ const OrderList = () => {
         
         console.log('✅ 订单详情数据:', detailData);
         
+        // 解析 room_numbers 字段（后端返回的可用房间号列表）
+        let roomNumbers = [];
+        if (detailData.room_numbers) {
+          try {
+            roomNumbers = typeof detailData.room_numbers === 'string' 
+              ? JSON.parse(detailData.room_numbers) 
+              : detailData.room_numbers;
+            console.log('✅ 解析后的房间号列表:', roomNumbers);
+          } catch (e) {
+            console.warn('⚠️ 解析 room_numbers 失败:', e);
+            roomNumbers = [];
+          }
+        }
+        
         // 格式化详情数据
         const fullOrder = {
           ...order,
@@ -106,7 +63,7 @@ const OrderList = () => {
           orderNo: detailData.order_no,
           hotelName: detailData.hotel_name,
           roomType: detailData.room_type,
-          assignedRoom: detailData.assigned_room_no, // ⭐ 房间号字段（后端返回，通常为空）
+          assignedRoom: detailData.assigned_room_no, // ⭐ 已分配的房间号
           customer: detailData.guest_name,
           phone: detailData.guest_phone,
           checkIn: detailData.check_in_date,
@@ -121,18 +78,25 @@ const OrderList = () => {
         setSelectedOrder(fullOrder);
         setIsDetailModalOpen(true);
         
-        // 如果是待确定状态，根据酒店名称和房型加载可用房间
+        // 如果是待确定状态，使用后端返回的 room_numbers 作为可选房间列表
         if (fullOrder.status === 2) {
-          await loadAvailableRoomsByHotelName(fullOrder);
+          const formattedRooms = roomNumbers.map(roomNum => ({
+            roomNumber: roomNum,
+            type: detailData.room_type,
+            hotelName: detailData.hotel_name,
+          }));
+          
+          console.log('✅ 可用房间号列表:', formattedRooms);
+          setAvailableRooms(formattedRooms);
+          
+          if (formattedRooms.length === 0) {
+            message.warning(`房型"${detailData.room_type}"下暂无可用房间号`);
+          }
         }
       } else {
         // 如果没有订单号，直接使用列表数据
         setSelectedOrder(order);
         setIsDetailModalOpen(true);
-        
-        if (order.status === 2) {
-          await loadAvailableRoomsByHotelName(order);
-        }
       }
     } catch (error) {
       console.error('❌ 获取订单详情失败:', error);
@@ -198,7 +162,7 @@ const OrderList = () => {
         onClose={handleDetailClose}
         onConfirm={handleConfirmOrder}
         availableRooms={availableRooms}
-        loadingRooms={loadingRooms}
+        loadingRooms={false}
       />
     </PageContainer>
   );

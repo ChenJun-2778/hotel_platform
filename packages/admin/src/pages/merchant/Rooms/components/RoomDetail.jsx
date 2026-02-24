@@ -1,7 +1,6 @@
 import React from 'react';
 import { Descriptions, Tag, Image } from 'antd';
 import DetailModal from '../../../../components/common/DetailModal';
-import { getRoomStatusInfo } from '../../../../constants/roomStatus';
 
 /**
  * 房间详情组件
@@ -9,13 +8,20 @@ import { getRoomStatusInfo } from '../../../../constants/roomStatus';
 const RoomDetail = ({ visible, room, onClose, loading }) => {
   if (!room && !loading) return null;
 
-  const statusInfo = room ? getRoomStatusInfo(room.status) : null;
+  // 调试日志
+  if (room) {
+    console.log('🔍 RoomDetail 接收到的 room 数据:', {
+      room_type_code: room.room_type_code,
+      room_number: room.room_number,
+      room_type: room.room_type,
+      所有字段: Object.keys(room)
+    });
+  }
 
   return (
     <DetailModal
       visible={visible}
       title={`房型详情 - ${room?.room_type || ''}`}
-      statusInfo={statusInfo}
       onClose={onClose}
       footer={null}
       width={800}
@@ -25,7 +31,7 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
       {room && (
         <>
           <Descriptions.Item label="房型编号">
-            {room.room_number}
+            {room.room_type_code || room.room_number || '-'}
           </Descriptions.Item>
           <Descriptions.Item label="房型">
             {room.room_type}
@@ -51,7 +57,7 @@ const RoomDetail = ({ visible, room, onClose, loading }) => {
             </span>
           </Descriptions.Item>
           <Descriptions.Item label="此类型房间总数">
-            {room.total_rooms}间
+            {room.total_rooms || (room.room_numbers ? room.room_numbers.length : 0)}间
           </Descriptions.Item>
           <Descriptions.Item label="房间号列表" span={2}>
             {room.room_numbers && Array.isArray(room.room_numbers) && room.room_numbers.length > 0 ? (

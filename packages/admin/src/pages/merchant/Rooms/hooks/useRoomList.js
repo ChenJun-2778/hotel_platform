@@ -75,32 +75,38 @@ const useRoomList = () => {
       
       // 转换房间数据格式
       const formattedRooms = roomList.map(room => {
-        // 确保 status 是有效的数字（1-4）
-        let status = Number(room.status);
-        if (isNaN(status) || status < 1 || status > 4) {
-          console.warn(`⚠️ 房间 ${room.room_number} 状态值无效: ${room.status}，默认设为1（可预订）`);
-          status = 1;
-        }
+        // 调试：输出原始房间数据
+        console.log('📦 原始房间数据:', {
+          id: room.id,
+          room_type: room.room_type,
+          bed_type: room.bed_type,
+          max_occupancy: room.max_occupancy,
+          所有字段: Object.keys(room)
+        });
         
         const formattedRoom = {
           id: room.id,
-          roomNumber: room.room_number,
-          type: room.room_type,
-          type_en: room.room_type_en,
-          bed_type: room.bed_type,
-          area: room.area,
-          floor: room.floor, // 字符串类型，如 "28层"
-          max_occupancy: room.max_occupancy,
-          price: room.base_price,
+          room_type_code: room.room_type_code, // ⭐ 房型编号
+          room_type: room.room_type, // 房型名称
+          room_type_en: room.room_type_en,
+          bed_type: room.bed_type, // ⭐ 床型
+          area: room.area, // ⭐ 面积
+          floor: room.floor,
+          max_occupancy: room.max_occupancy, // ⭐ 最多入住人数
+          base_price: room.base_price, // ⭐ 价格
           total_rooms: room.total_rooms,
+          room_numbers: room.room_numbers ? JSON.parse(room.room_numbers) : [], // ⭐ 房间号列表
           facilities: room.facilities ? JSON.parse(room.facilities) : [],
           description: room.description,
           images: room.images ? JSON.parse(room.images) : [],
-          status: status, // 确保是数字类型：1=可预订, 2=已入住, 3=已预订, 4=清洁中
-          booked_by: room.booked_by, // 预定人ID，"0"表示无人预定
+          // 以下字段用于兼容旧代码
+          roomNumber: room.room_type_code, // 映射为房型编号
+          type: room.room_type,
+          type_en: room.room_type_en,
+          price: room.base_price,
         };
         
-        console.log(`✅ 房间 ${formattedRoom.roomNumber} - 状态: ${formattedRoom.status} (${typeof formattedRoom.status})`);
+        console.log(`✅ 房型 ${formattedRoom.room_type_code} (${formattedRoom.room_type}) - 床型: ${formattedRoom.bed_type}, 入住人数: ${formattedRoom.max_occupancy}`);
         return formattedRoom;
       });
       
@@ -189,13 +195,13 @@ const useRoomList = () => {
     try {
       setLoading(true);
       
-      console.log('🔄 useRoomList v2.0 - available_rooms 字段已移除');
+      console.log('🔄 useRoomList v3.0 - 字段名映射：room_number -> room_type_code');
       console.log('📝 原始房间数据:', roomData);
       
-      // 构建提交数据 - 明确只包含后端需要的字段
+      // 构建提交数据 - 映射字段名到后端期望的格式
       const submitData = {
         hotel_id: roomData.hotel_id,
-        room_number: roomData.room_number,
+        room_type_code: roomData.room_number, // ⭐ 前端的 room_number 映射为后端的 room_type_code
         room_type: roomData.room_type,
         room_type_en: roomData.room_type_en || '',
         bed_type: roomData.bed_type,
@@ -204,26 +210,19 @@ const useRoomList = () => {
         max_occupancy: Number(roomData.max_occupancy),
         base_price: Number(roomData.base_price),
         total_rooms: Number(roomData.total_rooms),
-        // room_numbers: JSON.stringify(roomData.room_numbers || []), // 暂时注释，等后端实现
+        room_numbers: JSON.stringify(roomData.room_numbers || []), // ⭐ 房间号列表（必需）
         facilities: JSON.stringify(Array.isArray(roomData.facilities) ? roomData.facilities : []),
         description: roomData.description || '',
         images: JSON.stringify(roomData.images || []),
-        status: 1, // 新建房间默认为1（可预订）
         booked_by: "0", // 默认无人预定
       };
       
       console.log('📤 提交数据字段列表:', Object.keys(submitData));
       console.log('📤 提交数据详情:', JSON.stringify(submitData, null, 2));
-      
-      // 明确检查是否包含 available_rooms
-      if ('available_rooms' in submitData) {
-        console.error('❌ 错误：submitData 中仍包含 available_rooms 字段！');
-      } else {
-        console.log('✅ 确认：submitData 中不包含 available_rooms 字段');
-      }
+      console.log('✅ 字段映射: room_number -> room_type_code =', submitData.room_type_code);
       
       await createRoom(submitData);
-      console.log(`✅ 添加房间成功: ${submitData.room_number}`);
+      console.log(`✅ 添加房间成功: ${submitData.room_type_code}`);
       message.success('房间添加成功！');
       
       // 重新加载该酒店的房间列表
@@ -249,11 +248,13 @@ const useRoomList = () => {
     try {
       setLoading(true);
       
+      console.log('🔄 更新房间 - 字段名映射：room_number -> room_type_code');
+      
       // 构建提交数据（id 放在 Body 中）
       const submitData = {
         id: roomId, // ⭐ id 作为 Body 参数
         hotel_id: roomData.hotel_id,
-        room_number: roomData.room_number,
+        room_type_code: roomData.room_number, // ⭐ 前端的 room_number 映射为后端的 room_type_code
         room_type: roomData.room_type,
         room_type_en: roomData.room_type_en || '',
         bed_type: roomData.bed_type,
@@ -262,16 +263,17 @@ const useRoomList = () => {
         max_occupancy: Number(roomData.max_occupancy),
         base_price: Number(roomData.base_price),
         total_rooms: Number(roomData.total_rooms),
-        // room_numbers: JSON.stringify(roomData.room_numbers || []), // 暂时注释，等后端实现
+        room_numbers: JSON.stringify(roomData.room_numbers || []), // ⭐ 房间号列表（必需）
         facilities: JSON.stringify(Array.isArray(roomData.facilities) ? roomData.facilities : []),
         description: roomData.description || '',
         images: JSON.stringify(roomData.images || []),
-        status: Number(roomData.status) || 1,
         booked_by: roomData.booked_by || "0", // 保留原有预定人
       };
       
+      console.log('📤 更新数据详情:', JSON.stringify(submitData, null, 2));
+      
       await updateRoomAPI(roomId, submitData);
-      console.log(`✅ 更新房间成功: ID=${roomId}, 房间号=${submitData.room_number}`);
+      console.log(`✅ 更新房间成功: ID=${roomId}, 房型编号=${submitData.room_type_code}`);
       message.success('房间更新成功！');
       
       // 重新加载该酒店的房间列表

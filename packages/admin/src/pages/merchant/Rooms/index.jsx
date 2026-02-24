@@ -3,7 +3,6 @@ import { Select, Modal, Form, message } from 'antd';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 import PageContainer from '../../../components/common/PageContainer';
 import useRoomList from './hooks/useRoomList';
-import RoomStatsPanel from './components/RoomStatsPanel';
 import RoomGrid from './components/RoomGrid';
 import RoomForm from './components/RoomForm';
 import RoomDetail from './components/RoomDetail';
@@ -16,6 +15,7 @@ import './Rooms.css';
  */
 const Rooms = () => {
   const [selectedHotel, setSelectedHotel] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState(''); // 搜索关键词
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -24,7 +24,7 @@ const Rooms = () => {
   const [form] = Form.useForm();
   const [roomImageFileList, setRoomImageFileList] = useState([]);
 
-  const { hotels, getRoomsByHotel, calculateStats, addRoom, updateRoom, deleteRoom, loading, loadRoomsByHotel } = useRoomList();
+  const { hotels, getRoomsByHotel, addRoom, updateRoom, deleteRoom, loading, loadRoomsByHotel } = useRoomList();
 
   // 当酒店列表加载完成且还没有选中酒店时，自动选中第一个
   useEffect(() => {
@@ -41,15 +41,24 @@ const Rooms = () => {
   }, [selectedHotel, loadRoomsByHotel]);
 
   // 获取当前酒店的房间列表
-  const currentRooms = getRoomsByHotel(selectedHotel);
-  const stats = calculateStats(currentRooms);
+  const allRooms = getRoomsByHotel(selectedHotel);
+  
+  // 前端搜索过滤：按房型和房型编号搜索
+  const filteredRooms = searchKeyword 
+    ? allRooms.filter(room => {
+        const keyword = searchKeyword.toLowerCase().trim();
+        const roomType = (room.room_type || '').toLowerCase();
+        const roomTypeCode = (room.room_type_code || '').toLowerCase();
+        return roomType.includes(keyword) || roomTypeCode.includes(keyword);
+      })
+    : allRooms;
 
   /**
-   * 搜索房间
+   * 搜索房间（前端过滤）
    */
   const handleSearch = (keyword) => {
-    console.log('搜索房间:', keyword);
-    // TODO: 实现搜索逻辑
+    console.log('🔍 搜索关键词:', keyword);
+    setSearchKeyword(keyword);
   };
 
   /**
@@ -82,10 +91,17 @@ const Rooms = () => {
       // 1. 上传房间图片到OSS
       const images = await uploadImagesToOss(roomImageFileList, 'rooms');
 
-      // 2. 构建提交数据
-      const submitData = { ...values, images };
+      // 2. 自动计算 total_rooms（房间号列表的长度）
+      const totalRooms = values.room_numbers ? values.room_numbers.length : 0;
 
-      // 3. 提交到后端
+      // 3. 构建提交数据
+      const submitData = { 
+        ...values, 
+        images,
+        total_rooms: totalRooms, // 自动设置
+      };
+
+      // 4. 提交到后端
       const success = await addRoom(submitData);
       if (success) {
         handleAddCancel();
@@ -110,20 +126,12 @@ const Rooms = () => {
       const roomData = response.data || response;
       console.log('📦 解析后的房间数据:', JSON.stringify(roomData, null, 2));
       
-      // 确保 status 是有效的数字
-      // 如果后端没有返回 status，使用列表中的 status（从 room 参数获取）
-      let status = roomData.status !== undefined ? Number(roomData.status) : Number(room.status);
-      console.log(`🔍 状态字段检查: 后端值="${roomData.status}" (${typeof roomData.status}), 列表值="${room.status}" (${typeof room.status}), 最终值=${status} (${typeof status})`);
-      
-      if (isNaN(status) || status < 1 || status > 4) {
-        console.warn(`⚠️ 房间 ${roomData.room_number} 状态值无效，默认设为1（可预订）`);
-        status = 1;
-      }
-      
       // 解析 JSON 字段
       const detailData = {
         ...roomData,
-        status: status, // 确保是数字类型
+        room_type_code: roomData.room_type_code, // ⭐ 房型编号
+        room_number: roomData.room_type_code, // 兼容旧字段名
+        base_price: roomData.base_price, // ⭐ 价格
         facilities: roomData.facilities ? JSON.parse(roomData.facilities) : [],
         images: roomData.images ? JSON.parse(roomData.images) : [],
         room_numbers: roomData.room_numbers ? JSON.parse(roomData.room_numbers) : [], // 解析房间号列表
@@ -131,10 +139,8 @@ const Rooms = () => {
       
       console.log(`✅ 最终房间详情数据:`, {
         ID: room.id,
-        房型编号: roomData.room_number,
+        房型编号: detailData.room_type_code,
         房型: roomData.room_type,
-        状态值: status,
-        状态类型: typeof status,
         总房间数: roomData.total_rooms,
         房间号列表: detailData.room_numbers,
         所有字段: Object.keys(detailData)
@@ -185,18 +191,15 @@ const Rooms = () => {
         roomNumbers = [];
       }
       
-      // 如果没有房间号列表，使用房间号作为默认值
-      if (!Array.isArray(roomNumbers) || roomNumbers.length === 0) {
-        roomNumbers = [roomData.room_number];
-        console.log('⚠️ 使用房间号作为默认房间号列表:', roomNumbers);
-      }
+      // 获取房型编号（后端字段名是 room_type_code）
+      const roomTypeCode = roomData.room_type_code || roomData.room_number || '';
       
-      console.log(`✅ 编辑房型: ID=${room.id}, 房型编号=${roomData.room_number}, 房间号列表=`, roomNumbers);
+      console.log(`✅ 编辑房型: ID=${room.id}, 房型编号=${roomTypeCode}, 房间号列表=`, roomNumbers);
       
       // 填充表单数据
       form.setFieldsValue({
         hotel_id: roomData.hotel_id,
-        room_number: roomData.room_number,
+        room_number: roomTypeCode, // ⭐ 使用 room_type_code
         room_type: roomData.room_type,
         room_type_en: roomData.room_type_en || '',
         bed_type: roomData.bed_type || '大床',
@@ -204,7 +207,6 @@ const Rooms = () => {
         floor: roomData.floor,
         max_occupancy: roomData.max_occupancy || 2,
         base_price: roomData.base_price,
-        total_rooms: roomData.total_rooms || 1,
         room_numbers: roomNumbers, // 填充房间号列表
         facilities: facilities,
         description: roomData.description || '',
@@ -252,14 +254,18 @@ const Rooms = () => {
       // 1. 上传房间图片到OSS
       const images = await uploadImagesToOss(roomImageFileList, 'rooms');
 
-      // 2. 构建提交数据（保留原有的 booked_by）
+      // 2. 自动计算 total_rooms（房间号列表的长度）
+      const totalRooms = values.room_numbers ? values.room_numbers.length : 0;
+
+      // 3. 构建提交数据（保留原有的 booked_by）
       const submitData = { 
         ...values, 
         images,
+        total_rooms: totalRooms, // 自动设置
         booked_by: currentRoom.booked_by, // 保留原有预定人信息
       };
 
-      // 3. 提交到后端
+      // 4. 提交到后端
       const success = await updateRoom(currentRoom.id, submitData);
       if (success) {
         handleEditCancel();
@@ -299,18 +305,15 @@ const Rooms = () => {
         />
       }
       showSearch={true}
-      searchPlaceholder="搜索房间号、类型"
+      searchPlaceholder="搜索房型、房型编号"
       onSearch={handleSearch}
       searchLoading={loading}
       showAddButton={true}
       onAdd={showAddModal}
     >
-      {/* 统计面板 */}
-      <RoomStatsPanel stats={stats} />
-
       {/* 房间网格 */}
       <RoomGrid 
-        rooms={currentRooms} 
+        rooms={filteredRooms} 
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}

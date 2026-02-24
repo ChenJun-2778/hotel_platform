@@ -19,9 +19,26 @@ export const createHotel = (hotelData) => {
  * @param {number} params.user_id - 用户ID（可选，用于获取指定用户的酒店）
  * @returns {Promise}
  */
-export const getHotelList = (params = {}) => {
+export const getHotelList = async (params = {}) => {
   console.log('🔍 获取酒店列表 - 参数:', params);
-  return get(HOTEL_API.LIST, params);
+  const response = await get(HOTEL_API.LIST, params);
+  console.log('📦 后端返回的酒店列表原始数据:', JSON.stringify(response, null, 2));
+  
+  const hotels = response.data?.list || response.list || [];
+  
+  // 将 hotel_type 映射为 type
+  if (hotels.length > 0) {
+    hotels.forEach(hotel => {
+      if (hotel.hotel_type !== undefined) {
+        hotel.type = hotel.hotel_type;
+      }
+    });
+    console.log('📦 第一个酒店的hotel_type字段:', hotels[0].hotel_type);
+    console.log('📦 第一个酒店的type字段（映射后）:', hotels[0].type);
+    console.log('📦 所有酒店的type字段:', hotels.map(h => ({ id: h.id, name: h.name, hotel_type: h.hotel_type, type: h.type })));
+  }
+  
+  return response;
 };
 
 /**
@@ -29,8 +46,19 @@ export const getHotelList = (params = {}) => {
  * @param {string|number} id - 酒店ID
  * @returns {Promise}
  */
-export const getHotelDetail = (id) => {
-  return get(HOTEL_API.DETAIL(id));
+export const getHotelDetail = async (id) => {
+  console.log(`🔍 获取酒店详情 - ID: ${id}`);
+  const response = await get(HOTEL_API.DETAIL(id));
+  console.log('📦 后端返回的酒店详情原始数据:', JSON.stringify(response, null, 2));
+  console.log('📦 酒店详情中的hotel_type字段:', response.data?.hotel_type || response.hotel_type);
+  
+  // 将 hotel_type 映射为 type
+  if (response.data && response.data.hotel_type !== undefined) {
+    response.data.type = response.data.hotel_type;
+    console.log('✅ 已将 hotel_type 映射为 type:', response.data.type);
+  }
+  
+  return response;
 };
 
 /**

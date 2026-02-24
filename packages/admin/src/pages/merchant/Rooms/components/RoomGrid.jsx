@@ -1,10 +1,10 @@
 import React from 'react';
-import RoomDoorCard from './RoomDoorCard';
+import RoomTypeCard from './RoomTypeCard';
 
 /**
- * 房间网格组件
+ * 房间网格组件 - 按房型分组显示
  */
-const RoomGrid = ({ rooms, onView, onEdit, onDelete, onAdjustStock }) => {
+const RoomGrid = ({ rooms, onView, onEdit, onDelete }) => {
   if (!rooms || rooms.length === 0) {
     return (
       <div style={{ 
@@ -19,19 +19,18 @@ const RoomGrid = ({ rooms, onView, onEdit, onDelete, onAdjustStock }) => {
   
   return (
     <div style={{ 
-      display: 'grid', 
-      gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
       gap: 24,
       padding: '12px 0',
     }}>
-      {rooms.map((room) => (
-        <RoomDoorCard 
-          key={room.id || room.roomNumber} 
-          room={room} 
+      {rooms.map((roomType) => (
+        <RoomTypeCard 
+          key={roomType.id} 
+          roomType={roomType} 
           onView={onView}
           onEdit={onEdit}
           onDelete={onDelete}
-          onAdjustStock={onAdjustStock}
         />
       ))}
     </div>

@@ -132,34 +132,19 @@ const RoomForm = ({
 
       {/* 价格库存 */}
       <FormSection title="价格库存">
-        <Space style={{ width: '100%', display: 'flex', flexWrap: 'wrap' }} size="large">
-          <Form.Item
-            label="基础价格(元/晚)"
-            name="base_price"
-            rules={[{ required: true, message: '请输入基础价格' }]}
-            style={{ width: 180 }}
-          >
-            <InputNumber
-              placeholder="588.00"
-              min={0}
-              precision={2}
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="此类型房间总数"
-            name="total_rooms"
-            rules={[{ required: true, message: '请输入房间总数' }]}
-            style={{ width: 180 }}
-          >
-            <InputNumber
-              placeholder="20"
-              min={1}
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
-        </Space>
+        <Form.Item
+          label="基础价格(元/晚)"
+          name="base_price"
+          rules={[{ required: true, message: '请输入基础价格' }]}
+          style={{ width: 200 }}
+        >
+          <InputNumber
+            placeholder="588.00"
+            min={0}
+            precision={2}
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
       </FormSection>
 
       {/* 房间设施 */}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Form, message, Card, Button } from 'antd';
+import { Modal, Form, message, Card, Button, Segmented } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import SearchBar from '../../../components/common/SearchBar';
 import HotelTable from './components/HotelTable';
@@ -10,10 +10,12 @@ import { getHotelDetail } from '../../../services/hotelService';
 import { getRoomList } from '../../../services/roomService';
 import { uploadToOss } from '../../../utils/oss';
 import { HOTEL_STATUS } from '../../../constants/hotelStatus';
+import { HOTEL_TYPE, HOTEL_TYPE_OPTIONS } from '../../../constants/hotelType';
 import './Hotels.css';
 
 const Hotels = () => {
   // 状态管理
+  const [selectedType, setSelectedType] = useState(HOTEL_TYPE.DOMESTIC); // 当前选中的酒店类型
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -36,14 +38,25 @@ const Hotels = () => {
     handlePageChange,
     addHotel, 
     updateHotelData, 
-    toggleHotelStatus 
+    toggleHotelStatus,
+    loadHotelList,
   } = useHotelList();
+
+  // 切换酒店类型
+  const handleTypeChange = (value) => {
+    console.log('🔄 切换酒店类型:', value);
+    setSelectedType(value);
+    // 重新加载对应类型的酒店列表
+    loadHotelList(1, pagination.pageSize, '', value);
+  };
 
   // 打开添加弹窗
   const showModal = () => {
     setIsEditMode(false);
     setEditingHotelId(null);
     setIsModalOpen(true);
+    // 设置默认类型为当前选中的类型
+    form.setFieldsValue({ type: selectedType });
   };
 
   // 关闭表单弹窗
@@ -125,11 +138,17 @@ const Hotels = () => {
         console.log(`✅ 酒店图片处理完成: 共 ${images.length} 张图片`);
       }
 
-      // 4. 处理省市区数据
-      const location = values.area ? values.area.join('') : '';
-      
-      console.log('📍 省市区数据:', values.area);
-      console.log('📍 location:', location);
+      // 4. 处理位置数据
+      let location = '';
+      if (values.type === HOTEL_TYPE.OVERSEAS) {
+        // 海外酒店：location 字段直接使用国家名称
+        location = values.location || '';
+        console.log('📍 海外酒店 - 国家:', location);
+      } else {
+        // 国内/民宿：location 字段使用省市区拼接
+        location = values.area ? values.area.join('') : '';
+        console.log('📍 国内酒店 - 省市区:', values.area, '拼接结果:', location);
+      }
 
       // 5. 获取实际房间数（编辑模式下从房间列表实时计算所有房间的 total_rooms 总和）
       let actualRoomCount = 0;
@@ -148,6 +167,7 @@ const Hotels = () => {
 
       // 6. 构建提交数据（只提交后端需要的字段）
       const submitData = {
+        hotel_type: Number(values.type) || HOTEL_TYPE.DOMESTIC, // 后端字段名是 hotel_type
         name: values.name || '',
         english_name: values.english_name || '',
         brand: values.brand || '',
@@ -251,7 +271,7 @@ const Hotels = () => {
   // 搜索酒店
   const handleSearch = (keyword) => {
     console.log('🔍 搜索关键词:', keyword);
-    searchHotels(keyword);
+    searchHotels(keyword, selectedType);
   };
 
   // 编辑酒店
@@ -280,34 +300,43 @@ const Hotels = () => {
         actualRoomCount = hotelData.room_number || 0;
       }
       
-      // 解析 location 字段（格式可能是：浙江省杭州市西湖区 或 上海）
+      // 解析 location 字段
       let area = undefined;
-      if (hotelData.location) {
-        const locationStr = hotelData.location;
-        // 尝试解析省市区
-        const provinceMatch = locationStr.match(/^(.+?省)/);
-        const cityMatch = locationStr.match(/省?(.+?市)/);
-        const districtMatch = locationStr.match(/市(.+?区|县)/);
-        
-        const parts = [];
-        if (provinceMatch) parts.push(provinceMatch[1]);
-        if (cityMatch) parts.push(cityMatch[1]);
-        if (districtMatch) parts.push(districtMatch[1]);
-        
-        // 如果没有匹配到省市区格式，可能是直辖市（如：上海、北京）
-        if (parts.length === 0 && locationStr) {
-          // 检查是否是直辖市
-          const municipalities = ['北京', '上海', '天津', '重庆'];
-          const isMunicipality = municipalities.some(m => locationStr.includes(m));
-          if (isMunicipality) {
-            const city = municipalities.find(m => locationStr.includes(m));
-            parts.push(city + '市', city + '市');
+      let country = undefined;
+      
+      if (hotelData.type === HOTEL_TYPE.OVERSEAS) {
+        // 海外酒店：location 直接是国家名称
+        country = hotelData.location;
+        console.log('📍 海外酒店 - 国家:', country);
+      } else {
+        // 国内/民宿：解析省市区
+        if (hotelData.location) {
+          const locationStr = hotelData.location;
+          // 尝试解析省市区
+          const provinceMatch = locationStr.match(/^(.+?省)/);
+          const cityMatch = locationStr.match(/省?(.+?市)/);
+          const districtMatch = locationStr.match(/市(.+?区|县)/);
+          
+          const parts = [];
+          if (provinceMatch) parts.push(provinceMatch[1]);
+          if (cityMatch) parts.push(cityMatch[1]);
+          if (districtMatch) parts.push(districtMatch[1]);
+          
+          // 如果没有匹配到省市区格式，可能是直辖市（如：上海、北京）
+          if (parts.length === 0 && locationStr) {
+            // 检查是否是直辖市
+            const municipalities = ['北京', '上海', '天津', '重庆'];
+            const isMunicipality = municipalities.some(m => locationStr.includes(m));
+            if (isMunicipality) {
+              const city = municipalities.find(m => locationStr.includes(m));
+              parts.push(city + '市', city + '市');
+            }
           }
+          
+          area = parts.length > 0 ? parts : undefined;
         }
-        
-        area = parts.length > 0 ? parts : undefined;
+        console.log('📍 国内酒店 - 省市区数组:', area);
       }
-      console.log('解析的省市区数组:', area);
       
       // 解析设施
       const facilities = hotelData.hotel_facilities 
@@ -319,13 +348,14 @@ const Hotels = () => {
       
       // 填充表单数据
       const formData = {
+        type: hotelData.type || HOTEL_TYPE.DOMESTIC,
         name: hotelData.name,
         english_name: hotelData.english_name,
         brand: hotelData.brand,
         star_rating: hotelData.star_rating,
         room_number: actualRoomCount, // 使用实际房间数
-        area: area,
-        location: hotelData.location, // 保留原始 location 用于显示
+        area: area, // 国内/民宿使用
+        location: country, // 海外使用
         address: hotelData.address,
         hotel_phone: hotelData.hotel_phone,
         contact: hotelData.contact,
@@ -382,7 +412,16 @@ const Hotels = () => {
   return (
     <div style={{ padding: '24px', background: '#f0f2f5', minHeight: 'calc(100vh - 64px)', position: 'relative' }}>
       <Card 
-        title={<div style={{ fontSize: 18, fontWeight: 600 }}>我的酒店</div>}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ fontSize: 18, fontWeight: 600 }}>我的酒店</div>
+            <Segmented 
+              options={HOTEL_TYPE_OPTIONS}
+              value={selectedType}
+              onChange={handleTypeChange}
+            />
+          </div>
+        }
         extra={
           <SearchBar
             placeholder="搜索酒店名称、地址"

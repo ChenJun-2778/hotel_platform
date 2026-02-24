@@ -1,8 +1,9 @@
-import { Space, Button, Modal, Dropdown } from 'antd';
+import { Space, Button, Modal, Dropdown, Tag } from 'antd';
 import { EyeOutlined, EditOutlined, CheckCircleOutlined, StopOutlined, ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
 import StatusTag from '../../../../components/common/StatusTag';
 import StarRating from '../../../../components/common/StarRating';
 import { HOTEL_STATUS, HOTEL_STATUS_MAP } from '../../../../constants/hotelStatus';
+import { HOTEL_TYPE_TEXT } from '../../../../constants/hotelType';
 
 /**
  * 查看拒绝原因（直接从列表数据获取）
@@ -91,6 +92,28 @@ export const getHotelTableColumns = (onView, onEdit, onToggleStatus) => [
     render: (text) => (
       <div style={{ fontWeight: 500, color: '#262626' }}>{text}</div>
     ),
+  },
+  {
+    title: '类型',
+    dataIndex: 'type',
+    key: 'type',
+    width: 80,
+    align: 'center',
+    render: (type) => {
+      // 如果后端没有返回type字段，默认显示"国内"
+      const actualType = type !== undefined && type !== null ? type : 1;
+      const typeText = HOTEL_TYPE_TEXT[actualType];
+      const colorMap = {
+        1: 'blue',    // 国内
+        2: 'green',   // 海外
+        3: 'orange',  // 民宿
+      };
+      return (
+        <Tag color={colorMap[actualType]} style={{ margin: 0 }}>
+          {typeText}
+        </Tag>
+      );
+    },
   },
   {
     title: '星级',

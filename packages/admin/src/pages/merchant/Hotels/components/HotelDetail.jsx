@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Row, Col, Space, Image, Tag, Divider, Descriptions } from 'antd';
 import { EnvironmentOutlined, PhoneOutlined, UserOutlined, ClockCircleOutlined, StarFilled } from '@ant-design/icons';
+import { HOTEL_TYPE_TEXT } from '../../../../constants/hotelType';
 import dayjs from 'dayjs';
 
 /**
@@ -47,6 +48,9 @@ const HotelDetail = ({ hotel, loading }) => {
           {hotel.brand && (
             <Tag color="purple" style={{ margin: 0 }}>{hotel.brand}</Tag>
           )}
+          <Tag color="cyan" style={{ margin: 0 }}>
+            {HOTEL_TYPE_TEXT[hotel.type !== undefined && hotel.type !== null ? hotel.type : 1]}
+          </Tag>
         </Space>
       </Card>
 
