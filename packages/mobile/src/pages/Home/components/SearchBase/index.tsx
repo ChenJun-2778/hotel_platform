@@ -255,6 +255,8 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
           onDateChange([start, end]);
           // setVisible(false) 在组件内部已经调用
         }}
+        // 传递酒店类型
+        hotelType={type}
       />
     </div>
   );
