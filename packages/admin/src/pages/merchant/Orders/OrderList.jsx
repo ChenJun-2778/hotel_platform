@@ -5,7 +5,7 @@ import OrderTable from './components/OrderTable';
 import OrderDetail from './components/OrderDetail';
 import useOrderList from './hooks/useOrderList';
 import { getOrderDetail } from '../../../services/orderService';
-import { useRoomCache } from '../../../contexts/RoomCacheContext';
+import { useRoomStore } from '../../../stores/roomStore';
 
 /**
  * 订单明细页面
@@ -18,8 +18,11 @@ const OrderList = () => {
   
   const { orders, loading, pagination, searchOrders, handlePageChange, confirmOrder } = useOrderList();
   
-  // 使用房间缓存 Context
-  const { getRoomsByHotelAndType, getCacheStats, isCacheExpired } = useRoomCache();
+  // 使用 Zustand Store
+  const getRoomsByHotelAndType = useRoomStore(state => state.getRoomsByHotelAndType);
+  const getCacheStats = useRoomStore(state => state.getCacheStats);
+  const isCacheExpired = useRoomStore(state => state.isCacheExpired);
+  const assignRoomToOrder = useRoomStore(state => state.assignRoomToOrder);
 
   /**
    * 从酒店名称和房型匹配房间
@@ -103,7 +106,7 @@ const OrderList = () => {
           orderNo: detailData.order_no,
           hotelName: detailData.hotel_name,
           roomType: detailData.room_type,
-          assignedRoom: detailData.assigned_room_no,
+          assignedRoom: detailData.assigned_room_no, // ⭐ 房间号字段（后端返回，通常为空）
           customer: detailData.guest_name,
           phone: detailData.guest_phone,
           checkIn: detailData.check_in_date,
@@ -150,7 +153,25 @@ const OrderList = () => {
    * 确认订单并分配房间
    */
   const handleConfirmOrder = async (orderNo, roomNumber) => {
-    await confirmOrder(orderNo, roomNumber);
+    try {
+      // 1. 先保存到 Context（前端状态管理）
+      assignRoomToOrder(orderNo, roomNumber);
+      console.log('✅ 已在前端保存房间分配:', orderNo, '→', roomNumber);
+      
+      // 2. 调用后端接口确认订单
+      try {
+        await confirmOrder(orderNo, roomNumber);
+        console.log('✅ 后端确认成功');
+      } catch (backendError) {
+        console.warn('⚠️ 后端确认失败，但前端已保存分配:', backendError);
+        message.warning('订单确认请求失败，但房间分配已保存在本地');
+      }
+      
+      // 3. 确认成功后关闭弹窗
+      handleDetailClose();
+    } catch (error) {
+      console.error('❌ 订单确认失败:', error);
+    }
   };
 
   return (

@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { message } from 'antd';
 import { createHotel, getHotelList, updateHotel, putUpHotel, takeDownHotel } from '../../../../services/hotelService';
 import { HOTEL_STATUS } from '../../../../constants/hotelStatus';
-import { useAuth } from '../../../../contexts/AuthContext';
+import { useAuthStore } from '../../../../stores/authStore';
 
 /**
  * 酒店列表管理 Hook
  */
 const useHotelList = () => {
-  const { user } = useAuth();
+  const user = useAuthStore(state => state.user);
   const [hotelList, setHotelList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({

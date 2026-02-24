@@ -3,7 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout as AntLayout, Menu, Dropdown, Avatar } from 'antd';
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { adminMenus, merchantMenus } from '../config/menus';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthStore } from '../stores/authStore';
 import './Layout.css';
 
 const { Header, Sider, Content } = AntLayout;
@@ -11,7 +11,8 @@ const { Header, Sider, Content } = AntLayout;
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const user = useAuthStore(state => state.user);
+  const logout = useAuthStore(state => state.logout);
 
   // TODO: 后续根据用户角色动态获取菜单
   // 暂时根据路径判断使用哪个菜单

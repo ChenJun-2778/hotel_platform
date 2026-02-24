@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { message } from 'antd';
 import { getHotelList } from '../../../../services/hotelService';
 import { createRoom, getRoomList, updateRoom as updateRoomAPI, deleteRoom as deleteRoomAPI } from '../../../../services/roomService';
-import { useRoomCache } from '../../../../contexts/RoomCacheContext';
+import { useRoomStore } from '../../../../stores/roomStore';
 
 /**
  * 房间列表管理 Hook
@@ -12,8 +12,8 @@ const useRoomList = () => {
   const [roomsData, setRoomsData] = useState({});
   const [loading, setLoading] = useState(false);
   
-  // 使用房间缓存 Context
-  const { addHotelRooms } = useRoomCache();
+  // 使用 Zustand Store
+  const addHotelRooms = useRoomStore(state => state.addHotelRooms);
 
   /**
    * 同步酒店的房间数（计算属性，不写入数据库）
