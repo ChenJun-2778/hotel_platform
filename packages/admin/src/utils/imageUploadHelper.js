@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import { uploadToOss } from './oss';
 
 /**
  * 上传图片列表到 OSS
@@ -25,8 +26,6 @@ export const uploadImagesToOss = async (fileList, folder = 'images', messageKey 
   }
   
   try {
-    const { uploadToOss } = await import('./oss');
-    
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
       

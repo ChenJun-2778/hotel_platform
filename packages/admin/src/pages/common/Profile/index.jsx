@@ -4,6 +4,7 @@ import { UserOutlined, EditOutlined, LockOutlined, CameraOutlined, CheckOutlined
 import { changePassword, getUserInfo, updateUserInfo } from '../../../services/authService';
 import { useAuthStore } from '../../../stores/authStore';
 import { useNavigate } from 'react-router-dom';
+import { uploadToOss } from '../../../utils/oss';
 import {
   usernameRules,
   emailOptionalRules,
@@ -290,7 +291,6 @@ const Profile = ({
         await onUploadAvatar(selectedAvatar);
       } else {
         // 上传到 OSS
-        const { uploadToOss } = await import('../../../utils/oss');
         const avatarUrl = await uploadToOss(selectedAvatar, 'avatars');
         
         console.log('✅ 头像上传成功:', avatarUrl);
