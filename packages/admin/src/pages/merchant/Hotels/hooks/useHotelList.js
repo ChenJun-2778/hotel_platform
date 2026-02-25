@@ -19,7 +19,7 @@ const useHotelList = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
 
   // 加载酒店列表
-  const loadHotelList = async (page = pagination.current, pageSize = pagination.pageSize, keyword = searchKeyword) => {
+  const loadHotelList = async (page = pagination.current, pageSize = pagination.pageSize, keyword = searchKeyword, type = null) => {
     setLoading(true);
     try {
       // 构建请求参数
@@ -31,6 +31,12 @@ const useHotelList = () => {
       // 如果有搜索关键词，添加到参数中
       if (keyword) {
         params.keyword = keyword;
+      }
+      
+      // 如果有类型筛选，添加到参数中
+      if (type !== null && type !== undefined) {
+        params.type = type;
+        console.log('✅ 添加类型筛选:', type);
       }
       
       // 商户用户只能看到自己的酒店，添加 user_id 参数
@@ -90,16 +96,16 @@ const useHotelList = () => {
   };
 
   // 搜索酒店
-  const searchHotels = async (keyword) => {
-    console.log('🔍 搜索关键词:', keyword);
+  const searchHotels = async (keyword, type = null) => {
+    console.log('🔍 搜索关键词:', keyword, '类型:', type);
     setSearchKeyword(keyword);
-    await loadHotelList(1, pagination.pageSize, keyword);
+    await loadHotelList(1, pagination.pageSize, keyword, type);
   };
 
   // 分页变化
-  const handlePageChange = async (page, pageSize) => {
+  const handlePageChange = async (page, pageSize, type = null) => {
     console.log('📄 分页变化 - 页码:', page, '每页数量:', pageSize);
-    await loadHotelList(page, pageSize, searchKeyword);
+    await loadHotelList(page, pageSize, searchKeyword, type);
   };
 
   // 添加酒店
@@ -202,6 +208,7 @@ const useHotelList = () => {
   // 组件加载时获取列表
   useEffect(() => {
     loadHotelList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
