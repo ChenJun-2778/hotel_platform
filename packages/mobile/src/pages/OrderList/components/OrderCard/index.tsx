@@ -152,9 +152,16 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
     Toast.show('客服电话：400-123-4567');
   };
 
-  // 再次预订
+  // 再次预订 - 跳转到酒店详情页
   const handleRebook = () => {
-    navigate('/');
+    if (data.hotel_id) {
+      // 跳转到酒店详情页，带上酒店ID和日期参数
+      const checkInDate = dayjs().format('YYYY-MM-DD');
+      const checkOutDate = dayjs().add(1, 'day').format('YYYY-MM-DD');
+      navigate(`/detail/${data.hotel_id}?beginDate=${checkInDate}&endDate=${checkOutDate}`);
+    } else {
+      Toast.show({ icon: 'fail', content: '酒店信息不完整' });
+    }
   };
 
   return (

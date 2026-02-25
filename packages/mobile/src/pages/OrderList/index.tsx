@@ -14,6 +14,7 @@ const OrderList: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [orderList, setOrderList] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0); // 用于强制刷新
 
   // 获取订单列表
   useEffect(() => {
@@ -81,7 +82,12 @@ const OrderList: React.FC = () => {
     };
 
     fetchOrders();
-  }, [activeTab]);
+  }, [activeTab, refreshKey]); // 添加 refreshKey 依赖
+
+  // 刷新订单列表
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
     <div className={styles.container}>
@@ -109,7 +115,7 @@ const OrderList: React.FC = () => {
           <div className={styles.empty}>暂无相关订单</div>
         ) : (
           orderList.map(item => (
-            <OrderCard key={item.id} data={item} onRefresh={() => setActiveTab(activeTab)} />
+            <OrderCard key={item.id} data={item} onRefresh={handleRefresh} />
           ))
         )}
       </div>
