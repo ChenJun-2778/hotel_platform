@@ -111,8 +111,13 @@ const Home = () => {
     // 获取当前城市（从 localStorage 读取，默认上海）
     const city = localStorage.getItem('HOME_CITY') || '上海';
     // 使用当前类型对应的日期
-    const beginDate = dayjs(currentDateRange[0]).format('YYYY-MM-DD');
-    const endDate = dayjs(currentDateRange[1]).format('YYYY-MM-DD');
+    let beginDate = dayjs(currentDateRange[0]).format('YYYY-MM-DD');
+    let endDate = dayjs(currentDateRange[1]).format('YYYY-MM-DD');
+    
+    // 钟点房特殊处理：如果入住和离店是同一天，后端需要传第二天
+    if (isHourly && beginDate === endDate) {
+      endDate = dayjs(currentDateRange[0]).add(1, 'day').format('YYYY-MM-DD');
+    }
     
     // 检查是否有用户输入的关键词草稿
     const existingKeyword = localStorage.getItem('SEARCH_KEYWORD_DRAFT') || '';
@@ -209,8 +214,13 @@ const Home = () => {
                 className={styles.cardWrapper}
                 onClick={() => {
                   // 1. 格式化日期（使用当前类型对应的日期）
-                  const beginStr = dayjs(currentDateRange[0]).format('YYYY-MM-DD');
-                  const endStr = dayjs(currentDateRange[1]).format('YYYY-MM-DD');
+                  let beginStr = dayjs(currentDateRange[0]).format('YYYY-MM-DD');
+                  let endStr = dayjs(currentDateRange[1]).format('YYYY-MM-DD');
+                  
+                  // 钟点房特殊处理：如果入住和离店是同一天，后端需要传第二天
+                  if (isHourly && beginStr === endStr) {
+                    endStr = dayjs(currentDateRange[0]).add(1, 'day').format('YYYY-MM-DD');
+                  }
                   
                   // 2. 带着参数跳转
                   navigate(`/detail/${item.id}?beginDate=${beginStr}&endDate=${endStr}`);

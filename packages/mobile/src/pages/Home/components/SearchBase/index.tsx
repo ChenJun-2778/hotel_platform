@@ -138,10 +138,18 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
   const { goList } = useGoList();
 
   const handelSearch = () => {
+    let beginDate = dayjs(dateRange[0]).format('YYYY-MM-DD');
+    let endDate = dayjs(dateRange[1]).format('YYYY-MM-DD');
+    
+    // 钟点房特殊处理：如果入住和离店是同一天，后端需要传第二天
+    if (type === 'hourly' && beginDate === endDate) {
+      endDate = dayjs(dateRange[0]).add(1, 'day').format('YYYY-MM-DD');
+    }
+    
     const params: any = {
       city: city,
-      beginDate: dayjs(dateRange[0]).format('YYYY-MM-DD'),
-      endDate: dayjs(dateRange[1]).format('YYYY-MM-DD'),
+      beginDate: beginDate,
+      endDate: endDate,
     };
     
     // 只有关键词不为空时才添加

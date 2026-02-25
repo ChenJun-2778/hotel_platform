@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   NavBar, Form, Input, Button, Toast, Popup, 
-  PasscodeInput, NumberKeyboard 
+  PasscodeInput, NumberKeyboard, Picker 
 } from 'antd-mobile';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { CloseOutline } from 'antd-mobile-icons';
@@ -9,6 +9,16 @@ import dayjs from 'dayjs';
 import styles from './index.module.css';
 // 导入订单的api
 import { apiCreateOrder, apiPayOrder } from '@/api/Order/index'
+
+// 钟点房时间段选项
+const hourlyTimeSlots = [
+  [
+    { label: '上午时段 (08:00-12:00)', value: '08:00-12:00' },
+    { label: '下午时段 (12:00-18:00)', value: '12:00-18:00' },
+    { label: '晚间时段 (18:00-22:00)', value: '18:00-22:00' },
+    { label: '深夜时段 (22:00-次日06:00)', value: '22:00-06:00' },
+  ]
+];
 
 const OrderFill: React.FC = () => {
   const navigate = useNavigate();
@@ -23,14 +33,22 @@ const OrderFill: React.FC = () => {
   const checkInDate = searchParams.get('beginDate') || dayjs().format('YYYY-MM-DD');
   const checkOutDate = searchParams.get('endDate') || dayjs().add(1, 'day').format('YYYY-MM-DD');
   
-  const nights = dayjs(checkOutDate).diff(dayjs(checkInDate), 'day');
-  const totalPrice = price * nights;
+  // 判断是否是钟点房（入住和离店日期相同，或者相差1天但实际是钟点房）
+  const isHourly = dayjs(checkOutDate).diff(dayjs(checkInDate), 'day') === 1 && 
+                   dayjs(checkInDate).isSame(dayjs(checkOutDate).subtract(1, 'day'), 'day');
+  
+  const nights = isHourly ? 0 : dayjs(checkOutDate).diff(dayjs(checkInDate), 'day');
+  const totalPrice = isHourly ? price : price * nights;
 
   const [form] = Form.useForm();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [password, setPassword] = useState('');
   const [orderNo, setOrderNo] = useState(''); // 保存订单号
   const [submitting, setSubmitting] = useState(false);
+  
+  // 钟点房时间段选择
+  const [timeSlotVisible, setTimeSlotVisible] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string[]>(['08:00-12:00']);
 
   // 监听密码长度，满了6位自动提交
   useEffect(() => {
@@ -139,12 +157,20 @@ const OrderFill: React.FC = () => {
         <div className={styles.infoCard}>
           <div className={styles.hotelName}>{hotelName}</div>
           <div className={styles.roomName}>{roomName}</div>
-          <div className={styles.dateRow}>
-            <span>入住: {dayjs(checkInDate).format('MM月DD日')}</span>
-            <span className={styles.divider}>|</span>
-            <span>离店: {dayjs(checkOutDate).format('MM月DD日')}</span>
-            <span className={styles.nights}>共{nights}晚</span>
-          </div>
+          {isHourly ? (
+            // 钟点房：只显示使用日期
+            <div className={styles.dateRow}>
+              <span>使用日期: {dayjs(checkInDate).format('MM月DD日')}</span>
+            </div>
+          ) : (
+            // 普通酒店：显示入住、离店、晚数
+            <div className={styles.dateRow}>
+              <span>入住: {dayjs(checkInDate).format('MM月DD日')}</span>
+              <span className={styles.divider}>|</span>
+              <span>离店: {dayjs(checkOutDate).format('MM月DD日')}</span>
+              <span className={styles.nights}>共{nights}晚</span>
+            </div>
+          )}
         </div>
 
         <div className={styles.formCard}>
@@ -172,13 +198,29 @@ const OrderFill: React.FC = () => {
             >
               <Input placeholder='用于接收确认短信' type='tel' maxLength={11} />
             </Form.Item>
+            
+            {/* 钟点房：添加时间段选择 */}
+            {isHourly && (
+              <Form.Item label='使用时段'>
+                <div 
+                  onClick={() => setTimeSlotVisible(true)}
+                  style={{ 
+                    padding: '8px 0', 
+                    color: selectedTimeSlot[0] ? '#333' : '#999',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {hourlyTimeSlots[0].find(slot => slot.value === selectedTimeSlot[0])?.label || '请选择使用时段'}
+                </div>
+              </Form.Item>
+            )}
           </Form>
         </div>
 
         <div className={styles.priceCard}>
           <div className={styles.cardTitle}>费用明细</div>
           <div className={styles.priceRow}>
-            <span>房费 ({nights}晚)</span>
+            <span>{isHourly ? '钟点房费用' : `房费 (${nights}晚)`}</span>
             <span>¥{totalPrice}</span>
           </div>
         </div>
@@ -248,6 +290,20 @@ const OrderFill: React.FC = () => {
             />
         </div>
       </Popup>
+
+      {/* 钟点房时间段选择器 */}
+      {isHourly && (
+        <Picker
+          columns={hourlyTimeSlots}
+          visible={timeSlotVisible}
+          onClose={() => setTimeSlotVisible(false)}
+          value={selectedTimeSlot}
+          onConfirm={(value) => {
+            setSelectedTimeSlot(value as string[]);
+            setTimeSlotVisible(false);
+          }}
+        />
+      )}
     </div>
   );
 };
