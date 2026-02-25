@@ -31,7 +31,7 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [], 
 
   if (!order) return null;
 
-  const statusInfo = getOrderStatusInfo(order.status);
+  const statusInfo = getOrderStatusInfo(order.status, order.checkIn, order.checkOut);
   const isPendingConfirm = order.status === ORDER_STATUS.PENDING_CONFIRM; // 待确定状态
 
   // 天数从后端返回
@@ -166,15 +166,6 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [], 
           }}>
             {displayRoom || '-'}
           </span>
-          {frontendAssignedRoom && (
-            <span style={{ 
-              fontSize: 12, 
-              color: '#52c41a',
-              marginLeft: 8
-            }}>
-              (前端已分配)
-            </span>
-          )}
         </Descriptions.Item>
       )}
       

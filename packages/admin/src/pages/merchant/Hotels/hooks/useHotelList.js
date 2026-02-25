@@ -19,9 +19,11 @@ const useHotelList = () => {
   });
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedType, setSelectedType] = useState(null); // 当前选中的类型
+  const [selectedStatus, setSelectedStatus] = useState(null); // 当前选中的状态
+  const [selectedStarRating, setSelectedStarRating] = useState(null); // 当前选中的星级
 
   // 前端筛选和分页逻辑
-  const filterAndPaginateHotels = (hotels, keyword, type, page, pageSize) => {
+  const filterAndPaginateHotels = (hotels, keyword, type, status, starRating, page, pageSize) => {
     // 1. 先按类型筛选
     let filtered = hotels;
     if (type !== null && type !== undefined) {
@@ -29,7 +31,19 @@ const useHotelList = () => {
       console.log(`✅ 类型筛选 (type=${type}): ${hotels.length} -> ${filtered.length}`);
     }
     
-    // 2. 再按关键词搜索
+    // 2. 按状态筛选
+    if (status !== null && status !== undefined) {
+      filtered = filtered.filter(hotel => hotel.status === status);
+      console.log(`✅ 状态筛选 (status=${status}): ${filtered.length} 条结果`);
+    }
+    
+    // 3. 按星级筛选
+    if (starRating !== null && starRating !== undefined) {
+      filtered = filtered.filter(hotel => hotel.star_rating === starRating);
+      console.log(`✅ 星级筛选 (star=${starRating}): ${filtered.length} 条结果`);
+    }
+    
+    // 4. 按关键词搜索
     if (keyword) {
       filtered = filtered.filter(hotel => 
         hotel.name?.toLowerCase().includes(keyword.toLowerCase()) ||
@@ -39,7 +53,7 @@ const useHotelList = () => {
       console.log(`✅ 关键词筛选 (${keyword}): ${filtered.length} 条结果`);
     }
     
-    // 3. 计算分页
+    // 5. 计算分页
     const total = filtered.length;
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
@@ -57,8 +71,11 @@ const useHotelList = () => {
   const loadAllHotels = async () => {
     setLoading(true);
     try {
-      // 构建请求参数（不传分页参数，获取所有数据）
-      const params = {};
+      // 构建请求参数（请求大量数据以获取所有酒店）
+      const params = {
+        page: 1,
+        pageSize: 1000, // 请求足够大的数量以获取所有数据
+      };
       
       // 商户用户只能看到自己的酒店
       if (user?.role_type === 2 && user?.id) {
@@ -88,7 +105,7 @@ const useHotelList = () => {
       console.log('✅ 加载完成，共', hotelsWithId.length, '条数据');
       
       // 初始显示所有数据
-      const result = filterAndPaginateHotels(hotelsWithId, '', null, 1, pagination.pageSize);
+      const result = filterAndPaginateHotels(hotelsWithId, '', null, null, null, 1, pagination.pageSize);
       setHotelList(result.data);
       setPagination({
         current: 1,
@@ -106,13 +123,21 @@ const useHotelList = () => {
     }
   };
 
-  // 应用筛选（类型切换或搜索时调用）
-  const applyFilter = (keyword = searchKeyword, type = selectedType, page = 1) => {
-    console.log('🔄 应用筛选 - 关键词:', keyword, '类型:', type, '页码:', page);
+  // 应用筛选（类型、状态、星级切换或搜索时调用）
+  const applyFilter = (
+    keyword = searchKeyword, 
+    type = selectedType, 
+    status = selectedStatus,
+    starRating = selectedStarRating,
+    page = 1
+  ) => {
+    console.log('🔄 应用筛选 - 关键词:', keyword, '类型:', type, '状态:', status, '星级:', starRating, '页码:', page);
     setSearchKeyword(keyword);
     setSelectedType(type);
+    setSelectedStatus(status);
+    setSelectedStarRating(starRating);
     
-    const result = filterAndPaginateHotels(allHotels, keyword, type, page, pagination.pageSize);
+    const result = filterAndPaginateHotels(allHotels, keyword, type, status, starRating, page, pagination.pageSize);
     setHotelList(result.data);
     setPagination({
       current: page,
@@ -122,24 +147,44 @@ const useHotelList = () => {
   };
 
   // 搜索酒店（前端筛选）
-  const searchHotels = (keyword, type = selectedType) => {
-    console.log('🔍 搜索关键词:', keyword, '类型:', type);
-    applyFilter(keyword, type, 1);
+  const searchHotels = (keyword) => {
+    console.log('🔍 搜索关键词:', keyword);
+    applyFilter(keyword, selectedType, selectedStatus, selectedStarRating, 1);
   };
 
   // 切换类型（前端筛选）
   const filterByType = (type) => {
     console.log('🔄 切换类型:', type);
-    applyFilter(searchKeyword, type, 1);
+    applyFilter(searchKeyword, type, selectedStatus, selectedStarRating, 1);
+  };
+
+  // 切换状态（前端筛选）
+  const filterByStatus = (status) => {
+    console.log('🔄 切换状态:', status);
+    applyFilter(searchKeyword, selectedType, status, selectedStarRating, 1);
+  };
+
+  // 切换星级（前端筛选）
+  const filterByStarRating = (starRating) => {
+    console.log('🔄 切换星级:', starRating);
+    applyFilter(searchKeyword, selectedType, selectedStatus, starRating, 1);
   };
 
   // 分页变化（前端筛选）
   const handlePageChange = (page, pageSize) => {
     console.log('📄 分页变化 - 页码:', page, '每页数量:', pageSize);
     
-    // 如果每页数量变化，重新计算
+    // 如果每页数量变化，重置到第1页
     if (pageSize !== pagination.pageSize) {
-      const result = filterAndPaginateHotels(allHotels, searchKeyword, selectedType, 1, pageSize);
+      const result = filterAndPaginateHotels(
+        allHotels, 
+        searchKeyword, 
+        selectedType, 
+        selectedStatus,
+        selectedStarRating,
+        1, 
+        pageSize
+      );
       setHotelList(result.data);
       setPagination({
         current: 1,
@@ -147,7 +192,15 @@ const useHotelList = () => {
         total: result.total,
       });
     } else {
-      const result = filterAndPaginateHotels(allHotels, searchKeyword, selectedType, page, pageSize);
+      const result = filterAndPaginateHotels(
+        allHotels, 
+        searchKeyword, 
+        selectedType, 
+        selectedStatus,
+        selectedStarRating,
+        page, 
+        pageSize
+      );
       setHotelList(result.data);
       setPagination({
         current: page,
@@ -265,8 +318,12 @@ const useHotelList = () => {
     loading,
     pagination,
     searchKeyword,
+    selectedStatus,
+    selectedStarRating,
     searchHotels,
     filterByType,
+    filterByStatus,
+    filterByStarRating,
     handlePageChange,
     addHotel,
     updateHotelData,

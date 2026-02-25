@@ -1,32 +1,82 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
+import { getUserList } from '../../../../services/userService';
 
 /**
  * 用户列表管理 Hook
  */
 const useUserList = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0,
+  });
+  const [searchKeyword, setSearchKeyword] = useState('');
+
+  /**
+   * 加载用户列表
+   */
+  const loadUserList = useCallback(async (page = pagination.current, pageSize = pagination.pageSize, keyword = searchKeyword) => {
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        pageSize,
+      };
+      
+      if (keyword) {
+        params.keyword = keyword;
+      }
+      
+      console.log('📋 加载用户列表 - 参数:', params);
+      const response = await getUserList(params);
+      console.log('✅ 用户列表数据:', response);
+      
+      const data = response.data || response;
+      const userList = data.list || [];
+      const paginationData = data.pagination || {};
+      
+      // 确保每条数据都有唯一的 key
+      const usersWithKey = userList.map((user, index) => ({
+        ...user,
+        key: user.id || user.user_id || `user-${index}`,
+      }));
+      
+      setUsers(usersWithKey);
+      setPagination({
+        current: paginationData.page || page,
+        pageSize: paginationData.pageSize || pageSize,
+        total: paginationData.total || usersWithKey.length,
+      });
+      
+      console.log('✅ 加载完成，共', usersWithKey.length, '条数据');
+    } catch (error) {
+      console.error('❌ 加载用户列表失败:', error);
+      message.error('加载用户列表失败，请重试');
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.current, pagination.pageSize, searchKeyword]);
 
   /**
    * 搜索用户
    */
   const searchUsers = useCallback((keyword) => {
-    if (!keyword) {
-      setUsers(mockUsers);
-      return;
-    }
+    console.log('🔍 搜索用户 - 关键词:', keyword);
+    setSearchKeyword(keyword);
+    loadUserList(1, pagination.pageSize, keyword);
+  }, [loadUserList, pagination.pageSize]);
 
-    setLoading(true);
-    setTimeout(() => {
-      const filtered = mockUsers.filter(user => 
-        user.username.toLowerCase().includes(keyword.toLowerCase()) ||
-        user.email.toLowerCase().includes(keyword.toLowerCase())
-      );
-      setUsers(filtered);
-      setLoading(false);
-    }, 300);
-  }, []);
+  /**
+   * 分页变化
+   */
+  const handlePageChange = useCallback((page, pageSize) => {
+    console.log('📄 分页变化 - 页码:', page, '每页数量:', pageSize);
+    loadUserList(page, pageSize, searchKeyword);
+  }, [loadUserList, searchKeyword]);
 
   /**
    * 添加用户
@@ -37,27 +87,17 @@ const useUserList = () => {
       // TODO: 调用后端 API
       // await createUserAPI(userData);
       
-      // 模拟添加
-      setTimeout(() => {
-        const newUser = {
-          key: String(users.length + 1),
-          id: users.length + 1,
-          ...userData,
-          createdAt: new Date().toLocaleString('zh-CN'),
-        };
-        setUsers(prev => [newUser, ...prev]);
-        message.success('用户添加成功！');
-        setLoading(false);
-      }, 500);
-      
+      message.success('用户添加成功！');
+      await loadUserList(); // 重新加载列表
       return true;
     } catch (error) {
       console.error('❌ 添加用户失败:', error.message);
       message.error('添加用户失败，请重试');
-      setLoading(false);
       return false;
+    } finally {
+      setLoading(false);
     }
-  }, [users.length]);
+  }, [loadUserList]);
 
   /**
    * 更新用户
@@ -68,23 +108,17 @@ const useUserList = () => {
       // TODO: 调用后端 API
       // await updateUserAPI(userId, userData);
       
-      // 模拟更新
-      setTimeout(() => {
-        setUsers(prev => prev.map(user => 
-          user.key === userId ? { ...user, ...userData } : user
-        ));
-        message.success('用户更新成功！');
-        setLoading(false);
-      }, 500);
-      
+      message.success('用户更新成功！');
+      await loadUserList(); // 重新加载列表
       return true;
     } catch (error) {
       console.error('❌ 更新用户失败:', error.message);
       message.error('更新用户失败，请重试');
-      setLoading(false);
       return false;
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [loadUserList]);
 
   /**
    * 删除用户
@@ -95,74 +129,34 @@ const useUserList = () => {
       // TODO: 调用后端 API
       // await deleteUserAPI(userId);
       
-      // 模拟删除
-      setTimeout(() => {
-        setUsers(prev => prev.filter(user => user.key !== userId));
-        message.success('用户删除成功！');
-        setLoading(false);
-      }, 500);
-      
+      message.success('用户删除成功！');
+      await loadUserList(); // 重新加载列表
       return true;
     } catch (error) {
       console.error('❌ 删除用户失败:', error.message);
       message.error('删除用户失败，请重试');
-      setLoading(false);
       return false;
+    } finally {
+      setLoading(false);
     }
+  }, [loadUserList]);
+
+  // 组件加载时获取列表
+  useEffect(() => {
+    loadUserList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
     users,
     loading,
+    pagination,
     searchUsers,
+    handlePageChange,
     addUser,
     updateUser,
     deleteUser,
   };
 };
-
-// 模拟数据
-const mockUsers = [
-  {
-    key: '1',
-    id: 1,
-    username: 'admin',
-    role: 'admin',
-    email: 'admin@example.com',
-    phone: '13800138000',
-    status: 'active',
-    createdAt: '2026-01-15 10:30:00',
-  },
-  {
-    key: '2',
-    id: 2,
-    username: 'merchant1',
-    role: 'merchant',
-    email: 'merchant1@example.com',
-    phone: '13900139000',
-    status: 'active',
-    createdAt: '2026-01-20 14:20:00',
-  },
-  {
-    key: '3',
-    id: 3,
-    username: 'merchant2',
-    role: 'merchant',
-    email: 'merchant2@example.com',
-    phone: '13700137000',
-    status: 'active',
-    createdAt: '2026-02-01 09:15:00',
-  },
-  {
-    key: '4',
-    id: 4,
-    username: 'testuser',
-    role: 'merchant',
-    email: 'test@example.com',
-    phone: '13600136000',
-    status: 'inactive',
-    createdAt: '2026-02-05 16:45:00',
-  },
-];
 
 export default useUserList;

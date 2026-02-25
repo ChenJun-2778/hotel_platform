@@ -5,7 +5,7 @@ import { EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-de
 /**
  * 用户表格组件
  */
-const UserTable = ({ users, loading, onEdit, onDelete }) => {
+const UserTable = ({ users, loading, pagination, onPageChange, onEdit, onDelete }) => {
   /**
    * 确认删除
    */
@@ -23,12 +23,6 @@ const UserTable = ({ users, loading, onEdit, onDelete }) => {
 
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-    },
-    {
       title: '用户名',
       dataIndex: 'username',
       key: 'username',
@@ -36,14 +30,18 @@ const UserTable = ({ users, loading, onEdit, onDelete }) => {
     },
     {
       title: '角色',
-      dataIndex: 'role',
-      key: 'role',
+      dataIndex: 'role_type',
+      key: 'role_type',
       width: 100,
-      render: (role) => (
-        <Tag color={role === 'admin' ? 'red' : 'blue'}>
-          {role === 'admin' ? '管理员' : '商户'}
-        </Tag>
-      ),
+      render: (roleType) => {
+        // role_type: 1=管理员, 2=商户
+        const isAdmin = roleType === 1;
+        return (
+          <Tag color={isAdmin ? 'red' : 'blue'}>
+            {isAdmin ? '管理员' : '商户'}
+          </Tag>
+        );
+      },
     },
     {
       title: '邮箱',
@@ -62,17 +60,38 @@ const UserTable = ({ users, loading, onEdit, onDelete }) => {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'default'}>
-          {status === 'active' ? '正常' : '禁用'}
-        </Tag>
-      ),
+      render: (status) => {
+        // status: 1=正常, 0=禁用
+        const isActive = status === 1 || status === 'active';
+        return (
+          <Tag color={isActive ? 'green' : 'default'}>
+            {isActive ? '正常' : '禁用'}
+          </Tag>
+        );
+      },
     },
     {
       title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      dataIndex: 'created_at',
+      key: 'created_at',
       width: 180,
+      render: (time) => {
+        // 如果是时间戳或ISO格式，格式化显示
+        if (!time) return '-';
+        try {
+          const date = new Date(time);
+          return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          });
+        } catch {
+          return time;
+        }
+      },
     },
     {
       title: '操作',
@@ -106,10 +125,16 @@ const UserTable = ({ users, loading, onEdit, onDelete }) => {
       columns={columns} 
       dataSource={users}
       loading={loading}
+      rowKey="key"
       pagination={{
-        pageSize: 10,
-        showSizeChanger: true,
+        current: pagination?.current || 1,
+        pageSize: pagination?.pageSize || 10,
+        total: pagination?.total || 0,
         showTotal: (total) => `共 ${total} 条`,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        onChange: onPageChange,
+        onShowSizeChange: onPageChange,
       }}
       scroll={{ x: 1200 }}
     />

@@ -102,8 +102,8 @@ const OrderTable = ({ orders, loading, pagination, onPageChange, onViewDetail })
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status) => {
-        const info = getOrderStatusInfo(status);
+      render: (status, record) => {
+        const info = getOrderStatusInfo(status, record.checkIn, record.checkOut);
         return <Tag color={info.color}>{info.text}</Tag>;
       },
     },

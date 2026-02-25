@@ -1,16 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { message } from 'antd';
 import { getHotelList } from '../../../../services/hotelService';
-import { getRoomList } from '../../../../services/roomService';
-import { useRoomStore } from '../../../../stores/roomStore';
+import { getCalendarData } from '../../../../services/orderService';
 import { useAuthStore } from '../../../../stores/authStore';
-import useOrderList from './useOrderList';
-import dayjs from 'dayjs';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-
-dayjs.extend(isSameOrAfter);
-dayjs.extend(isSameOrBefore);
 
 /**
  * 日历数据管理 Hook
@@ -18,33 +10,55 @@ dayjs.extend(isSameOrBefore);
  */
 const useCalendarData = (selectedDate, selectedHotel) => {
   const [hotels, setHotels] = useState([]);
-  const [rooms, setRooms] = useState([]);
+  const [calendarData, setCalendarData] = useState({
+    date: '',
+    totalRooms: 0,
+    freeRooms: 0,
+    occupiedRooms: 0,
+    occupancyRate: 0,
+    rooms: [],
+  });
   const [loading, setLoading] = useState(false);
   
   const user = useAuthStore(state => state.user);
-  const getAssignedRoom = useRoomStore(state => state.getAssignedRoom);
-  const { orders, loading: ordersLoading } = useOrderList();
 
   /**
-   * 加载酒店列表
+   * 加载酒店列表（获取所有酒店）
    */
   useEffect(() => {
     const loadHotels = async () => {
       try {
-        const response = await getHotelList();
+        // 构建请求参数
+        const params = {
+          page: 1, 
+          pageSize: 1000 
+        };
+        
+        // 商户用户只能看到自己的酒店
+        if (user?.role_type === 2 && user?.id) {
+          params.user_id = user.id;
+          console.log('✅ 商户用户，添加 user_id 过滤:', user.id);
+        }
+        
+        const response = await getHotelList(params);
         const hotelList = response.data?.list || response.list || [];
+        
+        console.log('✅ 加载酒店列表成功:', hotelList.length);
+        
+        // 只显示营业中的酒店（status=1）
+        const onlineHotels = hotelList.filter(hotel => hotel.status === 1);
+        console.log('✅ 营业中的酒店:', onlineHotels.length, '条');
         
         // 转换为下拉选项格式
         const hotelOptions = [
           { value: null, label: '全部酒店' },
-          ...hotelList.map(hotel => ({
+          ...onlineHotels.map(hotel => ({
             value: hotel.id,
             label: hotel.name,
           }))
         ];
         
         setHotels(hotelOptions);
-        console.log('✅ 加载酒店列表成功:', hotelList.length);
       } catch (error) {
         console.error('❌ 加载酒店列表失败:', error);
         message.error('加载酒店列表失败');
@@ -52,130 +66,237 @@ const useCalendarData = (selectedDate, selectedHotel) => {
     };
 
     loadHotels();
-  }, []);
+  }, [user]);
 
   /**
-   * 加载房间列表
+   * 加载日历数据
    */
   useEffect(() => {
-    const loadRooms = async () => {
-      if (!user?.id) return;
+    const loadCalendarData = async () => {
+      if (!user?.id || !selectedDate) return;
       
       setLoading(true);
       try {
-        let allRooms = [];
+        const dateStr = selectedDate.format('YYYY-MM-DD');
         
+        // 如果选择了特定酒店，直接请求该酒店的数据
         if (selectedHotel) {
-          // 加载指定酒店的房间
-          const response = await getRoomList({ hotel_id: selectedHotel });
-          const roomList = response.data?.rooms || response.rooms || [];
-          allRooms = roomList;
+          const params = {
+            user_id: user.id,
+            date: dateStr,
+            hotel_id: selectedHotel,
+          };
+          
+          console.log('📅 加载单个酒店日历数据 - 参数:', params);
+          const response = await getCalendarData(params);
+          const data = response.data || response;
+          
+          // 为每个房间添加酒店信息
+          const hotelInfo = hotels.find(h => h.value === selectedHotel);
+          const roomsWithHotel = (data.rooms || []).map(room => ({
+            ...room,
+            hotel_id: selectedHotel,
+            hotel_name: hotelInfo?.label || '',
+          }));
+          
+          setCalendarData({
+            date: data.date || dateStr,
+            totalRooms: data.totalRooms || 0,
+            freeRooms: data.freeRooms || 0,
+            occupiedRooms: data.occupiedRooms || 0,
+            occupancyRate: data.occupancyRate || 0,
+            rooms: roomsWithHotel,
+          });
         } else {
-          // 加载所有酒店的房间
-          const hotelList = hotels.filter(h => h.value !== null);
-          for (const hotel of hotelList) {
-            try {
-              const response = await getRoomList({ hotel_id: hotel.value });
-              const roomList = response.data?.rooms || response.rooms || [];
-              allRooms = [...allRooms, ...roomList];
-            } catch (err) {
-              console.warn(`⚠️ 加载酒店 ${hotel.label} 的房间失败:`, err);
-            }
+          // 全部酒店模式：遍历所有营业中的酒店，分别请求数据
+          console.log('📅 加载全部酒店日历数据');
+          const onlineHotels = hotels.filter(h => h.value !== null); // 排除"全部酒店"选项
+          
+          if (onlineHotels.length === 0) {
+            setCalendarData({
+              date: dateStr,
+              totalRooms: 0,
+              freeRooms: 0,
+              occupiedRooms: 0,
+              occupancyRate: 0,
+              rooms: [],
+            });
+            return;
           }
+          
+          // 并发请求所有酒店的数据
+          const promises = onlineHotels.map(hotel => 
+            getCalendarData({
+              user_id: user.id,
+              date: dateStr,
+              hotel_id: hotel.value,
+            }).then(response => {
+              const data = response.data || response;
+              // 为每个房间添加酒店信息
+              return {
+                hotelId: hotel.value,
+                hotelName: hotel.label,
+                data: data,
+              };
+            }).catch(error => {
+              console.error(`❌ 加载酒店 ${hotel.label} 数据失败:`, error);
+              return null;
+            })
+          );
+          
+          const results = await Promise.all(promises);
+          const validResults = results.filter(r => r !== null);
+          
+          console.log('✅ 成功加载', validResults.length, '个酒店的数据');
+          
+          // 合并所有酒店的数据
+          let totalRooms = 0;
+          let freeRooms = 0;
+          let occupiedRooms = 0;
+          const allRooms = [];
+          
+          validResults.forEach(result => {
+            totalRooms += result.data.totalRooms || 0;
+            freeRooms += result.data.freeRooms || 0;
+            occupiedRooms += result.data.occupiedRooms || 0;
+            
+            // 为每个房间添加酒店信息
+            const roomsWithHotel = (result.data.rooms || []).map(room => ({
+              ...room,
+              hotel_id: result.hotelId,
+              hotel_name: result.hotelName,
+            }));
+            
+            allRooms.push(...roomsWithHotel);
+          });
+          
+          const occupancyRate = totalRooms > 0 
+            ? Number(((occupiedRooms / totalRooms) * 100).toFixed(1))
+            : 0;
+          
+          console.log('✅ 合并后的统计:', {
+            totalRooms,
+            freeRooms,
+            occupiedRooms,
+            occupancyRate,
+            roomsCount: allRooms.length,
+          });
+          
+          setCalendarData({
+            date: dateStr,
+            totalRooms,
+            freeRooms,
+            occupiedRooms,
+            occupancyRate,
+            rooms: allRooms,
+          });
         }
-        
-        setRooms(allRooms);
-        console.log('✅ 加载房间列表成功:', allRooms.length);
       } catch (error) {
-        console.error('❌ 加载房间列表失败:', error);
-        message.error('加载房间列表失败');
+        console.error('❌ 加载日历数据失败:', error);
+        message.error('加载日历数据失败，请重试');
+        setCalendarData({
+          date: selectedDate.format('YYYY-MM-DD'),
+          totalRooms: 0,
+          freeRooms: 0,
+          occupiedRooms: 0,
+          occupancyRate: 0,
+          rooms: [],
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    if (hotels.length > 0) {
-      loadRooms();
-    }
-  }, [selectedHotel, hotels, user]);
+    loadCalendarData();
+  }, [selectedDate, selectedHotel, user, hotels]);
 
   /**
-   * 计算指定日期的房间预订情况
+   * 按房型分组房间数据（单个酒店模式）
    */
-  const roomBookings = useMemo(() => {
-    return rooms.map(room => {
-      // 查找该房间在选定日期的订单
-      const order = orders.find(order => {
-        // 获取前端分配的房间号
-        const assignedRoom = getAssignedRoom(order.orderNo);
-        const roomMatch = assignedRoom === room.room_number;
-        
-        // 检查日期是否在订单范围内
-        const checkIn = dayjs(order.checkIn);
-        const checkOut = dayjs(order.checkOut);
-        const isInRange = selectedDate.isSameOrAfter(checkIn, 'day') && 
-                         selectedDate.isBefore(checkOut, 'day');
-        
-        return roomMatch && isInRange && room.hotel_id === order.hotelId;
-      });
-
-      // 确定房间状态
-      let status = room.status || 1; // 默认可预订
-      if (order) {
-        // 根据订单状态和日期判断房间状态
-        const checkIn = dayjs(order.checkIn);
-        const isCheckInDay = selectedDate.isSame(checkIn, 'day');
-        
-        if (order.status === 3 && isCheckInDay) {
-          status = 3; // 已预订（待入住）
-        } else if (order.status === 3 && selectedDate.isAfter(checkIn, 'day')) {
-          status = 2; // 已入住
-        } else if (order.status === 2) {
-          status = 3; // 待确定（显示为已预订）
-        }
+  const groupedByRoomType = useMemo(() => {
+    const groups = {};
+    
+    calendarData.rooms.forEach((room) => {
+      const roomType = room.room_type || room.roomType || room.type || '未知房型';
+      const roomTypeCode = room.room_type_code || room.roomTypeCode || room.room_number || roomType;
+      const basePrice = room.base_price || room.basePrice || room.price || 0;
+      const roomNumber = room.roomNo || room.room_number || room.roomNumber || room.number || '';
+      const available = room.available !== undefined ? room.available : true;
+      const hotelId = room.hotel_id || room.hotelId || '';
+      const hotelName = room.hotel_name || room.hotelName || '';
+      
+      const key = `${hotelId}-${roomType}`;
+      
+      if (!groups[key]) {
+        groups[key] = {
+          room_type_code: roomTypeCode,
+          room_type: roomType,
+          base_price: basePrice,
+          hotel_id: hotelId,
+          hotel_name: hotelName,
+          room_numbers: [],
+        };
       }
-
-      return {
-        id: room.id,
-        roomNumber: room.room_number,
-        type: room.room_type,
-        price: room.base_price,
-        hotel: room.hotel_name || '未知酒店',
-        hotelId: room.hotel_id,
-        floor: room.floor,
-        status: status,
-        order: order || null,
-      };
+      
+      groups[key].room_numbers.push({
+        roomNumber: roomNumber,
+        available: available,
+        order: room.order || null,
+      });
     });
-  }, [rooms, orders, selectedDate, getAssignedRoom]);
+    
+    return Object.values(groups);
+  }, [calendarData.rooms]);
+
+  /**
+   * 按酒店分组房间数据（全部酒店模式）
+   */
+  const groupedByHotel = useMemo(() => {
+    if (selectedHotel) {
+      // 单个酒店模式，不需要按酒店分组
+      return null;
+    }
+    
+    const hotelGroups = {};
+    
+    groupedByRoomType.forEach(roomType => {
+      const hotelId = roomType.hotel_id;
+      const hotelName = roomType.hotel_name || '未知酒店';
+      
+      if (!hotelGroups[hotelId]) {
+        hotelGroups[hotelId] = {
+          hotelId,
+          hotelName,
+          roomTypes: [],
+        };
+      }
+      
+      hotelGroups[hotelId].roomTypes.push(roomType);
+    });
+    
+    console.log('✅ 按酒店分组完成 - 总酒店数:', Object.keys(hotelGroups).length);
+    
+    return Object.values(hotelGroups);
+  }, [groupedByRoomType, selectedHotel]);
 
   /**
    * 统计信息
    */
   const stats = useMemo(() => {
-    const total = roomBookings.length;
-    const available = roomBookings.filter(r => r.status === 1).length;
-    const occupied = roomBookings.filter(r => r.status === 2).length;
-    const reserved = roomBookings.filter(r => r.status === 3).length;
-    const cleaning = roomBookings.filter(r => r.status === 4).length;
-    const booked = occupied + reserved;
-    
     return {
-      total,
-      available,
-      occupied,
-      reserved,
-      cleaning,
-      booked,
-      occupancyRate: total > 0 ? ((booked / total) * 100).toFixed(1) : 0,
+      total: calendarData.totalRooms,
+      available: calendarData.freeRooms,
+      booked: calendarData.occupiedRooms,
+      occupancyRate: calendarData.occupancyRate,
     };
-  }, [roomBookings]);
+  }, [calendarData]);
 
   return {
     hotels,
-    roomBookings,
+    roomBookings: groupedByRoomType,
+    hotelGroups: groupedByHotel,
     stats,
-    loading: loading || ordersLoading,
+    loading,
   };
 };
 

@@ -39,14 +39,29 @@ const useRoomList = () => {
   }, []);
 
   /**
-   * 加载酒店列表
+   * 加载酒店列表（获取所有酒店）
    */
   const loadHotels = useCallback(async () => {
     try {
-      const response = await getHotelList();
+      // 构建请求参数
+      const params = {
+        page: 1, 
+        pageSize: 1000 
+      };
+      
+      // 商户用户只能看到自己的酒店
+      const user = useRoomStore.getState().user || JSON.parse(localStorage.getItem('user') || '{}');
+      if (user?.role_type === 2 && user?.id) {
+        params.user_id = user.id;
+        console.log('✅ 商户用户，添加 user_id 过滤:', user.id);
+      }
+      
+      const response = await getHotelList(params);
       const hotelList = response.data?.list || response.list || [];
       
-      // 转换为下拉选项格式，不显示房间数
+      console.log('✅ 加载酒店列表，共', hotelList.length, '条');
+      
+      // 房间管理页面显示所有酒店（不过滤状态）
       const hotelOptions = hotelList.map(hotel => ({
         value: hotel.id,
         label: hotel.name,
@@ -55,7 +70,7 @@ const useRoomList = () => {
       
       setHotels(hotelOptions);
     } catch (error) {
-      console.error('加载酒店列表失败:', error);
+      console.error('❌ 加载酒店列表失败:', error);
       message.error('加载酒店列表失败');
     }
   }, []);

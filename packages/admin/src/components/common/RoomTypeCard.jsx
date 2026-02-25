@@ -10,12 +10,12 @@ import { EditOutlined, DeleteOutlined, EyeOutlined, DollarOutlined, HomeOutlined
  */
 const RoomTypeCard = ({ 
   roomType, 
-  mode = 'manage', // 'manage' | 'calendar'
+  mode = 'manage',
   onView, 
   onEdit, 
   onDelete,
-  getRoomConfig, // 日历模式下获取房间配置的函数
-  renderRoomTooltip, // 日历模式下渲染房间 Tooltip 的函数
+  getRoomConfig,
+  renderRoomTooltip,
 }) => {
   const { 
     room_type_code, 
@@ -57,11 +57,8 @@ const RoomTypeCard = ({
    * 渲染房间号卡片
    */
   const renderRoomNumber = (item, index) => {
-    // 管理模式：item 是字符串
-    // 日历模式：item 是对象 { roomNumber, order, ... }
     const roomNumber = typeof item === 'string' ? item : item.roomNumber;
     
-    // 获取房间配置
     let config = {
       color: '#f5576c',
       bgColor: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -87,7 +84,7 @@ const RoomTypeCard = ({
           textAlign: 'center',
           boxShadow: `0 4px 12px ${config.color}40`,
           transition: 'all 0.2s ease',
-          cursor: 'pointer',
+          cursor: 'default',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-2px)';
@@ -98,7 +95,6 @@ const RoomTypeCard = ({
           e.currentTarget.style.boxShadow = `0 4px 12px ${config.color}40`;
         }}
       >
-        {/* 门把手 */}
         <div style={{
           position: 'absolute',
           right: '8px',
@@ -111,7 +107,6 @@ const RoomTypeCard = ({
           boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
         }} />
         
-        {/* 门框底部 */}
         <div style={{
           position: 'absolute',
           bottom: '-4px',
@@ -123,14 +118,15 @@ const RoomTypeCard = ({
           opacity: 0.8,
         }} />
         
-        <div style={{ marginBottom: config.text ? 4 : 0 }}>
+        <div style={{ marginBottom: config.text ? 4 : 0, fontSize: 20, fontWeight: 700 }}>
           {roomNumber}
         </div>
         {config.text && (
           <div style={{ 
-            fontSize: 11, 
-            fontWeight: 500,
-            opacity: 0.9,
+            fontSize: 12, 
+            fontWeight: 600,
+            opacity: 0.95,
+            marginTop: 4,
           }}>
             {config.text}
           </div>
@@ -138,7 +134,6 @@ const RoomTypeCard = ({
       </div>
     );
 
-    // 日历模式：添加 Tooltip
     if (isCalendarMode && renderRoomTooltip) {
       return (
         <Tooltip key={index} title={renderRoomTooltip(item, base_price)}>
@@ -264,7 +259,6 @@ const RoomTypeCard = ({
         </div>
       </div>
 
-      {/* 底部提示 */}
       {isManageMode && (
         <div style={{
           padding: '10px 20px',

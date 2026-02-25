@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Form, message, Card, Button, Segmented } from 'antd';
+import { Modal, Form, message, Card, Button, Segmented, Select, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import SearchBar from '../../../components/common/SearchBar';
 import HotelTable from './components/HotelTable';
@@ -10,11 +10,12 @@ import { getHotelDetail } from '../../../services/hotelService';
 import { getRoomList } from '../../../services/roomService';
 import { uploadToOss } from '../../../utils/oss';
 import { HOTEL_TYPE, HOTEL_TYPE_OPTIONS } from '../../../constants/hotelType';
+import { HOTEL_STATUS } from '../../../constants/hotelStatus';
 import './Hotels.css';
 
 const Hotels = () => {
   // 状态管理
-  const [selectedType, setSelectedType] = useState(HOTEL_TYPE.ALL); // 当前选中的酒店类型（默认全部）
+  const [selectedType, setSelectedType] = useState(HOTEL_TYPE.ALL);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -33,8 +34,12 @@ const Hotels = () => {
     hotelList, 
     loading, 
     pagination,
+    selectedStatus,
+    selectedStarRating,
     searchHotels,
     filterByType,
+    filterByStatus,
+    filterByStarRating,
     handlePageChange,
     addHotel, 
     updateHotelData, 
@@ -46,6 +51,31 @@ const Hotels = () => {
     console.log('🔄 切换酒店类型:', value);
     setSelectedType(value);
     filterByType(value);
+  };
+
+  // 状态筛选选项
+  const statusOptions = [
+    { label: '全部状态', value: null },
+    { label: '营业中', value: HOTEL_STATUS.ONLINE },
+    { label: '已下架', value: HOTEL_STATUS.OFFLINE },
+    { label: '待审批', value: HOTEL_STATUS.PENDING },
+    { label: '审批拒绝', value: HOTEL_STATUS.REJECTED },
+  ];
+
+  // 星级筛选选项
+  const starRatingOptions = [
+    { label: '全部星级', value: null },
+    { label: '⭐ 1星', value: 1 },
+    { label: '⭐⭐ 2星', value: 2 },
+    { label: '⭐⭐⭐ 3星', value: 3 },
+    { label: '⭐⭐⭐⭐ 4星', value: 4 },
+    { label: '⭐⭐⭐⭐⭐ 5星', value: 5 },
+  ];
+
+  // 处理分页变化
+  const handlePaginationChange = (page, pageSize) => {
+    console.log('📄 分页变化:', { page, pageSize });
+    handlePageChange(page, pageSize);
   };
 
   // 打开添加弹窗
@@ -269,7 +299,7 @@ const Hotels = () => {
   // 搜索酒店
   const handleSearch = (keyword) => {
     console.log('🔍 搜索关键词:', keyword);
-    searchHotels(keyword, selectedType);
+    searchHotels(keyword);
   };
 
   // 编辑酒店
@@ -411,14 +441,30 @@ const Hotels = () => {
     <div style={{ padding: '24px', background: '#f0f2f5', minHeight: 'calc(100vh - 64px)', position: 'relative' }}>
       <Card 
         title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Space size="middle" wrap>
             <div style={{ fontSize: 18, fontWeight: 600 }}>我的酒店</div>
             <Segmented 
               options={HOTEL_TYPE_OPTIONS}
               value={selectedType}
               onChange={handleTypeChange}
             />
-          </div>
+            <Select
+              placeholder="状态"
+              value={selectedStatus}
+              onChange={filterByStatus}
+              options={statusOptions}
+              style={{ width: 120 }}
+              allowClear
+            />
+            <Select
+              placeholder="星级"
+              value={selectedStarRating}
+              onChange={filterByStarRating}
+              options={starRatingOptions}
+              style={{ width: 140 }}
+              allowClear
+            />
+          </Space>
         }
         extra={
           <SearchBar
@@ -436,7 +482,7 @@ const Hotels = () => {
           dataSource={hotelList}
           loading={loading}
           pagination={pagination}
-          onPageChange={handlePageChange}
+          onPageChange={handlePaginationChange}
           onView={handleViewDetail}
           onEdit={handleEdit}
           onToggleStatus={handleToggleStatus}

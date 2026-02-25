@@ -14,7 +14,7 @@ export const adminMenus = [
   {
     key: '/admin/dashboard',
     icon: DashboardOutlined,
-    label: '控制台',
+    label: '首页',
     path: '/admin/dashboard',
   },
   {
@@ -42,7 +42,7 @@ export const merchantMenus = [
   {
     key: '/merchant/dashboard',
     icon: DashboardOutlined,
-    label: '控制台',
+    label: '首页',
     path: '/merchant/dashboard',
   },
   {

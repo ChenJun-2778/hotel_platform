@@ -302,6 +302,12 @@ const Rooms = () => {
           onChange={setSelectedHotel}
           style={{ width: 200 }}
           options={hotels}
+          showSearch
+          filterOption={(input, option) =>
+            (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+          }
+          optionFilterProp="label"
+          placeholder="选择酒店"
         />
       }
       showSearch={true}

@@ -42,7 +42,15 @@ const RoomForm = ({
           name="hotel_id"
           rules={[{ required: true, message: '请选择所属酒店' }]}
         >
-          <Select placeholder="请选择酒店" options={hotels} />
+          <Select 
+            placeholder="请选择酒店" 
+            options={hotels}
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            optionFilterProp="label"
+          />
         </Form.Item>
 
         <Space style={{ width: '100%', display: 'flex', flexWrap: 'wrap' }} size="large">

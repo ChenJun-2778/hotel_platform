@@ -14,7 +14,7 @@ const Users = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [form] = Form.useForm();
   
-  const { users, loading, searchUsers, addUser, updateUser, deleteUser } = useUserList();
+  const { users, loading, pagination, searchUsers, handlePageChange, addUser, updateUser, deleteUser } = useUserList();
 
   /**
    * 搜索用户
@@ -102,6 +102,8 @@ const Users = () => {
       <UserTable 
         users={users}
         loading={loading}
+        pagination={pagination}
+        onPageChange={handlePageChange}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
