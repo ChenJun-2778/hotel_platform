@@ -76,7 +76,9 @@ const HotelDetail: React.FC = () => {
                 tags: roomTags, // 使用处理后的正常标签数组
                 price: room.base_price
               };
-            }) || []
+            })
+            // ✅ 按价格从高到低排序
+            .sort((a: any, b: any) => b.price - a.price) || []
           };
           
           setDetail(processedData);

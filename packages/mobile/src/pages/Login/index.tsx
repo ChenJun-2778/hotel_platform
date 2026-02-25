@@ -3,7 +3,7 @@ import { NavBar, Form, Input, Button, Toast } from 'antd-mobile';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserOutline, LockOutline, EyeInvisibleOutline, EyeOutline } from 'antd-mobile-icons';
 import styles from './index.module.css';
-import { apiLogin } from '@/api/User/index';
+import { apiLogin, apiRegister } from '@/api/User/index';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ const Login: React.FC = () => {
 
   // UI 控制状态
   const [visible, setVisible] = useState(false); // 控制密码显示/隐藏
+  const [mode, setMode] = useState<'login' | 'register'>('login'); // 登录/注册模式
   const [loginType, setLoginType] = useState<'account' | 'phone'>('phone'); // 默认显示手机号登录
 
   // 验证码倒计时状态
@@ -48,11 +49,39 @@ const Login: React.FC = () => {
     }, 1000);
   };
 
-  // 点击登录按钮触发
+  // 点击登录/注册按钮触发
   const location = useLocation();
   const onFinish = async (values: any) => {
-    console.log(`提交的数据 (${loginType} 模式):`, values);
+    console.log(`提交的数据 (${mode === 'register' ? '注册' : loginType} 模式):`, values);
 
+    // 注册模式
+    if (mode === 'register') {
+      if (!values.username || !values.phone || !values.password) {
+        Toast.show('请填写完整信息');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const res = await apiRegister({
+          username: values.username,
+          phone: values.phone,
+          password: values.password
+        });
+
+        Toast.show({ content: '注册成功，请登录', icon: 'success' });
+        // 注册成功后切换到登录模式
+        setMode('login');
+        form.resetFields();
+      } catch (error) {
+        Toast.show('注册失败');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // 登录模式
     // 1. 简单的表单校验 (根据当前模式判断)
     if (loginType === 'account' && (!values.username || !values.password)) {
       Toast.show('请输入账号和密码');
@@ -111,7 +140,7 @@ const Login: React.FC = () => {
       {/* Logo 区域 */}
       <div className={styles.logoSection}>
         <div className={styles.logo}>易</div>
-        <div className={styles.title}>这里是易酒店~</div>
+        <div className={styles.title}>{mode === 'register' ? '欢迎注册易酒店' : '这里是易酒店~'}</div>
       </div>
 
       {/* 表单区域 */}
@@ -129,12 +158,56 @@ const Login: React.FC = () => {
               loading={loading}
               className={styles.submitBtn}
             >
-              登录
+              {mode === 'register' ? '注册' : '登录'}
             </Button>
           }
         >
-          {/* ========== 动态渲染：手机验证码模式 ========== */}
-          {loginType === 'phone' && (
+          {/* ========== 注册模式 ========== */}
+          {mode === 'register' && (
+            <>
+              <Form.Item
+                name='username'
+                label={<UserOutline />}
+                rules={[{ required: true, message: '请输入姓名' }]}
+              >
+                <Input placeholder='请输入真实姓名' clearable />
+              </Form.Item>
+
+              <Form.Item
+                name='phone'
+                label={<UserOutline />}
+                rules={[
+                  { required: true, message: '请输入手机号' },
+                  { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' }
+                ]}
+              >
+                <Input placeholder='请输入手机号' clearable type='tel' maxLength={11} />
+              </Form.Item>
+
+              <Form.Item
+                name='password'
+                label={<LockOutline />}
+                rules={[
+                  { required: true, message: '请输入密码' },
+                  { min: 6, message: '密码至少6位' }
+                ]}
+                extra={
+                  <div className={styles.eyeIcon} onClick={() => setVisible(!visible)}>
+                    {visible ? <EyeOutline /> : <EyeInvisibleOutline />}
+                  </div>
+                }
+              >
+                <Input
+                  placeholder='请输入密码（至少6位）'
+                  type={visible ? 'text' : 'password'}
+                  clearable
+                />
+              </Form.Item>
+            </>
+          )}
+
+          {/* ========== 登录模式：手机验证码 ========== */}
+          {mode === 'login' && loginType === 'phone' && (
             <>
               <Form.Item
                 name='phone'
@@ -170,7 +243,7 @@ const Login: React.FC = () => {
           )}
 
           {/* ========== 动态渲染：账号密码模式 ========== */}
-          {loginType === 'account' && (
+          {mode === 'login' && loginType === 'account' && (
             <>
               <Form.Item
                 name='username'
@@ -199,17 +272,31 @@ const Login: React.FC = () => {
             </>
           )}
 
-          {/* ========== 切换登录方式的文字按钮 ========== */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 16px 0' }}>
+          {/* ========== 切换登录方式/注册的文字按钮 ========== */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px 0' }}>
+            {mode === 'login' && (
+              <span
+                style={{ color: '#666', fontSize: 13, cursor: 'pointer' }}
+                onClick={() => {
+                  // 切换登录模式并清空表单
+                  setLoginType(loginType === 'account' ? 'phone' : 'account');
+                  form.resetFields();
+                }}
+              >
+                {loginType === 'account' ? '手机验证码登录' : '账号密码登录'}
+              </span>
+            )}
+            {mode === 'login' && <div style={{ flex: 1 }}></div>}
             <span
-              style={{ color: '#666', fontSize: 13, cursor: 'pointer' }}
+              style={{ color: '#1677ff', fontSize: 13, cursor: 'pointer' }}
               onClick={() => {
-                // 切换模式并清空表单，防止数据互相污染
-                setLoginType(loginType === 'account' ? 'phone' : 'account');
+                // 切换登录/注册模式并清空表单
+                setMode(mode === 'login' ? 'register' : 'login');
                 form.resetFields();
+                setVisible(false);
               }}
             >
-              {loginType === 'account' ? '手机验证码登录' : '账号密码登录'}
+              {mode === 'login' ? '立即注册' : '已有账号？去登录'}
             </span>
           </div>
         </Form>

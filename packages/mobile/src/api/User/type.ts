@@ -21,7 +21,7 @@ export interface UserInfo {
 
 /** * 🌟 3. 新增：专门定义登录成功后，后端返回的完整的 data 结构
  */
-export interface UserInfo {
+export interface LoginResponse {
   token: string;
   userInfo: UserInfo;
 }
@@ -34,4 +34,12 @@ export interface LoginParams {
   code?: string;
   account?: string;
   password?: string;
+}
+
+/** * 5. 定义注册请求的入参参数
+ */
+export interface RegisterParams {
+  username: string;
+  phone: string;
+  password: string;
 }
