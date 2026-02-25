@@ -32,10 +32,10 @@ const OrderFill: React.FC = () => {
   const price = Number(searchParams.get('price')) || 0;
   const checkInDate = searchParams.get('beginDate') || dayjs().format('YYYY-MM-DD');
   const checkOutDate = searchParams.get('endDate') || dayjs().add(1, 'day').format('YYYY-MM-DD');
+  const type = searchParams.get('type') || '1'; // 获取酒店类型
   
-  // 判断是否是钟点房（入住和离店日期相同，或者相差1天但实际是钟点房）
-  const isHourly = dayjs(checkOutDate).diff(dayjs(checkInDate), 'day') === 1 && 
-                   dayjs(checkInDate).isSame(dayjs(checkOutDate).subtract(1, 'day'), 'day');
+  // 判断是否是钟点房（type=3）
+  const isHourly = type === '3';
   
   const nights = isHourly ? 0 : dayjs(checkOutDate).diff(dayjs(checkInDate), 'day');
   const totalPrice = isHourly ? price : price * nights;

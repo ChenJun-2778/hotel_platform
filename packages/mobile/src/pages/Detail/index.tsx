@@ -18,6 +18,7 @@ const HotelDetail: React.FC = () => {
 
   const beginDate = searchParams.get('beginDate') || defaultBegin;
   const endDate = searchParams.get('endDate') || defaultEnd;
+  const type = searchParams.get('type') || '1'; // 获取酒店类型
   const nightCount = dayjs(endDate).diff(dayjs(beginDate), 'day');
   // 1. 定义状态
   const [showCalendar, setShowCalendar] = useState(false); // 控制日历显示
@@ -230,7 +231,8 @@ const HotelDetail: React.FC = () => {
                       `roomName=${encodeURIComponent(room.name)}&` +
                       `price=${room.price}&` +
                       `beginDate=${beginDate}&` +
-                      `endDate=${endDate}`
+                      `endDate=${endDate}&` +
+                      `type=${type}`
                     )
                   }}
                 >

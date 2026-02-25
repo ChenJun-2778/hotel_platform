@@ -420,7 +420,8 @@ const List: React.FC = () => {
             <div key={`${item.id}-${index}`} onClick={() => navigate(
               `/detail/${item.id}?` +
               `beginDate=${safeBeginDate}&` +
-              `endDate=${safeEndDate}`
+              `endDate=${safeEndDate}&` +
+              `type=${type}`
             )}>
               <HotelCard hotel={item} />
             </div>
