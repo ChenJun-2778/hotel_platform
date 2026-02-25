@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavBar, CapsuleTabs, DotLoading, Toast, Dropdown, Button, Input } from 'antd-mobile';
+import { NavBar, CapsuleTabs, DotLoading, Toast, Dropdown, Button, Input, InfiniteScroll } from 'antd-mobile';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { EnvironmentOutline, SearchOutline, CloseCircleFill } from 'antd-mobile-icons';
@@ -150,6 +150,9 @@ const List: React.FC = () => {
   );
   // 存放列表数据
   const [hotelList, setHotelList] = useState<any[]>([]);
+  // 分页状态
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   // 加载显示
   const [loading, setLoading] = useState(true);
   // 监听从城市页面返回
@@ -193,10 +196,12 @@ const List: React.FC = () => {
     });
     // 3. 此时 URL 变了，useEffect 会自动监听到变化并重新请求数据
   }
-  // 请求酒店列表
+  // 请求酒店列表（首次加载）
   useEffect(() => {
     const getHotelList = async () => {
       setLoading(true);
+      setPage(1); // 重置页码
+      setHasMore(true); // 重置hasMore
       try {
         // 构建请求参数
         const params: any = {
@@ -205,7 +210,9 @@ const List: React.FC = () => {
           endDate: safeEndDate,
           type, 
           sortType,
-          keyword
+          keyword,
+          page: 1,
+          pageSize: 20
         };
 
         // 添加价格筛选
@@ -255,6 +262,8 @@ const List: React.FC = () => {
         // 处理返回的数据
         if (res && res.success) {
           setHotelList(res.data.list || []); 
+          setHasMore(res.data.pagination?.hasMore ?? false);
+          setPage(2); // 下次加载第2页
         } else {
            Toast.show({ icon: 'fail', content: res.message || '查询失败' });
         }
@@ -267,6 +276,53 @@ const List: React.FC = () => {
 
     getHotelList();
   }, [city, type, safeBeginDate, safeEndDate, sortType, keyword, priceRange, filterScore, filterStar, selectedFacilities, selectedComment]);
+
+  // 加载更多（无限滚动）
+  const loadMore = async () => {
+    if (!hasMore) return;
+
+    try {
+      // 构建请求参数（与首次加载相同，只是page不同）
+      const params: any = {
+        city,
+        beginDate: safeBeginDate,
+        endDate: safeEndDate,
+        type, 
+        sortType,
+        keyword,
+        page,
+        pageSize: 20
+      };
+
+      // 添加筛选条件
+      if (priceRange[0] > 0) params.price_min = priceRange[0];
+      if (priceRange[1] < 1000) params.price_max = priceRange[1];
+      if (filterScore) {
+        const scoreValue = parseFloat(filterScore);
+        if (!isNaN(scoreValue)) params.score_min = scoreValue;
+      }
+      if (filterStar) {
+        const starValue = parseInt(filterStar);
+        if (!isNaN(starValue)) params.star_min = starValue;
+      }
+      if (selectedFacilities.length > 0) params.facilities = selectedFacilities.join(',');
+      if (selectedComment) {
+        const match = selectedComment.match(/(\d+)/);
+        if (match) params.review_count_min = parseInt(match[1]);
+      }
+
+      const res = await apiGetHotelList(params);
+
+      if (res && res.success) {
+        // 追加数据到列表末尾
+        setHotelList(prev => [...prev, ...(res.data.list || [])]);
+        setHasMore(res.data.pagination?.hasMore ?? false);
+        setPage(prev => prev + 1);
+      }
+    } catch (error) {
+      Toast.show({ icon: 'fail', content: '加载失败' });
+    }
+  };
 
   return (
     <div className={styles.listContainer}>
@@ -423,17 +479,32 @@ const List: React.FC = () => {
             <DotLoading color='primary' /> 正在寻找酒店...
           </div>
         ) : (
-          hotelList.map((item, index) => (
-            // 如果数据有重复，key 加上 index: `${item.id}-${index}`
-            <div key={`${item.id}-${index}`} onClick={() => navigate(
-              `/detail/${item.id}?` +
-              `beginDate=${safeBeginDate}&` +
-              `endDate=${safeEndDate}&` +
-              `type=${type}`
-            )}>
-              <HotelCard hotel={item} />
-            </div>
-          ))
+          <>
+            {hotelList.map((item, index) => (
+              // 如果数据有重复，key 加上 index: `${item.id}-${index}`
+              <div key={`${item.id}-${index}`} onClick={() => navigate(
+                `/detail/${item.id}?` +
+                `beginDate=${safeBeginDate}&` +
+                `endDate=${safeEndDate}&` +
+                `type=${type}`
+              )}>
+                <HotelCard hotel={item} />
+              </div>
+            ))}
+
+            {/* 无限滚动组件 */}
+            <InfiniteScroll loadMore={loadMore} hasMore={hasMore}>
+              {hasMore ? (
+                <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                  <DotLoading /> 加载中...
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                  {hotelList.length > 0 ? '没有更多了' : ''}
+                </div>
+              )}
+            </InfiniteScroll>
+          </>
         )}
 
         {!loading && hotelList.length === 0 && (

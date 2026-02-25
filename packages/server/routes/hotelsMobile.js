@@ -33,11 +33,27 @@ router.get('/search', async (req, res) => {
       sortType,  // 排序类型参数
       review_count_min,  // 最低评价数
       keyword,  // 新增：关键词搜索（匹配酒店名称、品牌）
-      hotel_type  // 酒店类型：1-国内 2-海外 3-民宿
+      hotel_type,  // 酒店类型：1-国内 2-海外 3-民宿
+      page,  // 页码
+      pageSize  // 每页条数
     } = req.query;
 
     // 调试：打印接收到的参数
     console.log('🔍 后端接收到的查询参数:', req.query);
+
+    // ── 分页参数解析 ────────────────────────────────────────
+    const currentPage = page !== undefined && page !== '' ? parseInt(page) : 1;
+    const limit = pageSize !== undefined && pageSize !== '' ? parseInt(pageSize) : 20;
+    
+    // 分页参数校验
+    if (currentPage < 1) {
+      return res.status(400).json({ success: false, message: 'page 必须大于等于 1' });
+    }
+    if (limit < 1 || limit > 100) {
+      return res.status(400).json({ success: false, message: 'pageSize 取值范围 1-100' });
+    }
+    
+    const offset = (currentPage - 1) * limit;
 
     const hasDestination = destination && destination.trim() !== '';
     const hasKeyword = keyword && keyword.trim() !== '';
@@ -280,17 +296,42 @@ router.get('/search', async (req, res) => {
     }
     sql += ` ${orderByClause}`;
 
+    // ── 添加分页 LIMIT 和 OFFSET ──────────────────────────────
+    sql += ` LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+
     // 调试：打印 SQL 和参数
     console.log('🔍 执行的 SQL:', sql);
     console.log('🔍 SQL 参数:', params);
 
     const hotels = await query(sql, params);
 
+    // ── 查询总数（用于计算总页数和是否有更多数据）────────────
+    // 构建 COUNT 查询（去掉 SELECT 字段、GROUP BY、ORDER BY、LIMIT）
+    let countSql = sql
+      .replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(DISTINCT h.id) as total FROM')
+      .replace(/GROUP BY[\s\S]*$/, '')
+      .replace(/ORDER BY[\s\S]*$/, '')
+      .replace(/LIMIT[\s\S]*$/, '');
+    
+    // COUNT 查询的参数（去掉最后两个分页参数）
+    const countParams = params.slice(0, -2);
+    
+    const countResult = await query(countSql, countParams);
+    const total = countResult[0]?.total || 0;
+
     res.status(200).json({
       success: true,
       message: '查询成功',
       data: {
         list: hotels,
+        pagination: {
+          page: currentPage,
+          pageSize: limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasMore: currentPage * limit < total
+        },
         search_params: {
           destination:    hasDestination ? destination.trim() : null,
           check_in_date:  check_in_date  || null,
@@ -305,8 +346,7 @@ router.get('/search', async (req, res) => {
           facilities:     facilityList.length > 0 ? facilityList : null,
           review_count_min: reviewCountMin,
           hotel_type:     hotelTypeVal
-        },
-        total: hotels.length
+        }
       }
     });
 

@@ -150,4 +150,112 @@ router.post('/login', async (req, res) => {
   }
 });
 
+/**
+ * 移动端：更新用户信息接口
+ * PUT /api/loginMobile/profile/:id
+ * 
+ * 路径参数：
+ * - id: 用户ID
+ * 
+ * 请求体参数：
+ * - username: 用户名（可选）
+ * - avatar_url: 头像URL（可选）
+ * 
+ * 返回数据：更新后的用户信息
+ */
+router.put('/profile/:id', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+
+    // 验证ID是否为有效数字
+    if (!userId || userId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的用户ID'
+      });
+    }
+
+    // 检查用户是否存在
+    const checkSql = 'SELECT id FROM users WHERE id = ? AND is_deleted = 0';
+    const existingUsers = await query(checkSql, [userId]);
+    
+    if (existingUsers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: '用户不存在或已被删除'
+      });
+    }
+
+    // 获取要更新的字段
+    const { username, avatar_url } = req.body;
+
+    // 构建动态更新SQL
+    const updateFields = [];
+    const updateParams = [];
+
+    if (username !== undefined && username.trim() !== '') {
+      updateFields.push('username = ?');
+      updateParams.push(username.trim());
+    }
+
+    if (avatar_url !== undefined) {
+      updateFields.push('avatar_url = ?');
+      updateParams.push(avatar_url);
+    }
+
+    // 如果没有要更新的字段
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: '没有提供要更新的字段'
+      });
+    }
+
+    // 添加更新时间
+    updateFields.push('updated_at = NOW()');
+
+    // 添加用户ID到参数列表
+    updateParams.push(userId);
+
+    // 执行更新
+    const updateSql = `
+      UPDATE users 
+      SET ${updateFields.join(', ')}
+      WHERE id = ? AND is_deleted = 0
+    `;
+
+    await query(updateSql, updateParams);
+
+    // 查询更新后的用户信息
+    const userSql = `
+      SELECT 
+        id, account, username, phone, email,
+        role_type, avatar_url, created_at, last_login_at,
+        updated_at, status
+      FROM users 
+      WHERE id = ?
+    `;
+    
+    const updatedUsers = await query(userSql, [userId]);
+    const updatedUser = updatedUsers[0];
+
+    res.status(200).json({
+      success: true,
+      message: '用户资料更新成功',
+      data: {
+        ...updatedUser,
+        avatar: updatedUser.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
+      }
+    });
+
+  } catch (error) {
+    console.error('更新用户资料失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '更新用户资料失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

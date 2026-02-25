@@ -15,6 +15,9 @@ export interface ApiResponse<T> {
     type?: number;
     sortType?: string;
     keyword?: string;
+    // 分页参数
+    page?: number;            // 页码（默认1）
+    pageSize?: number;        // 每页条数（默认20）
     // 筛选参数
     price_min?: number;
     price_max?: number;
@@ -43,13 +46,20 @@ export interface ApiResponse<T> {
   // 4. 搜索接口返回的 data 结构
   export interface HotelSearchResult {
     list: HotelListItem[];
+    pagination?: {            // 分页信息（可选，兼容旧接口）
+      page: number;           // 当前页
+      pageSize: number;       // 每页条数
+      total: number;          // 总条数
+      totalPages: number;     // 总页数
+      hasMore: boolean;       // 是否还有更多
+    };
     search_params: {
       destination: string;
       check_in_date: string;
       check_out_date: string;
       nights: number;
     };
-    total: number;
+    total: number;            // 保留旧字段，兼容性
   }
   
   // 5. 酒店详情中的房型结构
@@ -101,6 +111,9 @@ export interface FrontendSearchParams {
     type?: string | null; // URL 里拿出来的默认是 string 或 null
     sortType?: string;
     keyword?: string;
+    // 分页参数
+    page?: number;
+    pageSize?: number;
     // 筛选参数
     price_min?: number;
     price_max?: number;

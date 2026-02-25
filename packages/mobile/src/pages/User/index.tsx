@@ -8,6 +8,7 @@ import {
   EditSOutline 
 } from 'antd-mobile-icons';
 import styles from './index.module.css';
+import { apiUpdateProfile } from '@/api/User/index';
 
 type ImageUploadItem = {
   url: string;
@@ -84,21 +85,37 @@ const User: React.FC = () => {
         newAvatarUrl = values.avatar[0].url;
       }
 
-      // ✅ 字段对齐：更新 username
-      const newUser = { 
-        ...userInfo, 
-        username: values.username,
-        avatar: newAvatarUrl 
-      };
-
-      // 💡 提示：真实开发时，这里需要调接口 apiUpdateUser(newUser) 同步给后端
-      setUserInfo(newUser);
-      localStorage.setItem('USER_INFO', JSON.stringify(newUser));
+      // ✅ 调用后端 API 更新用户信息
+      Toast.show({ icon: 'loading', content: '保存中...', duration: 0 });
       
-      Toast.show({ icon: 'success', content: '修改成功' });
-      setEditVisible(false);
-    } catch (error) {
-      console.log('验证失败', error);
+      const res = await apiUpdateProfile(userInfo.id, {
+        username: values.username,
+        avatar_url: newAvatarUrl
+      });
+
+      Toast.clear();
+
+      if (res.success) {
+        // 更新本地用户信息
+        const newUser = { 
+          ...userInfo, 
+          username: values.username,
+          avatar: newAvatarUrl,
+          avatar_url: newAvatarUrl
+        };
+
+        setUserInfo(newUser);
+        localStorage.setItem('USER_INFO', JSON.stringify(newUser));
+        
+        Toast.show({ icon: 'success', content: '修改成功' });
+        setEditVisible(false);
+      } else {
+        Toast.show({ icon: 'fail', content: res.message || '修改失败' });
+      }
+    } catch (error: any) {
+      Toast.clear();
+      console.log('保存失败', error);
+      Toast.show({ icon: 'fail', content: error.message || '保存失败' });
     }
   };
 

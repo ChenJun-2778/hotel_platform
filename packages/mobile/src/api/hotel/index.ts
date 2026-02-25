@@ -76,6 +76,9 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
     type: Number(frontendParams.type) || 1,
     sortType: frontendParams.sortType,
     keyword: frontendParams.keyword,
+    // 分页参数（可选，不传则使用后端默认值）
+    page: frontendParams.page,
+    pageSize: frontendParams.pageSize,
     // 添加筛选参数
     price_min: frontendParams.price_min,
     price_max: frontendParams.price_max,

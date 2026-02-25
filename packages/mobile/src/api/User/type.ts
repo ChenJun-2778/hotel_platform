@@ -43,3 +43,10 @@ export interface RegisterParams {
   phone: string;
   password: string;
 }
+
+/** * 6. 定义更新用户信息的入参参数
+ */
+export interface UpdateProfileParams {
+  username?: string;
+  avatar_url?: string;
+}
