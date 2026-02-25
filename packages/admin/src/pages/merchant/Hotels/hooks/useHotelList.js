@@ -9,7 +9,8 @@ import { useAuthStore } from '../../../../stores/authStore';
  */
 const useHotelList = () => {
   const user = useAuthStore(state => state.user);
-  const [hotelList, setHotelList] = useState([]);
+  const [allHotels, setAllHotels] = useState([]); // 存储所有酒店数据
+  const [hotelList, setHotelList] = useState([]); // 当前显示的酒店列表
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -17,55 +18,63 @@ const useHotelList = () => {
     total: 0,
   });
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedType, setSelectedType] = useState(null); // 当前选中的类型
 
-  // 加载酒店列表
-  const loadHotelList = async (page = pagination.current, pageSize = pagination.pageSize, keyword = searchKeyword, type = null) => {
+  // 前端筛选和分页逻辑
+  const filterAndPaginateHotels = (hotels, keyword, type, page, pageSize) => {
+    // 1. 先按类型筛选
+    let filtered = hotels;
+    if (type !== null && type !== undefined) {
+      filtered = hotels.filter(hotel => hotel.type === type);
+      console.log(`✅ 类型筛选 (type=${type}): ${hotels.length} -> ${filtered.length}`);
+    }
+    
+    // 2. 再按关键词搜索
+    if (keyword) {
+      filtered = filtered.filter(hotel => 
+        hotel.name?.toLowerCase().includes(keyword.toLowerCase()) ||
+        hotel.address?.toLowerCase().includes(keyword.toLowerCase()) ||
+        hotel.location?.toLowerCase().includes(keyword.toLowerCase())
+      );
+      console.log(`✅ 关键词筛选 (${keyword}): ${filtered.length} 条结果`);
+    }
+    
+    // 3. 计算分页
+    const total = filtered.length;
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const paginatedData = filtered.slice(start, end);
+    
+    console.log(`✅ 分页: 第${page}页, 每页${pageSize}条, 共${total}条, 显示${paginatedData.length}条`);
+    
+    return {
+      data: paginatedData,
+      total,
+    };
+  };
+
+  // 加载所有酒店列表（只在初始化时调用一次）
+  const loadAllHotels = async () => {
     setLoading(true);
     try {
-      // 构建请求参数
-      const params = {
-        page,
-        pageSize,
-      };
+      // 构建请求参数（不传分页参数，获取所有数据）
+      const params = {};
       
-      // 如果有搜索关键词，添加到参数中
-      if (keyword) {
-        params.keyword = keyword;
-      }
-      
-      // 如果有类型筛选，添加到参数中
-      if (type !== null && type !== undefined) {
-        params.type = type;
-        console.log('✅ 添加类型筛选:', type);
-      }
-      
-      // 商户用户只能看到自己的酒店，添加 user_id 参数
+      // 商户用户只能看到自己的酒店
       if (user?.role_type === 2 && user?.id) {
         params.user_id = user.id;
         console.log('✅ 商户用户，添加 user_id 过滤:', user.id);
       }
       
-      console.log('🔍 请求参数:', params);
+      console.log('🔍 请求所有酒店数据，参数:', params);
       
       const response = await getHotelList(params);
       console.log('✅ 后端返回的原始数据:', response);
-      console.log('✅ 后端返回的酒店列表详细数据:', JSON.stringify(response.data?.list || response.list, null, 2));
       
       // 后端返回格式：{ data: { list: [], pagination: {} }, success: true, message: '' }
       const hotels = response.data?.list || response.list || response.data || response || [];
-      const paginationData = response.data?.pagination || response.pagination || {};
       
       console.log('✅ 解析后的酒店列表:', hotels);
-      console.log('✅ 分页信息:', paginationData);
-      
-      // 检查是否有拒绝原因字段
-      hotels.forEach((hotel, index) => {
-        if (hotel.status === 3) { // 已拒绝状态
-          console.log(`🔍 酒店 ${index + 1} (${hotel.name}) - 状态: 已拒绝`);
-          console.log(`🔍 rejection_reason:`, hotel.rejection_reason);
-          console.log(`🔍 reject_reason:`, hotel.reject_reason);
-        }
-      });
       
       // 确保每条数据都有唯一的 id
       const hotelsWithId = Array.isArray(hotels) 
@@ -75,37 +84,77 @@ const useHotelList = () => {
           }))
         : [];
       
-      setHotelList(hotelsWithId);
-      
-      // 更新分页信息
-      setPagination({
-        current: paginationData.page || page,
-        pageSize: paginationData.pageSize || pageSize,
-        total: paginationData.total || hotelsWithId.length,
-      });
-      
+      setAllHotels(hotelsWithId);
       console.log('✅ 加载完成，共', hotelsWithId.length, '条数据');
+      
+      // 初始显示所有数据
+      const result = filterAndPaginateHotels(hotelsWithId, '', null, 1, pagination.pageSize);
+      setHotelList(result.data);
+      setPagination({
+        current: 1,
+        pageSize: pagination.pageSize,
+        total: result.total,
+      });
       
     } catch (error) {
       console.error('❌ 加载酒店列表失败:', error);
       message.error('加载酒店列表失败，请重试');
+      setAllHotels([]);
       setHotelList([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 搜索酒店
-  const searchHotels = async (keyword, type = null) => {
-    console.log('🔍 搜索关键词:', keyword, '类型:', type);
+  // 应用筛选（类型切换或搜索时调用）
+  const applyFilter = (keyword = searchKeyword, type = selectedType, page = 1) => {
+    console.log('🔄 应用筛选 - 关键词:', keyword, '类型:', type, '页码:', page);
     setSearchKeyword(keyword);
-    await loadHotelList(1, pagination.pageSize, keyword, type);
+    setSelectedType(type);
+    
+    const result = filterAndPaginateHotels(allHotels, keyword, type, page, pagination.pageSize);
+    setHotelList(result.data);
+    setPagination({
+      current: page,
+      pageSize: pagination.pageSize,
+      total: result.total,
+    });
   };
 
-  // 分页变化
-  const handlePageChange = async (page, pageSize, type = null) => {
+  // 搜索酒店（前端筛选）
+  const searchHotels = (keyword, type = selectedType) => {
+    console.log('🔍 搜索关键词:', keyword, '类型:', type);
+    applyFilter(keyword, type, 1);
+  };
+
+  // 切换类型（前端筛选）
+  const filterByType = (type) => {
+    console.log('🔄 切换类型:', type);
+    applyFilter(searchKeyword, type, 1);
+  };
+
+  // 分页变化（前端筛选）
+  const handlePageChange = (page, pageSize) => {
     console.log('📄 分页变化 - 页码:', page, '每页数量:', pageSize);
-    await loadHotelList(page, pageSize, searchKeyword, type);
+    
+    // 如果每页数量变化，重新计算
+    if (pageSize !== pagination.pageSize) {
+      const result = filterAndPaginateHotels(allHotels, searchKeyword, selectedType, 1, pageSize);
+      setHotelList(result.data);
+      setPagination({
+        current: 1,
+        pageSize: pageSize,
+        total: result.total,
+      });
+    } else {
+      const result = filterAndPaginateHotels(allHotels, searchKeyword, selectedType, page, pageSize);
+      setHotelList(result.data);
+      setPagination({
+        current: page,
+        pageSize: pageSize,
+        total: result.total,
+      });
+    }
   };
 
   // 添加酒店
@@ -138,7 +187,7 @@ const useHotelList = () => {
       
       await createHotel(submitData);
       message.success('酒店添加成功！');
-      await loadHotelList(); // 重新加载列表
+      await loadAllHotels(); // 重新加载所有数据
       return true;
     } catch (error) {
       console.error('❌ 添加酒店失败:', error);
@@ -164,7 +213,7 @@ const useHotelList = () => {
       const response = await updateHotel(id, hotelData);
       console.log('✅ 更新酒店成功:', response);
       message.success('酒店更新成功！');
-      await loadHotelList(); // 重新加载列表
+      await loadAllHotels(); // 重新加载所有数据
       return true;
     } catch (error) {
       console.error('❌ 更新酒店失败 - ID:', id);
@@ -196,7 +245,7 @@ const useHotelList = () => {
         return false;
       }
       
-      await loadHotelList(); // 重新加载列表
+      await loadAllHotels(); // 重新加载所有数据
       return true;
     } catch (error) {
       console.error('更新酒店状态失败:', error);
@@ -205,9 +254,9 @@ const useHotelList = () => {
     }
   };
 
-  // 组件加载时获取列表
+  // 组件加载时获取所有酒店数据
   useEffect(() => {
-    loadHotelList();
+    loadAllHotels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -216,8 +265,8 @@ const useHotelList = () => {
     loading,
     pagination,
     searchKeyword,
-    loadHotelList,
     searchHotels,
+    filterByType,
     handlePageChange,
     addHotel,
     updateHotelData,

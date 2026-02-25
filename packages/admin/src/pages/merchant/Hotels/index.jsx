@@ -9,13 +9,12 @@ import useHotelList from './hooks/useHotelList';
 import { getHotelDetail } from '../../../services/hotelService';
 import { getRoomList } from '../../../services/roomService';
 import { uploadToOss } from '../../../utils/oss';
-import { HOTEL_STATUS } from '../../../constants/hotelStatus';
 import { HOTEL_TYPE, HOTEL_TYPE_OPTIONS } from '../../../constants/hotelType';
 import './Hotels.css';
 
 const Hotels = () => {
   // 状态管理
-  const [selectedType, setSelectedType] = useState(HOTEL_TYPE.DOMESTIC); // 当前选中的酒店类型
+  const [selectedType, setSelectedType] = useState(HOTEL_TYPE.ALL); // 当前选中的酒店类型（默认全部）
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -35,19 +34,18 @@ const Hotels = () => {
     loading, 
     pagination,
     searchHotels,
+    filterByType,
     handlePageChange,
     addHotel, 
     updateHotelData, 
     toggleHotelStatus,
-    loadHotelList,
   } = useHotelList();
 
-  // 切换酒店类型
+  // 切换酒店类型（前端筛选）
   const handleTypeChange = (value) => {
     console.log('🔄 切换酒店类型:', value);
     setSelectedType(value);
-    // 重新加载对应类型的酒店列表
-    loadHotelList(1, pagination.pageSize, '', value);
+    filterByType(value);
   };
 
   // 打开添加弹窗
