@@ -11,6 +11,11 @@ import { mockRequest } from '@/utils/mockRequest';
 
 // 读取环境变量
 const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
+// 定义统一的 API 路径枚举
+export enum HotelApi {
+  SEARCH = '/api/hotelsMobile/search',
+  DETAIL = '/api/hotelsMobile', // 详情接口通常是基础路径拼接 ID
+}
 
 /**
  * 搜索酒店列表
@@ -52,7 +57,6 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
   }
 
   // 真实接口
-  // 真实接口
   // 酒店类型映射：国内(1)和钟点房(3)都属于国内酒店，所以都传 hotel_type=1
   let hotelType: number | undefined;
   const typeNum = Number(frontendParams.type);
@@ -81,7 +85,7 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
     review_count_min: frontendParams.review_count_min
   };
 
-  return request.get<any, ApiResponse<HotelSearchResult>>('/api/hotelsMobile/search', { params });
+  return request.get<any, ApiResponse<HotelSearchResult>>(HotelApi.SEARCH, { params });
 };
 
 /**
@@ -92,10 +96,10 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
  */
 export const apiGetHotelDetail = async (id: string | number): Promise<ApiResponse<HotelDetail>> => {
   // Mock 模式
-  if (USE_MOCK) {
-    return mockRequest(MOCK_HOTEL_DETAIL, 500);
-  }
+  // if (USE_MOCK) {
+  //   return mockRequest(MOCK_HOTEL_DETAIL, 500);
+  // }
 
   // 真实接口
-  return request.get<any, ApiResponse<HotelDetail>>(`/api/hotelsMobile/${id}`);
+  return request.get<any, ApiResponse<HotelDetail>>(`${HotelApi.DETAIL}/${id}`);
 };

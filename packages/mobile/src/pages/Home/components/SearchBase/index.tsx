@@ -109,7 +109,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
 
     const checkKeywordDraft = () => {
       const keywordDraft = localStorage.getItem('SEARCH_KEYWORD_DRAFT');
-      console.log('🔍 检查关键词草稿:', keywordDraft);
+      // console.log(' 关键词:', keywordDraft);
       if (keywordDraft) {
         setKeyword(keywordDraft);
       }
@@ -117,7 +117,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('📱 页面可见，检查数据...');
+        // console.log(' 页面可见，检查数据...');
         checkSelectedCity();
         checkKeywordDraft();
       }
@@ -157,7 +157,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
       params.keyword = keyword.trim();
     }
     
-    console.log('🔍 查询酒店参数:', params);
+    // console.log('酒店参数:', params);
     
     goList(params, currentTypeId);
     

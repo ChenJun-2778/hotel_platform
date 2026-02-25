@@ -150,11 +150,11 @@ const List: React.FC = () => {
       const selected = localStorage.getItem('selectedCity');
       if (selected) {
         // console.log('检测到新城市，更新草稿:', selected);
-        // ✅ 关键修改 A：只更新“草稿城市”，不更新 URL
+        // A：只更新“草稿城市”，不更新 URL
         setTempCity(selected);
         // 这里需要拿到最新的 safeBeginDate 和 safeEndDate
         setTempDates([safeBeginDate, safeEndDate]);
-        // ✅ 关键修改 B：强制打开 SearchPanel，让用户确认
+        // B：强制打开 SearchPanel，让用户确认
         setShowSearchPanel(true);
         localStorage.removeItem('selectedCity');
       }
@@ -173,7 +173,7 @@ const List: React.FC = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [safeBeginDate, safeEndDate]);
-  // ✅ 清除关键词的逻辑
+  // 清除关键词的逻辑
   const handleClearKeyword = (e: React.MouseEvent) => {
     // 1. 阻止冒泡：防止触发父级 div 的点击跳转
     e.stopPropagation();
@@ -239,7 +239,7 @@ const List: React.FC = () => {
         }
 
         // 调试：打印请求参数
-        console.log('🔍 请求参数:', params);
+        // console.log('请求参数:', params);
 
         // 调用 API
         const res = await apiGetHotelList(params);
@@ -309,7 +309,7 @@ const List: React.FC = () => {
        {/* 筛选区 */}
        <div className={styles.sortContainer}>
           
-          {/* ✅ Dropdown 占据剩余宽度 */}
+          {/* Dropdown 占据剩余宽度 */}
           <div className={styles.dropdownWrapper}>
             <Dropdown ref={dropdownRef}>
               
@@ -343,7 +343,7 @@ const List: React.FC = () => {
                 />
               </Dropdown.Item>
 
-             {/* ✅ 3. 合并后的 评分/星级 下拉框 */}
+             {/*  3. 合并后的 评分/星级 下拉框 */}
              <Dropdown.Item 
                key='score_star' 
                title='评分/星级'
@@ -416,7 +416,7 @@ const List: React.FC = () => {
           </div>
         ) : (
           hotelList.map((item, index) => (
-            // ✅ 注意：如果数据有重复，建议 key 加上 index: `${item.id}-${index}`
+            // 如果数据有重复，key 加上 index: `${item.id}-${index}`
             <div key={`${item.id}-${index}`} onClick={() => navigate(
               `/detail/${item.id}?` +
               `beginDate=${safeBeginDate}&` +
