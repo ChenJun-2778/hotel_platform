@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
+import { CapsuleTabs, NavBar, TabBar, InfiniteScroll, DotLoading, Toast } from 'antd-mobile';
 import { FireFill, HeartFill, StarFill } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
 // 引入跳转钩子
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 // 引入组件
 import HotelCard from '@/components/HotelCard';
-import { MOCK_HOTEL_LIST } from '@/mock/data'
 import dayjs from 'dayjs';
 import type { HomeContextType } from './type/homeContextType';
+// 引入 API
+import { apiGetHotelList } from '@/api/Hotel/index';
 
 
 const Home = () => {
@@ -163,13 +164,62 @@ const Home = () => {
     localStorage.removeItem('SEARCH_KEYWORD_DRAFT');
   };
 
-  // 制作假数据
-  const recommendList = [
-    ...MOCK_HOTEL_LIST,
-    ...MOCK_HOTEL_LIST,
-    ...MOCK_HOTEL_LIST,
-    ...MOCK_HOTEL_LIST
-  ]
+  // 猜你喜欢列表数据
+  const [recommendList, setRecommendList] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // 首次加载猜你喜欢数据
+  useEffect(() => {
+    const loadRecommendList = async () => {
+      setLoading(true);
+      try {
+        const res = await apiGetHotelList({
+          city: '', // 不限城市
+          beginDate: dayjs().format('YYYY-MM-DD'),
+          endDate: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+          page: 1,
+          pageSize: 20
+        });
+
+        if (res && res.success) {
+          setRecommendList(res.data.list || []);
+          setHasMore(res.data.pagination?.hasMore ?? false);
+          setPage(2);
+        }
+      } catch (error) {
+        console.error('加载推荐列表失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRecommendList();
+  }, []);
+
+  // 加载更多推荐数据
+  const loadMoreRecommend = async () => {
+    if (!hasMore || loading) return;
+
+    try {
+      const res = await apiGetHotelList({
+        city: '',
+        beginDate: dayjs().format('YYYY-MM-DD'),
+        endDate: dayjs().add(1, 'day').format('YYYY-MM-DD'),
+        page,
+        pageSize: 20
+      });
+
+      if (res && res.success) {
+        setRecommendList(prev => [...prev, ...(res.data.list || [])]);
+        setHasMore(res.data.pagination?.hasMore ?? false);
+        setPage(prev => prev + 1);
+      }
+    } catch (error) {
+      Toast.show({ icon: 'fail', content: '加载失败' });
+    }
+  };
   return (
     <div className={styles.homeContainer}>
       <NavBar back={null} className={styles.navBar}>易宿酒店预订</NavBar>
@@ -228,13 +278,20 @@ const Home = () => {
            <FireFill color='#ff3141' /> 猜你喜欢
         </div>
         
-        <div className={styles.cardList}>
-          {recommendList.map((item, index) => (
-            // 注意：因为数据是重复的，key 不能只用 item.id，要加上 index 避免重复报错
-            <div 
+        {loading && recommendList.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
+            <DotLoading color='primary' /> 加载中...
+          </div>
+        ) : (
+          <div className={styles.cardList}>
+            {recommendList.map((item, index) => (
+              <div 
                 key={`${item.id}-${index}`} 
                 className={styles.cardWrapper}
                 onClick={() => {
+                  // 使用酒店自己的城市信息，而不是首页选择的城市
+                  const hotelCity = item.location || '上海';
+                  
                   // 1. 格式化日期（使用当前类型对应的日期）
                   let beginStr = dayjs(currentDateRange[0]).format('YYYY-MM-DD');
                   let endStr = dayjs(currentDateRange[1]).format('YYYY-MM-DD');
@@ -244,15 +301,28 @@ const Home = () => {
                     endStr = dayjs(currentDateRange[0]).add(1, 'day').format('YYYY-MM-DD');
                   }
                   
-                  // 2. 带着参数跳转
-                  navigate(`/detail/${item.id}?beginDate=${beginStr}&endDate=${endStr}`);
-              }}
-            >
-              {/* 直接复用你之前写的卡片 */}
-              <HotelCard hotel={item} />
-            </div>
-          ))}
-        </div>
+                  // 2. 带着参数跳转（包括酒店所在城市）
+                  navigate(`/detail/${item.id}?beginDate=${beginStr}&endDate=${endStr}&city=${hotelCity}`);
+                }}
+              >
+                <HotelCard hotel={item} />
+              </div>
+            ))}
+
+            {/* 无限滚动组件 */}
+            <InfiniteScroll loadMore={loadMoreRecommend} hasMore={hasMore}>
+              {hasMore ? (
+                <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                  <DotLoading /> 加载中...
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '12px', color: '#999' }}>
+                  {recommendList.length > 0 ? '没有更多了' : ''}
+                </div>
+              )}
+            </InfiniteScroll>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -67,16 +67,28 @@ const List: React.FC = () => {
   // 从 URL 参数初始化价格范围
   const urlPriceMin = searchParams.get('price_min');
   const urlPriceMax = searchParams.get('price_max');
+  
+  // 应用的筛选条件（用于请求）
+  const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>(() => {
+    const min = urlPriceMin ? Number(urlPriceMin) : 0;
+    const max = urlPriceMax ? Number(urlPriceMax) : 1000;
+    return [min, max];
+  });
+  const [appliedFilterScore, setAppliedFilterScore] = useState('');
+  const [appliedFilterStar, setAppliedFilterStar] = useState('');
+  const [appliedFacilities, setAppliedFacilities] = useState<string[]>([]);
+  const [appliedComment, setAppliedComment] = useState('');
+
+  // 临时筛选条件（用户在下拉菜单中选择的，未确认）
   const [priceRange, setPriceRange] = useState<[number, number]>(() => {
     const min = urlPriceMin ? Number(urlPriceMin) : 0;
     const max = urlPriceMax ? Number(urlPriceMax) : 1000;
     return [min, max];
-  }); // 价格
-  const [filterScore, setFilterScore] = useState(''); // 分数
-  // 综合
+  });
+  const [filterScore, setFilterScore] = useState('');
+  const [filterStar, setFilterStar] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
   const [selectedComment, setSelectedComment] = useState('');
-  const [filterStar, setFilterStar] = useState(''); //
   // 控制弹窗显示
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   // 城市跳转方法
@@ -216,38 +228,38 @@ const List: React.FC = () => {
         };
 
         // 添加价格筛选
-        if (priceRange[0] > 0) {
-          params.price_min = priceRange[0];
+        if (appliedPriceRange[0] > 0) {
+          params.price_min = appliedPriceRange[0];
         }
-        if (priceRange[1] < 1000) {
-          params.price_max = priceRange[1];
+        if (appliedPriceRange[1] < 1000) {
+          params.price_max = appliedPriceRange[1];
         }
 
         // 添加评分筛选
-        if (filterScore) {
-          const scoreValue = parseFloat(filterScore);
+        if (appliedFilterScore) {
+          const scoreValue = parseFloat(appliedFilterScore);
           if (!isNaN(scoreValue)) {
             params.score_min = scoreValue;
           }
         }
 
         // 添加星级筛选
-        if (filterStar) {
-          const starValue = parseInt(filterStar);
+        if (appliedFilterStar) {
+          const starValue = parseInt(appliedFilterStar);
           if (!isNaN(starValue)) {
             params.star_min = starValue;
           }
         }
 
         // 添加设施筛选（逗号分隔）
-        if (selectedFacilities.length > 0) {
-          params.facilities = selectedFacilities.join(',');
+        if (appliedFacilities.length > 0) {
+          params.facilities = appliedFacilities.join(',');
         }
 
         // 添加评价数筛选
-        if (selectedComment) {
+        if (appliedComment) {
           // 从 "200条以上" 中提取数字 200
-          const match = selectedComment.match(/(\d+)/);
+          const match = appliedComment.match(/(\d+)/);
           if (match) {
             params.review_count_min = parseInt(match[1]);
           }
@@ -275,7 +287,7 @@ const List: React.FC = () => {
     }
 
     getHotelList();
-  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword, priceRange, filterScore, filterStar, selectedFacilities, selectedComment]);
+  }, [city, type, safeBeginDate, safeEndDate, sortType, keyword, appliedPriceRange, appliedFilterScore, appliedFilterStar, appliedFacilities, appliedComment]);
 
   // 加载更多（无限滚动）
   const loadMore = async () => {
@@ -295,19 +307,19 @@ const List: React.FC = () => {
       };
 
       // 添加筛选条件
-      if (priceRange[0] > 0) params.price_min = priceRange[0];
-      if (priceRange[1] < 1000) params.price_max = priceRange[1];
-      if (filterScore) {
-        const scoreValue = parseFloat(filterScore);
+      if (appliedPriceRange[0] > 0) params.price_min = appliedPriceRange[0];
+      if (appliedPriceRange[1] < 1000) params.price_max = appliedPriceRange[1];
+      if (appliedFilterScore) {
+        const scoreValue = parseFloat(appliedFilterScore);
         if (!isNaN(scoreValue)) params.score_min = scoreValue;
       }
-      if (filterStar) {
-        const starValue = parseInt(filterStar);
+      if (appliedFilterStar) {
+        const starValue = parseInt(appliedFilterStar);
         if (!isNaN(starValue)) params.star_min = starValue;
       }
-      if (selectedFacilities.length > 0) params.facilities = selectedFacilities.join(',');
-      if (selectedComment) {
-        const match = selectedComment.match(/(\d+)/);
+      if (appliedFacilities.length > 0) params.facilities = appliedFacilities.join(',');
+      if (appliedComment) {
+        const match = appliedComment.match(/(\d+)/);
         if (match) params.review_count_min = parseInt(match[1]);
       }
 
@@ -395,15 +407,19 @@ const List: React.FC = () => {
               <Dropdown.Item 
                 key='price' 
                 title='价格'
-                highlight={priceRange[0] > 0 || priceRange[1] < 1000}
+                highlight={appliedPriceRange[0] > 0 || appliedPriceRange[1] < 1000}
               >
                 <PricePanel
                   priceRange={priceRange}
                   onChange={setPriceRange}
                   onReset={() => { 
-                    setPriceRange([0, 1000]); // 重置就是回归无限制
+                    setPriceRange([0, 1000]); // 重置临时状态
+                    setAppliedPriceRange([0, 1000]); // 重置应用状态
                   }}
-                  onConfirm={() => dropdownRef.current?.close()}
+                  onConfirm={() => {
+                    setAppliedPriceRange(priceRange); // 应用筛选
+                    dropdownRef.current?.close();
+                  }}
                 />
               </Dropdown.Item>
 
@@ -411,7 +427,7 @@ const List: React.FC = () => {
              <Dropdown.Item 
                key='score_star' 
                title='评分/星级'
-               highlight={!!filterScore || !!filterStar}
+               highlight={!!appliedFilterScore || !!appliedFilterStar}
              >
                 <ScoreStarPanel
                   filterScore={filterScore}
@@ -419,10 +435,16 @@ const List: React.FC = () => {
                   filterStar={filterStar}
                   onStarChange={setFilterStar}
                   onReset={() => { 
-                    setFilterScore(''); 
+                    setFilterScore(''); // 重置临时状态
                     setFilterStar(''); 
+                    setAppliedFilterScore(''); // 重置应用状态
+                    setAppliedFilterStar('');
                   }}
-                  onConfirm={() => dropdownRef.current?.close()}
+                  onConfirm={() => {
+                    setAppliedFilterScore(filterScore); // 应用筛选
+                    setAppliedFilterStar(filterStar);
+                    dropdownRef.current?.close();
+                  }}
                 />
               </Dropdown.Item>
 
@@ -430,7 +452,7 @@ const List: React.FC = () => {
               <Dropdown.Item 
                 key='filter' 
                 title='筛选'
-                highlight={selectedFacilities.length > 0 || !!selectedComment}
+                highlight={appliedFacilities.length > 0 || !!appliedComment}
               >
                 <FilterPanel
                   selectedFacilities={selectedFacilities}
@@ -438,11 +460,18 @@ const List: React.FC = () => {
                   selectedComment={selectedComment}
                   onCommentChange={setSelectedComment}
                   onReset={() => {
-                    // 重置时清空所有相关状态
+                    // 重置临时状态
                     setSelectedFacilities([]);
                     setSelectedComment('');
+                    // 重置应用状态
+                    setAppliedFacilities([]);
+                    setAppliedComment('');
                   }}
-                  onConfirm={() => dropdownRef.current?.close()}
+                  onConfirm={() => {
+                    setAppliedFacilities(selectedFacilities); // 应用筛选
+                    setAppliedComment(selectedComment);
+                    dropdownRef.current?.close();
+                  }}
                 />
               </Dropdown.Item>
             </Dropdown>

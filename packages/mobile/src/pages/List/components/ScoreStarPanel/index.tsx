@@ -45,7 +45,7 @@ const ScoreStarPanel: React.FC<ScoreStarPanelProps> = ({
             fill={filterScore === opt.value ? 'solid' : 'outline'}
             style={{ borderRadius: '16px' }}
             onClick={() => {
-              // ✅ 核心修复：如果当前已经选中了这个值，再次点击就传空字符串（取消选中）
+              // 如果当前已经选中了这个值，再次点击就传空字符串（取消选中）
               onScoreChange(filterScore === opt.value ? '' : opt.value);
             }}
           >
@@ -65,7 +65,7 @@ const ScoreStarPanel: React.FC<ScoreStarPanelProps> = ({
             fill={filterStar === opt.value ? 'solid' : 'outline'}
             style={{ borderRadius: '16px' }}
             onClick={() => {
-              // ✅ 核心修复：同理，点击已激活的选项即取消
+              // 同理，点击已激活的选项即取消
               onStarChange(filterStar === opt.value ? '' : opt.value);
             }}
           >
@@ -76,8 +76,8 @@ const ScoreStarPanel: React.FC<ScoreStarPanelProps> = ({
 
       {/* 底部按钮 */}
       <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-        <Button block size="middle" onClick={onReset}>重置</Button>
-        <Button block size="middle" color="primary" onClick={onConfirm}>确定</Button>
+        <Button block shape="rounded" size="middle" onClick={onReset}>重置</Button>
+        <Button block shape="rounded" size="middle" color="primary" onClick={onConfirm}>查看</Button>
       </div>
     </div>
   );
