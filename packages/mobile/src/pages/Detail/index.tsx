@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavBar, Swiper, Image, Toast, Tag, ImageViewer, DotLoading } from 'antd-mobile';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { StarFill, EnvironmentOutline, PictureOutline, CalendarOutline } from 'antd-mobile-icons';
+import { StarFill, EnvironmentOutline, PictureOutline, CalendarOutline, LocationFill } from 'antd-mobile-icons';
 import styles from './index.module.css';
 import { apiGetHotelDetail } from '@/api/Hotel'
 import dayjs from 'dayjs';
@@ -155,26 +155,31 @@ const HotelDetail: React.FC = () => {
       {/* 2. 酒店核心信息卡片 */}
       <div className={styles.infoCard}>
         <div className={styles.hotelTitle}>
-          {/* 这里用 detail.name */}
           {detail.name}
-          <span className={styles.starBadge}>五星级</span>
+          {detail.star_rating && (
+            <span className={styles.starBadge}>
+              {detail.star_rating === 5 ? '五星级' : 
+               detail.star_rating === 4 ? '四星级' : 
+               detail.star_rating === 3 ? '三星级' : 
+               detail.star_rating === 2 ? '二星级' : 
+               detail.star_rating === 1 ? '一星级' : ''}
+            </span>
+          )}
         </div>
 
         <div className={styles.scoreRow}>
-          <div className={styles.scoreBlock}>
-            {/* 这里用 detail.score */}
-            <span className={styles.score}>{detail.score}</span>
-            <span className={styles.scoreText}>{detail.scoreText}</span>
-          </div>
           <div className={styles.commentSummary}>
-            "服务周到" · "位置优越" · "早餐丰富"
+            {detail.description || '热门精选酒店'}
           </div>
           <div className={styles.mapLink}>
             地图 <EnvironmentOutline />
           </div>
         </div>
 
-        <div className={styles.addressRow}>{detail.address}</div>
+        <div className={styles.addressRow}>
+          <LocationFill style={{ color: '#ff6b6b', fontSize: '14px', flexShrink: 0, marginTop: '2px' }} />
+          {detail.address}
+        </div>
       </div>
 
       {/* 日期选择条 (插在房型列表前面) */}

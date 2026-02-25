@@ -184,8 +184,10 @@ const Home = () => {
         });
 
         if (res && res.success) {
-          setRecommendList(res.data.list || []);
-          setHasMore(res.data.pagination?.hasMore ?? false);
+          const newList = res.data.list || [];
+          setRecommendList(newList);
+          // ✅ 修复爆红：通过判断返回的数组长度是否等于请求的 pageSize 来决定是否有下一页
+          setHasMore(newList.length === 20); 
           setPage(2);
         }
       } catch (error) {
@@ -212,8 +214,10 @@ const Home = () => {
       });
 
       if (res && res.success) {
-        setRecommendList(prev => [...prev, ...(res.data.list || [])]);
-        setHasMore(res.data.pagination?.hasMore ?? false);
+        const newList = res.data.list || [];
+        setRecommendList(prev => [...prev, ...newList]);
+        // 同样修复爆红
+        setHasMore(newList.length === 20);
         setPage(prev => prev + 1);
       }
     } catch (error) {
