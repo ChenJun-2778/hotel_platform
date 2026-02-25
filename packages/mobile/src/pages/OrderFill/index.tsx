@@ -66,7 +66,7 @@ const OrderFill: React.FC = () => {
       
       // 获取用户信息
       const userInfoStr = localStorage.getItem('USER_INFO');
-      console.log('📦 localStorage USER_INFO:', userInfoStr); // 调试日志
+      // console.log('localStorage USER_INFO:', userInfoStr); // 调试日志
       
       if (!userInfoStr) {
         Toast.show({ icon: 'fail', content: '请先登录' });
@@ -75,8 +75,8 @@ const OrderFill: React.FC = () => {
       }
       
       const userInfo = JSON.parse(userInfoStr);
-      console.log('👤 解析后的 userInfo:', userInfo); // 调试日志
-      console.log('🆔 user_id:', userInfo.id); // 调试日志
+      // console.log('userInfo:', userInfo); // 调试日志
+      // console.log('user_id:', userInfo.id); // 调试日志
       
       if (!hotelId || !roomId) {
         Toast.show({ icon: 'fail', content: '订单信息不完整' });
@@ -97,7 +97,7 @@ const OrderFill: React.FC = () => {
         total_price: totalPrice
       };
       
-      console.log('📤 发送的订单数据:', orderData); // 调试日志
+      // console.log('发送的订单数据:', orderData); // 调试日志
 
       // 创建订单
       const res = await apiCreateOrder(orderData);
