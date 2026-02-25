@@ -10,15 +10,38 @@ import styles from './index.module.css';
 // 导入订单的api
 import { apiCreateOrder, apiPayOrder } from '@/api/Order/index'
 
-// 钟点房时间段选项
-const hourlyTimeSlots = [
-  [
-    { label: '上午时段 (08:00-12:00)', value: '08:00-12:00' },
-    { label: '下午时段 (12:00-18:00)', value: '12:00-18:00' },
-    { label: '晚间时段 (18:00-22:00)', value: '18:00-22:00' },
-    { label: '深夜时段 (22:00-次日06:00)', value: '22:00-06:00' },
-  ]
-];
+// 钟点房时间段选项（动态生成，根据当前时间禁用已过去的时段）
+const getHourlyTimeSlots = (checkInDate: string) => {
+  const now = dayjs();
+  const selectedDate = dayjs(checkInDate);
+  const isToday = selectedDate.isSame(now, 'day');
+  
+  const allSlots = [
+    { label: '上午时段 (08:00-12:00)', value: '08:00-12:00', endHour: 12 },
+    { label: '下午时段 (12:00-18:00)', value: '12:00-18:00', endHour: 18 },
+    { label: '晚间时段 (18:00-22:00)', value: '18:00-22:00', endHour: 22 },
+    { label: '深夜时段 (22:00-次日06:00)', value: '22:00-06:00', endHour: 30 }, // 30表示次日6点
+  ];
+  
+  // 如果不是今天，所有时段都可选
+  if (!isToday) {
+    return [allSlots.map(slot => ({ label: slot.label, value: slot.value }))];
+  }
+  
+  // 如果是今天，根据当前时间禁用已过去的时段
+  const currentHour = now.hour();
+  
+  return [allSlots.map(slot => {
+    // 如果当前时间已经超过该时段的结束时间，则禁用
+    const isPast = currentHour >= slot.endHour;
+    
+    return {
+      label: isPast ? `${slot.label} (已过期)` : slot.label,
+      value: slot.value,
+      disabled: isPast
+    };
+  })];
+};
 
 const OrderFill: React.FC = () => {
   const navigate = useNavigate();
@@ -49,6 +72,19 @@ const OrderFill: React.FC = () => {
   // 钟点房时间段选择
   const [timeSlotVisible, setTimeSlotVisible] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string[]>(['08:00-12:00']);
+  
+  // 动态生成时间段选项
+  const hourlyTimeSlots = getHourlyTimeSlots(checkInDate);
+  
+  // 初始化时选择第一个可用的时间段
+  useEffect(() => {
+    if (isHourly) {
+      const availableSlots = hourlyTimeSlots[0].filter(slot => !slot.disabled);
+      if (availableSlots.length > 0) {
+        setSelectedTimeSlot([availableSlots[0].value]);
+      }
+    }
+  }, [isHourly, checkInDate]);
 
   // 监听密码长度，满了6位自动提交
   useEffect(() => {
