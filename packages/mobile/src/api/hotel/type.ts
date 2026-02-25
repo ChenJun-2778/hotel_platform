@@ -41,6 +41,9 @@ export interface ApiResponse<T> {
     description: string;
     hotel_facilities: string; // 注意：这里后端返回的是逗号分隔的字符串
     min_price: string;        // 注意：这里后端返回的是字符串类型的价格 "2323.00"
+    score?: number;           // 评分
+    review_count?: number;    // 评价数
+    favorite_count?: number;  // 收藏数
   }
   
   // 4. 搜索接口返回的 data 结构

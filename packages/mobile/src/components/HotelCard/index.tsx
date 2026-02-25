@@ -63,6 +63,12 @@ const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
           <span className={styles.commentInfo}>
             {hotel.review_count !== undefined ? hotel.review_count : '暂无'}点评
           </span>
+          {/* ✅ 新增：收藏数显示 */}
+          {hotel.favorite_count !== undefined && (
+            <span className={styles.favoriteInfo}>
+              {hotel.favorite_count}人收藏
+            </span>
+          )}
         </div>
 
         {/* ✅ 修复：优先使用具体 address，没有再降级使用 location */}
