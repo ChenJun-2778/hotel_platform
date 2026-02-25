@@ -20,6 +20,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
   const navigate = useNavigate();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [password, setPassword] = useState('');
+  const [contactVisible, setContactVisible] = useState(false); // 联系酒店弹窗
 
   // 状态映射
   const getStatusInfo = (status: OrderStatus) => {
@@ -147,9 +148,35 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
     });
   };
 
-  // 联系酒店
+  // 联系酒店 - 显示联系方式弹窗
   const handleContact = () => {
-    Toast.show('客服电话：400-123-4567');
+    setContactVisible(true);
+  };
+
+  // 复制到剪贴板
+  const copyToClipboard = (text: string, label: string) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        Toast.show({ icon: 'success', content: `${label}已复制` });
+      }).catch(() => {
+        Toast.show({ icon: 'fail', content: '复制失败' });
+      });
+    } else {
+      // 降级方案：使用 document.execCommand
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        Toast.show({ icon: 'success', content: `${label}已复制` });
+      } catch (err) {
+        Toast.show({ icon: 'fail', content: '复制失败' });
+      }
+      document.body.removeChild(textarea);
+    }
   };
 
   // 再次预订 - 跳转到酒店详情页
@@ -257,6 +284,82 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
           />
         </div>
       </Popup>
+
+      {/* 联系酒店弹窗 */}
+      <Dialog
+        visible={contactVisible}
+        title="联系酒店"
+        content={
+          <div style={{ padding: '12px 0' }}>
+            {data.hotel_name && (
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#333' }}>
+                  {data.hotel_name}
+                </div>
+              </div>
+            )}
+            
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '13px', color: '#999', marginBottom: '4px' }}>酒店电话</div>
+              <div 
+                style={{ 
+                  fontSize: '16px', 
+                  color: '#0086F6', 
+                  fontWeight: '500',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <span>400-123-4567</span>
+                <Button 
+                  size='mini' 
+                  color='primary' 
+                  fill='outline'
+                  onClick={() => copyToClipboard('400-123-4567', '酒店电话')}
+                >
+                  复制
+                </Button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '13px', color: '#999', marginBottom: '4px' }}>客服热线</div>
+              <div 
+                style={{ 
+                  fontSize: '16px', 
+                  color: '#0086F6', 
+                  fontWeight: '500',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <span>95010</span>
+                <Button 
+                  size='mini' 
+                  color='primary' 
+                  fill='outline'
+                  onClick={() => copyToClipboard('95010', '客服热线')}
+                >
+                  复制
+                </Button>
+              </div>
+            </div>
+          </div>
+        }
+        closeOnAction
+        onClose={() => setContactVisible(false)}
+        actions={[
+          [
+            {
+              key: 'close',
+              text: '关闭',
+              onClick: () => setContactVisible(false)
+            }
+          ]
+        ]}
+      />
     </div>
   );
 };
