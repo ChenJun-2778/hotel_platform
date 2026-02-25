@@ -10,6 +10,7 @@ const { query, pool } = require('../config/database');
  * - page: 页码（可选，默认1）
  * - pageSize: 每页条数（可选，默认10）
  * - status: 状态筛选（可选，1-营业中，0-已下架，2-待审批，3-审批拒绝）
+ * - keyword: 搜索关键词（可选，同时匹配酒店名称或商户名称）
  * 
  * 返回字段：
  * - id: 酒店ID
@@ -28,8 +29,9 @@ router.get('/list', async (req, res) => {
     const pageSize = Math.max(1, Math.min(100, parseInt(req.query.pageSize) || 10)); // 限制最大100条
     const offset = (page - 1) * pageSize;
 
-    // 获取状态筛选参数
+    // 获取状态筛选参数和关键词
     const statusFilter = req.query.status !== undefined ? parseInt(req.query.status) : null;
+    const keyword = req.query.keyword ? req.query.keyword.trim() : '';
 
     // 构建WHERE条件
     let whereCondition = 'h.is_deleted = 0';
@@ -39,6 +41,13 @@ router.get('/list', async (req, res) => {
     if (statusFilter !== null && !isNaN(statusFilter)) {
       whereCondition += ' AND h.status = ?';
       queryParams.push(statusFilter);
+    }
+
+    // 关键词搜索：酒店名称 OR 商户名称
+    if (keyword) {
+      whereCondition += ' AND (h.name LIKE ? OR u.username LIKE ?)';
+      const searchPattern = `%${keyword}%`;
+      queryParams.push(searchPattern, searchPattern);
     }
 
     // 查询总数

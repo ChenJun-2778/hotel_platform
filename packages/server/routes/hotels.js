@@ -171,7 +171,10 @@ router.post('/create', async (req, res) => {
  * 
  * 查询参数：
  * - page: 页码（可选，默认1）
- * - pageSize: 每页条数（可选，默认10）
+ * - pageSize: 每页条数（可选，默认10，最大100）
+ * - keyword: 搜索关键词（可选，按酒店名称或地址模糊搜索）
+ * - user_id: 用户ID（可选，只返回该用户创建的酒店）
+ * - hotel_type: 酒店类型（可选，1-国内酒店，2-海外酒店，3-民宿酒店）
  * 
  * 返回字段：
  * - id: 酒店ID
@@ -182,6 +185,8 @@ router.post('/create', async (req, res) => {
  * - room_number: 酒店房间数
  * - status: 状态（1-营业中，0-已下架，2-待审批，3-审批拒绝）
  * - star_rating: 酒店星级
+ * - rejection_reason: 审批拒绝原因
+ * - hotel_type: 酒店类型（1-国内酒店，2-海外酒店，3-民宿酒店）
  */
 router.get('/list', async (req, res) => {
   try {
@@ -193,6 +198,7 @@ router.get('/list', async (req, res) => {
     // 获取查询参数
     const keyword = req.query.keyword ? req.query.keyword.trim() : '';
     const user_id = req.query.user_id ? parseInt(req.query.user_id) : null;
+    const hotel_type = req.query['hotel_type'] ? parseInt(req.query['hotel_type']) : null;
 
     // 构建WHERE条件
     let whereCondition = 'is_deleted = 0';
@@ -204,11 +210,17 @@ router.get('/list', async (req, res) => {
       queryParams.push(user_id);
     }
 
+    // hotel_type 过滤（按酒店类型精确匹配）
+    if (hotel_type) {
+      whereCondition += ' AND hotel_type = ?';
+      queryParams.push(hotel_type);
+    }
+
     if (keyword) {
-      // 如果有关键词，添加名称或地址的模糊搜索
-      whereCondition += ' AND (name LIKE ? OR address LIKE ?)';
+      // 如果有关键词，按名称、城市（location）或详细地址（address）模糊搜索
+      whereCondition += ' AND (name LIKE ? OR location LIKE ? OR address LIKE ?)';
       const searchPattern = `%${keyword}%`;
-      queryParams.push(searchPattern, searchPattern);
+      queryParams.push(searchPattern, searchPattern, searchPattern);
     }
 
     // 查询总数
@@ -231,7 +243,8 @@ router.get('/list', async (req, res) => {
         room_number,
         status,
         star_rating,
-        rejection_reason
+        rejection_reason,
+        hotel_type
       FROM hotels
       WHERE ${whereCondition}
       ORDER BY created_at DESC
