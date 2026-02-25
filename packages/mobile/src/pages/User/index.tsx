@@ -8,7 +8,6 @@ import {
   EditSOutline 
 } from 'antd-mobile-icons';
 import styles from './index.module.css';
-import { apiUpdateProfile } from '@/api/User/index';
 
 type ImageUploadItem = {
   url: string;
@@ -29,7 +28,13 @@ const User: React.FC = () => {
     const storedUser = localStorage.getItem('USER_INFO');
     if (storedUser) {
       try {
-        setUserInfo(JSON.parse(storedUser));
+        const user = JSON.parse(storedUser);
+        // 清理无效的 blob URL
+        if (user.avatar && user.avatar.startsWith('blob:')) {
+          user.avatar = '';
+          localStorage.setItem('USER_INFO', JSON.stringify(user));
+        }
+        setUserInfo(user);
       } catch (e) {
         console.error('解析用户信息失败', e);
       }
@@ -48,16 +53,28 @@ const User: React.FC = () => {
     }
   };
 
-  // 模拟图片上传
+  // 获取有效的头像 URL（过滤掉无效的 blob URL）
+  const getValidAvatarUrl = (avatar: string | undefined): string => {
+    if (!avatar) return '';
+    // 如果是 blob URL，返回空字符串（让 Avatar 组件显示默认头像）
+    if (avatar.startsWith('blob:')) return '';
+    // 如果是 base64 或 http/https URL，正常返回
+    return avatar;
+  };
+
+  // Mock 图片上传（转换为 base64，刷新后仍可显示）
   const mockUpload = async (file: File): Promise<ImageUploadItem> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setTimeout(() => {
-          resolve({ url: e.target?.result as string });
-        }, 500);
+        // 转换为 base64 格式，这样保存到 localStorage 后刷新仍可显示
+        const base64Url = e.target?.result as string;
+        resolve({ url: base64Url });
       };
-      reader.readAsDataURL(file);
+      reader.onerror = () => {
+        reject(new Error('文件读取失败'));
+      };
+      reader.readAsDataURL(file); // 读取为 base64
     });
   };
 
@@ -65,7 +82,9 @@ const User: React.FC = () => {
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // 阻止冒泡，防止触发外层 header 的点击事件
     if (userInfo) {
-      const avatarFileList = userInfo.avatar ? [{ url: userInfo.avatar }] : [];
+      // 过滤掉无效的 blob URL
+      const validAvatarUrl = getValidAvatarUrl(userInfo.avatar);
+      const avatarFileList = validAvatarUrl ? [{ url: validAvatarUrl }] : [];
       // ✅ 字段对齐：用 username 替换原来的 nickname
       form.setFieldsValue({
         username: userInfo.username,
@@ -75,47 +94,33 @@ const User: React.FC = () => {
     }
   };
 
-  // 保存修改
+  // 保存修改（仅本地）
   const handleSaveProfile = async () => {
     try {
       const values = await form.validateFields();
       
-      let newAvatarUrl = '';
+      let newAvatarUrl = userInfo.avatar;
       if (values.avatar && values.avatar.length > 0) {
         newAvatarUrl = values.avatar[0].url;
       }
 
-      // ✅ 调用后端 API 更新用户信息
-      Toast.show({ icon: 'loading', content: '保存中...', duration: 0 });
-      
-      const res = await apiUpdateProfile(userInfo.id, {
+      // 过滤掉无效的 blob URL
+      const validAvatarUrl = getValidAvatarUrl(newAvatarUrl);
+
+      // 更新本地用户信息
+      const newUser = { 
+        ...userInfo, 
         username: values.username,
-        avatar_url: newAvatarUrl
-      });
+        avatar: validAvatarUrl 
+      };
 
-      Toast.clear();
-
-      if (res.success) {
-        // 更新本地用户信息
-        const newUser = { 
-          ...userInfo, 
-          username: values.username,
-          avatar: newAvatarUrl,
-          avatar_url: newAvatarUrl
-        };
-
-        setUserInfo(newUser);
-        localStorage.setItem('USER_INFO', JSON.stringify(newUser));
-        
-        Toast.show({ icon: 'success', content: '修改成功' });
-        setEditVisible(false);
-      } else {
-        Toast.show({ icon: 'fail', content: res.message || '修改失败' });
-      }
-    } catch (error: any) {
-      Toast.clear();
+      setUserInfo(newUser);
+      localStorage.setItem('USER_INFO', JSON.stringify(newUser));
+      
+      Toast.show({ icon: 'success', content: '修改成功' });
+      setEditVisible(false);
+    } catch (error) {
       console.log('保存失败', error);
-      Toast.show({ icon: 'fail', content: error.message || '保存失败' });
     }
   };
 
@@ -151,7 +156,7 @@ const User: React.FC = () => {
       {/* ========== 头部区域 ========== */}
       <div className={styles.header} onClick={handleHeaderClick}>
         <Avatar 
-            src={userInfo?.avatar || ''} 
+            src={getValidAvatarUrl(userInfo?.avatar)} 
             style={{ '--size': '64px', '--border-radius': '50%' }} 
         />
         
