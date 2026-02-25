@@ -37,34 +37,40 @@
 .searchMockCenter {
   flex: 1;
   display: flex;
-  align-items: center; 
+  /* 💡 核心对齐修复 1：让子元素沉到底部对齐 */
+  align-items: flex-end; 
+  /* 💡 核心对齐修复 2：强制中栏高度拉伸，与左侧两行字的高度完全一致 */
+  align-self: stretch; 
   border-left: 1px solid #eee;
   padding-left: 16px;
   padding-right: 8px;
-  padding-top: 18px; 
+  /* 💡 核心对齐修复 3：微调底部内边距，弥补行高带来的视觉差，实现完美水平线 */
+  padding-bottom: 2px; 
   min-width: 0;
   cursor: pointer;
-  min-height: 44px;
 }
 
 /* 关键词容器样式 */
 .keywordWrapper {
   display: flex;
-  align-items: center;
+  align-items: center; /* 让清除图标和文字垂直居中 */
   width: 100%;
   justify-content: flex-start; 
 }
 
-/* 关键词文本样式（有内容时） - 与城市名对齐 */
+/* 关键词文本样式（有内容时） - 变小，变灰 */
 .keywordText {
-  font-size: 18px;
-  color: #333;
-  font-weight: bold;
+  /* 💡 视觉修复 1：字体缩小到 16px (对比左侧的 18px) */
+  font-size: 16px; 
+  /* 💡 视觉修复 2：颜色改为偏灰色 */
+  color: #666; 
+  /* 💡 视觉修复 3：取消粗体，改为普通或中等字重，显得秀气 */
+  font-weight: 500; 
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 0 1 auto; 
-  line-height: 1.4;
+  line-height: 1.2;
 }
 
 /* 清除图标样式 */
