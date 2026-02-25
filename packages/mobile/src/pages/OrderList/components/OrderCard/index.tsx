@@ -1,6 +1,7 @@
-import React from 'react';
-import { Button, Toast, Dialog } from 'antd-mobile';
+import React, { useState } from 'react';
+import { Button, Toast, Dialog, Popup, PasscodeInput, NumberKeyboard } from 'antd-mobile';
 import { useNavigate } from 'react-router-dom';
+import { CloseOutline } from 'antd-mobile-icons';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 import { OrderStatus } from '@/api/Order/type';
@@ -17,6 +18,8 @@ interface OrderCardProps {
 
 const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
   const navigate = useNavigate();
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [password, setPassword] = useState('');
 
   // 状态映射
   const getStatusInfo = (status: OrderStatus) => {
@@ -82,13 +85,21 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
     return dayjs(dateStr).format('MM-DD');
   };
 
-  // 支付按钮点击
-  const handlePay = async () => {
+  // 支付按钮点击 - 打开支付密码弹窗
+  const handlePay = () => {
+    setPasswordVisible(true);
+    setPassword('');
+  };
+
+  // 执行支付
+  const handlePayment = async () => {
     // Mock 模式下模拟支付
     if (USE_MOCK) {
       Toast.show({ icon: 'loading', content: '支付中...', duration: 1000 });
       setTimeout(() => {
         Toast.show({ icon: 'success', content: '支付成功' });
+        setPasswordVisible(false);
+        setPassword('');
         onRefresh?.();
       }, 1000);
       return;
@@ -96,11 +107,13 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
 
     // 真实接口
     try {
-      Toast.show({ icon: 'loading', content: '正在跳转支付...', duration: 0 });
+      Toast.show({ icon: 'loading', content: '支付中...', duration: 0 });
       
       const res = await apiPayOrder(data.order_no);
       
       Toast.clear();
+      setPasswordVisible(false);
+      setPassword('');
       
       if (res.success) {
         Toast.show({ icon: 'success', content: '支付成功' });
@@ -110,9 +123,18 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
       }
     } catch (error: any) {
       Toast.clear();
+      setPasswordVisible(false);
+      setPassword('');
       Toast.show({ icon: 'fail', content: error.message || '支付失败' });
     }
   };
+
+  // 监听密码输入，满6位自动提交
+  React.useEffect(() => {
+    if (password.length === 6) {
+      handlePayment();
+    }
+  }, [password]);
 
   // 取消订单
   const handleCancel = () => {
@@ -180,6 +202,54 @@ const OrderCard: React.FC<OrderCardProps> = ({ data, onRefresh }) => {
           <Button size='small' color='primary' fill='outline' onClick={handleRebook}>再次预订</Button>
         )}
       </div>
+
+      {/* 支付密码弹窗 */}
+      <Popup
+        visible={passwordVisible}
+        onMaskClick={() => {
+          setPasswordVisible(false);
+          setPassword('');
+        }}
+        bodyStyle={{ borderTopLeftRadius: '12px', borderTopRightRadius: '12px', minHeight: '50vh' }}
+      >
+        <div style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <span style={{ fontSize: '18px', fontWeight: 'bold' }}>请输入支付密码</span>
+            <CloseOutline 
+              fontSize={24} 
+              color='#999' 
+              onClick={() => {
+                setPasswordVisible(false);
+                setPassword('');
+              }}
+            />
+          </div>
+          
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <div style={{ fontSize: '14px', color: '#666' }}>向 携程酒店 支付</div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '8px' }}>¥{data.total_price}</div>
+          </div>
+
+          <PasscodeInput 
+            seperated 
+            value={password}
+            length={6}
+          />
+
+          <NumberKeyboard
+            visible={passwordVisible}
+            showCloseButton={false}
+            onInput={(char) => {
+              if (password.length < 6) {
+                setPassword(val => val + char);
+              }
+            }}
+            onDelete={() => {
+              setPassword(val => val.slice(0, -1));
+            }}
+          />
+        </div>
+      </Popup>
     </div>
   );
 };

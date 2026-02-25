@@ -136,6 +136,19 @@
     line-height: 1;
   }
   
+  .buttonGroup {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .laterBtn {
+    width: 100px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    border: 1px solid #d9d9d9;
+  }
+  
   .submitBtn {
     width: 120px;
     border-radius: 20px;

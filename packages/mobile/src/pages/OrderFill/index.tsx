@@ -57,7 +57,7 @@ const OrderFill: React.FC = () => {
     }
   }, [password]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (payNow: boolean = true) => {
     if (submitting) return;
     
     try {
@@ -106,8 +106,17 @@ const OrderFill: React.FC = () => {
 
       if (res.success) {
         setOrderNo(res.data.order_no);
-        // 打开支付密码弹窗
-        setPasswordVisible(true);
+        
+        if (payNow) {
+          // 立即支付：打开支付密码弹窗
+          setPasswordVisible(true);
+        } else {
+          // 稍后支付：跳转到订单列表
+          Toast.show({ icon: 'success', content: '订单创建成功' });
+          setTimeout(() => {
+            navigate('/order-list', { replace: true });
+          }, 1500);
+        }
       } else {
         Toast.show({ icon: 'fail', content: res.message || '创建订单失败' });
       }
@@ -232,15 +241,26 @@ const OrderFill: React.FC = () => {
             <span className={styles.currency}>¥</span>
             <span className={styles.totalPrice}>{totalPrice}</span>
         </div>
-        <Button 
-            color='primary' 
-            className={styles.submitBtn}
-            onClick={handleSubmit}
-            loading={submitting}
-            disabled={submitting}
-        >
-            提交订单
-        </Button>
+        <div className={styles.buttonGroup}>
+          <Button 
+              color='default' 
+              className={styles.laterBtn}
+              onClick={() => handleSubmit(false)}
+              loading={submitting}
+              disabled={submitting}
+          >
+              稍后支付
+          </Button>
+          <Button 
+              color='primary' 
+              className={styles.submitBtn}
+              onClick={() => handleSubmit(true)}
+              loading={submitting}
+              disabled={submitting}
+          >
+              立即支付
+          </Button>
+        </div>
       </div>
 
       {/* 支付弹窗 */}
