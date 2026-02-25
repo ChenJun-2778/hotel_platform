@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import styles from './index.module.css';
 // import type { Hotel } from './type'; 
 import LazyImage from '@/components/LazyImage';
+import { LocationFill } from 'antd-mobile-icons';
 
 const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
   // ✅ 使用 useMemo 缓存标签数组，避免重复计算
@@ -72,7 +73,10 @@ const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
         </div>
 
         {/* ✅ 修复：优先使用具体 address，没有再降级使用 location */}
-        <div className={styles.positionText}>{hotel.address || hotel.location || '位置不详'}</div>
+        <div className={styles.positionText}>
+          <LocationFill className={styles.locationIcon} />
+          {hotel.address || hotel.location || '位置不详'}
+        </div>
         
         <div className={styles.recommendText}>{hotel.description || '热门精选酒店'}</div>
 

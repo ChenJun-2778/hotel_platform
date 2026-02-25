@@ -1,5 +1,6 @@
 .listContent {
   padding: 12px;
+  background: #f5f5f5;
 }
 
 .hotelCard {
@@ -8,12 +9,19 @@
   border-radius: 12px;
   padding: 12px;
   margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.hotelCard:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .cardLeft {
   position: relative;
-  width: 110px;
-  height: 150px;
+  width: 120px;
+  height: 160px;
   flex-shrink: 0;
 }
 
@@ -30,13 +38,15 @@
   bottom: 8px;
   right: 8px;
   color: #fff;
-  background: rgba(0,0,0,0.5);
-  width: 20px;
-  height: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 10px;
-  line-height: 20px;
+  backdrop-filter: blur(4px);
 }
 
 .cardRight {
@@ -47,114 +57,180 @@
   justify-content: space-between;
 }
 
+.hotelNameRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
 .hotelName {
   font-size: 16px;
-  font-weight: bold;
-  color: #333;
+  font-weight: 600;
+  color: #1a1a1a;
   line-height: 1.4;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hotelStar {
-  color: #ff9d00;
-  font-size: 10px;
-  margin-left: 4px;
+  color: #ffa726;
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1.4;
 }
 
 .scoreRow {
   display: flex;
   align-items: center;
-  margin-top: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  gap: 4px 0;
 }
 
 .scoreNum {
-  background: #0086F6;
+  background: linear-gradient(135deg, #0086F6 0%, #0066CC 100%);
   color: #fff;
-  padding: 0 4px;
+  padding: 2px 6px;
   border-radius: 4px 4px 4px 0;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 134, 246, 0.2);
 }
 
 .scoreText {
   color: #0086F6;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 600;
   margin: 0 6px;
 }
 
 .commentInfo {
-  color: #666;
-  font-size: 11px;
+  color: #999;
+  font-size: 12px;
 }
 
 .favoriteInfo {
-  color: #666;
-  font-size: 11px;
+  color: #999;
+  font-size: 12px;
   margin-left: 8px;
+  display: flex;
+  align-items: center;
 }
 
-.positionText, .recommendText {
+.favoriteInfo::before {
+  content: '♥';
+  color: #ff6b6b;
+  margin-right: 2px;
+  font-size: 11px;
+}
+
+.positionText {
   font-size: 12px;
   color: #666;
-  margin-top: 4px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.locationIcon {
+  font-size: 14px;
+  color: #ff6b6b;
+  flex-shrink: 0;
 }
 
 .recommendText {
-  color: #0055aa; /* 推荐文字颜色偏蓝 */
+  font-size: 12px;
+  color: #0086F6;
+  margin-top: 4px;
+  background: rgba(0, 134, 246, 0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
 }
 
 .tagRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .hotelTag {
-  font-size: 10px;
+  font-size: 11px;
   color: #0086F6;
-  border: 1px solid rgba(0, 134, 246, 0.3);
-  padding: 0 4px;
-  border-radius: 2px;
+  background: rgba(0, 134, 246, 0.08);
+  border: 1px solid rgba(0, 134, 246, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
 }
 
 .rankBadge {
-  background: #fff5e6;
+  background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
   color: #ff9d00;
   font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
   margin-top: 6px;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  font-weight: 500;
+}
+
+.rankIcon {
+  font-size: 12px;
 }
 
 .priceRow {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-top: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.priceLeft {
+  display: flex;
+  align-items: center;
 }
 
 .vipTag {
-  font-size: 10px;
+  font-size: 11px;
   color: #ff6600;
-  font-weight: bold;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+  padding: 3px 8px;
+  border-radius: 4px;
 }
 
 .priceRight {
+  display: flex;
+  align-items: baseline;
   color: #ff4400;
 }
 
 .priceUnit {
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .priceNum {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 2px;
 }
 
 .priceTail {
   font-size: 12px;
   color: #999;
+  font-weight: 400;
 }
