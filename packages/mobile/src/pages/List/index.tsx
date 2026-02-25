@@ -49,8 +49,9 @@ const List: React.FC = () => {
   // 计算晚数
   const nightCount = dayjs(safeEndDate).diff(dayjs(safeBeginDate), 'day');
 
-  // 控制排序
-  const [sortType, setSortType] = useState<string>('def');
+  // 控制排序 - 从 URL 参数初始化
+  const urlSortType = searchParams.get('sortType');
+  const [sortType, setSortType] = useState<string>(urlSortType || 'def');
   // 控制 Dropdown 关闭
   const dropdownRef = useRef<any>(null);
   // 排序的菜单数据保留在父组件，方便以后传给后端或做动态修改
@@ -63,7 +64,14 @@ const List: React.FC = () => {
   ];
   // 静态筛选条件的状态
   // const [priceRange, setPriceRange] = useState({ min: '', max: '' });
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]); // 价格
+  // 从 URL 参数初始化价格范围
+  const urlPriceMin = searchParams.get('price_min');
+  const urlPriceMax = searchParams.get('price_max');
+  const [priceRange, setPriceRange] = useState<[number, number]>(() => {
+    const min = urlPriceMin ? Number(urlPriceMin) : 0;
+    const max = urlPriceMax ? Number(urlPriceMax) : 1000;
+    return [min, max];
+  }); // 价格
   const [filterScore, setFilterScore] = useState(''); // 分数
   // 综合
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CapsuleTabs, NavBar, TabBar } from 'antd-mobile';
-import { FireFill } from 'antd-mobile-icons'; // 需要安装图标库
+import { FireFill, HeartFill, StarFill } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
 // 引入跳转钩子
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -82,27 +82,35 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHourly, dateRange[0]]);
 
-  // 快捷入口配置（方便后续修改词条）
+  // 快捷入口配置（补充了渐变色和图标）
   const quickEntries = [
     { 
       label: '特价酒店', 
       type: 'discount',
-      params: { sortType: 'price_asc', price_max: '300' }  // 特殊逻辑：价格筛选
+      params: { sortType: 'price_asc', price_max: '300' },
+      icon: <FireFill />,
+      color: 'linear-gradient(135deg, #ff8b6e, #ff4d4f)' // 热情促销红
     },
     { 
       label: '亲子房', 
       type: 'keyword',
-      keyword: '亲子'  // 关键词搜索
+      keyword: '亲子',
+      icon: <HeartFill />,
+      color: 'linear-gradient(135deg, #ff9a9e, #fecfef)' // 温馨亲子粉
     },
     { 
       label: '免费停车', 
       type: 'keyword',
-      keyword: '停车'  // 关键词搜索
+      keyword: '停车',
+      icon: <span style={{ fontFamily: 'Arial, sans-serif', fontStyle: 'italic', paddingRight: '2px' }}>P</span>, // 停车场专属大 P
+      color: 'linear-gradient(135deg, #70a1ff, #1e90ff)' // 商务安心蓝
     },
     { 
       label: '游泳池', 
       type: 'keyword',
-      keyword: '游泳'  // 关键词搜索
+      keyword: '游泳',
+      icon: <StarFill />,
+      color: 'linear-gradient(135deg, #4facfe, #00f2fe)' // 清凉泳池蓝
     }
   ];
 
@@ -194,7 +202,21 @@ const Home = () => {
             className={styles.gridItem}
             onClick={() => handleQuickEntry(entry)}
           >
-            <div className={styles.gridIcon}></div>
+            {/* ✅ 核心修改：注入渐变背景色和居中显示的白色图标 */}
+            <div 
+              className={styles.gridIcon}
+              style={{ 
+                background: entry.color,
+                color: '#fff',
+                fontSize: '22px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.1)' // 加一点点投影让它浮起来
+              }}
+            >
+              {entry.icon}
+            </div>
             <div className={styles.gridLabel}>{entry.label}</div>
           </div>
         ))}
