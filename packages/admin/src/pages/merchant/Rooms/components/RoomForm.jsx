@@ -18,6 +18,13 @@ const RoomForm = ({
   roomImageFileList,
   setRoomImageFileList,
 }) => {
+  // 处理房间号输入
+  const handleRoomNumbersChange = (value) => {
+    // 过滤掉空字符串
+    const filteredValue = value.filter(v => v && v.trim());
+    form.setFieldsValue({ room_numbers: filteredValue });
+  };
+
   return (
     <Form
       form={form}
@@ -76,6 +83,14 @@ const RoomForm = ({
             placeholder="输入房间号，按回车添加"
             style={{ width: '100%' }}
             tokenSeparators={[',']}
+            onChange={handleRoomNumbersChange}
+            onInputKeyDown={(e) => {
+              // 如果按下回车键且输入框为空，阻止默认行为（防止删除最后一个标签）
+              if (e.key === 'Enter' && !e.target.value.trim()) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
           />
         </Form.Item>
 

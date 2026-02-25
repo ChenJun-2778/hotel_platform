@@ -1,5 +1,5 @@
 import React from 'react';
-import RoomTypeCard from './RoomTypeCard';
+import RoomTypeCard from '../../../../components/common/RoomTypeCard';
 
 /**
  * 房间网格组件 - 按房型分组显示
@@ -27,7 +27,8 @@ const RoomGrid = ({ rooms, onView, onEdit, onDelete }) => {
       {rooms.map((roomType) => (
         <RoomTypeCard 
           key={roomType.id} 
-          roomType={roomType} 
+          roomType={roomType}
+          mode="manage"
           onView={onView}
           onEdit={onEdit}
           onDelete={onDelete}
