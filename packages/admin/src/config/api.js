@@ -1,5 +1,6 @@
 // API 基础配置
 export const API_BASE_URL = 'http://47.99.56.81:3000/api';
+// export const API_BASE_URL = 'http://localhost:3000/api';
 
 // 认证相关接口
 export const AUTH_API = {

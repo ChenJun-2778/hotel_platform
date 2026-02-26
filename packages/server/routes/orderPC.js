@@ -12,15 +12,16 @@ const { query } = require('../config/database');
  * - guest_name:  预订客户姓名（可选，模糊搜索）
  *
  * 返回字段：
- * - order_no:       订单号
- * - hotel_name:     酒店名称（来自 hotels 表）
- * - room_type:      房间类型（来自 rooms 表）
- * - guest_name:     客户姓名（来自 orders 表）
- * - check_in_date:  入住日期
- * - check_out_date: 退房日期
- * - nights:         住宿天数
- * - total_price:    订单金额
- * - status:         订单状态（1-待付款 2-待确定 3-待入住 4-已完成）
+ * - order_no:          订单号
+ * - hotel_name:        酒店名称（来自 hotels 表）
+ * - room_type:         房间类型（来自 rooms 表）
+ * - guest_name:        客户姓名（来自 orders 表）
+ * - check_in_date:     入住日期
+ * - check_out_date:    退房日期
+ * - nights:            住宿天数
+ * - total_price:       订单金额
+ * - status:            订单状态（1-待付款 2-待确定 3-待入住 4-已完成）
+ * - assigned_room_no:  分配房间号（仅 status=3 或 status=4 时返回）
  */
 router.get('/list', async (req, res) => {
   try {
@@ -49,14 +50,15 @@ router.get('/list', async (req, res) => {
     const sql = `
       SELECT
         o.order_no,
-        h.name        AS hotel_name,
+        h.name           AS hotel_name,
         r.room_type,
         o.guest_name,
         o.check_in_date,
         o.check_out_date,
         o.nights,
         o.total_price,
-        o.status
+        o.status,
+        o.assigned_room_no
       FROM orders o
       INNER JOIN hotels h ON o.hotel_id = h.id
       INNER JOIN rooms  r ON o.room_id  = r.id
@@ -65,6 +67,13 @@ router.get('/list', async (req, res) => {
     `;
 
     const orders = await query(sql, params);
+
+    // status 不为 3（待入住）或 4（已完成）时，隐藏 assigned_room_no
+    orders.forEach(order => {
+      if (order.status !== 3 && order.status !== 4) {
+        delete order.assigned_room_no;
+      }
+    });
 
     res.status(200).json({
       success: true,
@@ -176,9 +185,11 @@ router.put('/confirm/:order_no', async (req, res) => {
  * - order_no: 订单号（必填）
  *
  * 返回字段说明：
- * - 始终不返回 updated_at
- * - status 为 1（待付款）或 2（待确定）时，不返回 assigned_room_no
- * - status 不为 1、2 时，额外返回 confirmed_at
+ * - 始终不返回 updated_at、room_id、room_numbers（原始字段）
+ * - available_room_numbers: 该房型中尚未被分配的房间号数组
+ *   （从 rooms.room_numbers 中剔除已被 status=3/4 订单占用的 assigned_room_no）
+ * - status 为 1（待付款）或 2（待确定）时，不返回 assigned_room_no 和 confirmed_at
+ * - status 为 3（待入住）/ 4（已完成）时，额外返回 assigned_room_no 和 confirmed_at
  */
 router.get('/detail', async (req, res) => {
   try {
@@ -188,12 +199,13 @@ router.get('/detail', async (req, res) => {
       return res.status(400).json({ success: false, message: '订单号不能为空' });
     }
 
-    // 查询订单，JOIN hotels 和 rooms 取名称，排除 hotel_id、room_id 和 updated_at
+    // 查询订单，JOIN hotels 和 rooms 取名称；保留 room_id / room_numbers 用于后续计算
     const sql = `
       SELECT
         o.id,
         o.order_no,
         o.user_id,
+        o.room_id,
         h.name        AS hotel_name,
         r.room_type,
         r.room_numbers,
@@ -220,6 +232,40 @@ router.get('/detail', async (req, res) => {
     }
 
     const order = rows[0];
+    const roomId = order.room_id;
+
+    // -------------------------------------------------------
+    // 计算可用房间号：
+    // 1. 查询同 room_id 下已被分配（status=3 或 4）的所有 assigned_room_no
+    // 2. 从 rooms.room_numbers 总列表中剔除已占用的，得到可用列表
+    // -------------------------------------------------------
+    // 查询在时间段重叠区间内、已被分配（status=3/4）的同房型订单的房间号
+    // 日期重叠条件：其他订单的 check_in_date < 本订单 check_out_date
+    //              且 check_out_date > 本订单 check_in_date
+    // 同时排除当前订单自身（order_no <> ?）
+    const assignedRows = await query(
+      `SELECT assigned_room_no FROM orders
+       WHERE room_id = ?
+         AND status IN (3, 4)
+         AND assigned_room_no IS NOT NULL
+         AND order_no <> ?
+         AND check_in_date  < ?
+         AND check_out_date > ?`,
+      [roomId, order_no, order.check_out_date, order.check_in_date]
+    );
+    const assignedSet = new Set(assignedRows.map(r => r.assigned_room_no));
+
+    let allRoomNumbers = [];
+    try {
+      allRoomNumbers = JSON.parse(order.room_numbers || '[]');
+    } catch {
+      allRoomNumbers = [];
+    }
+    const availableRoomNumbers = allRoomNumbers.filter(no => !assignedSet.has(no));
+
+    // 用可用列表替换原始字段，并移除内部辅助字段
+    order.room_numbers = availableRoomNumbers;
+    delete order.room_id;
 
     // 根据状态动态裁剪返回字段
     if (order.status === 1 || order.status === 2) {
