@@ -150,8 +150,39 @@
   background: rgba(0, 134, 246, 0.05);
   padding: 4px 8px;
   border-radius: 4px;
-  display: inline-block;
-  align-self: flex-start;
+  display: block;
+  max-width: 100%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.descContent {
+  /* 默认状态：最多显示 3 行 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+/* 展开状态：显示全部文字，但最多 8 行 */
+.recommendText.expanded .descContent {
+  -webkit-line-clamp: 8;
+}
+
+.expandHint {
+  color: #0086F6;
+  font-size: 11px;
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+/* 添加点击提示 */
+.recommendText:active {
+  background: rgba(0, 134, 246, 0.12);
 }
 
 .tagRow {

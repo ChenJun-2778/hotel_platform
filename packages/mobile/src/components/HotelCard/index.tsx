@@ -1,16 +1,32 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import styles from './index.module.css';
 // import type { Hotel } from './type'; 
 import LazyImage from '@/components/LazyImage';
 import { LocationFill } from 'antd-mobile-icons';
 
 const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
+  // 控制描述文字的展开/收起状态
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  // 判断描述文字是否超过 3 行
+  const [isDescOverflow, setIsDescOverflow] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
+
   // ✅ 使用 useMemo 缓存标签数组，避免重复计算
   const tagsArray = useMemo(() => {
     return hotel.hotel_facilities 
       ? hotel.hotel_facilities.split(',') 
       : (hotel.tags || []);
   }, [hotel.hotel_facilities, hotel.tags]);
+
+  // 检测描述文字是否超过 3 行
+  useEffect(() => {
+    if (descRef.current) {
+      const lineHeight = parseFloat(getComputedStyle(descRef.current).lineHeight);
+      const maxHeight = lineHeight * 3; // 3 行的高度
+      const actualHeight = descRef.current.scrollHeight;
+      setIsDescOverflow(actualHeight > maxHeight);
+    }
+  }, [hotel.description]);
 
   // ✅ 使用 useMemo 缓存评分文案
   const scoreText = useMemo(() => {
@@ -78,7 +94,27 @@ const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
           {hotel.address || hotel.location || '位置不详'}
         </div>
         
-        <div className={styles.recommendText}>{hotel.description || '热门精选酒店'}</div>
+        {/* 描述文字：支持展开/收起，最多显示 3 行 */}
+        <div 
+          className={`${styles.recommendText} ${isDescExpanded ? styles.expanded : ''}`}
+          onClick={(e) => {
+            if (isDescOverflow) {
+              e.stopPropagation(); // 阻止冒泡，避免触发卡片点击
+              setIsDescExpanded(!isDescExpanded);
+            }
+          }}
+          style={{ cursor: isDescOverflow ? 'pointer' : 'default' }}
+        >
+          <div ref={descRef} className={styles.descContent}>
+            {hotel.description || '热门精选酒店'}
+          </div>
+          {/* 只有文字超过 3 行时才显示展开/收起提示 */}
+          {isDescOverflow && (
+            <span className={styles.expandHint}>
+              {isDescExpanded ? ' 收起' : ' 展开'}
+            </span>
+          )}
+        </div>
 
         <div className={styles.tagRow}>
           {tagsArray.map((tag: string, index: number) => (
