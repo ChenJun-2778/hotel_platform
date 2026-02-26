@@ -18,11 +18,11 @@ const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
       : (hotel.tags || []);
   }, [hotel.hotel_facilities, hotel.tags]);
 
-  // 检测描述文字是否超过 3 行
+  // 检测描述文字是否超过 2 行
   useEffect(() => {
     if (descRef.current) {
       const lineHeight = parseFloat(getComputedStyle(descRef.current).lineHeight);
-      const maxHeight = lineHeight * 3; // 3 行的高度
+      const maxHeight = lineHeight * 2; // 2 行的高度
       const actualHeight = descRef.current.scrollHeight;
       setIsDescOverflow(actualHeight > maxHeight);
     }
@@ -94,7 +94,7 @@ const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
           {hotel.address || hotel.location || '位置不详'}
         </div>
         
-        {/* 描述文字：支持展开/收起，最多显示 3 行 */}
+        {/* 描述文字：支持展开/收起，默认最多显示 2 行 */}
         <div 
           className={`${styles.recommendText} ${isDescExpanded ? styles.expanded : ''}`}
           onClick={(e) => {
@@ -108,7 +108,7 @@ const HotelCard: React.FC<{ hotel: any }> = ({ hotel }) => {
           <div ref={descRef} className={styles.descContent}>
             {hotel.description || '热门精选酒店'}
           </div>
-          {/* 只有文字超过 3 行时才显示展开/收起提示 */}
+          {/* 只有文字超过 2 行时才显示展开/收起提示 */}
           {isDescOverflow && (
             <span className={styles.expandHint}>
               {isDescExpanded ? ' 收起' : ' 展开'}
