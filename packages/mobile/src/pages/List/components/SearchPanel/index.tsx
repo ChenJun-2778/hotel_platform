@@ -1,7 +1,7 @@
 // src/pages/List/components/SearchPanel/index.tsx
 import React from 'react';
 import { Popup, Button } from 'antd-mobile';
-import { RightOutline } from 'antd-mobile-icons';
+import { RightOutline, EnvironmentOutline } from 'antd-mobile-icons';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 
@@ -41,7 +41,10 @@ const SearchPanel: React.FC<Props> = ({
       <div className={styles.container}>
         {/* 1. 城市行 */}
         <div className={styles.row} onClick={onCityClick}>
-          <span className={styles.cityText}>{city}</span>
+          <div className={styles.cityText}>
+            <EnvironmentOutline className={styles.cityIcon} />
+            {city}
+          </div>
           <RightOutline color='#ccc' />
         </div>
         {/* ✅ 日期行：添加 onClick */}
@@ -59,12 +62,6 @@ const SearchPanel: React.FC<Props> = ({
             </div>
           </div>
           <div className={styles.nightTag}>共 {nightCount} 晚</div>
-        </div>
-
-        {/* 3. 人数行 */}
-        <div className={styles.row} style={{ borderBottom: 'none' }}>
-          <span className={styles.guestText}>1间 · 2成人 · 0儿童</span>
-          <RightOutline color='#ccc' />
         </div>
 
         {/* 4. 按钮 */}
