@@ -167,6 +167,7 @@
     overflow: hidden;
     margin-right: 12px;
     flex-shrink: 0;
+    position: relative;
   }
   
   .roomImg {
@@ -250,6 +251,41 @@
   .bookBtn:active {
     transform: scale(0.95);
     box-shadow: 0 2px 6px rgba(0, 134, 246, 0.4);
+  }
+
+  /* 售罄房型卡片 */
+  .roomCard.soldOut {
+    opacity: 0.6;
+    filter: grayscale(0.5);
+  }
+  
+  /* 售罄遮罩 */
+  .soldOutMask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 8px;
+  }
+  
+  /* 禁用按钮 */
+  .bookBtn.disabled {
+    background: #d9d9d9;
+    color: #999;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  
+  .bookBtn.disabled:active {
+    transform: none;
   }
 
   /* ✅ 新增：日期选择条样式 */

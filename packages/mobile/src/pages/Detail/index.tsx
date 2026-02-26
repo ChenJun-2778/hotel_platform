@@ -206,11 +206,18 @@ const HotelDetail: React.FC = () => {
         <div className={styles.sectionTitle}>选择房型</div>
 
         {/* 这里用 detail.rooms.map，因为 Mock 数据里 rooms 在 detail 内部 */}
-        {detail.rooms && detail.rooms.map((room: any) => (
-          <div key={room.id} className={styles.roomCard}>
-            <div className={styles.roomImgBox}>
-              <Image src={room.image} fit='cover' className={styles.roomImg} />
-            </div>
+        {detail.rooms && detail.rooms.map((room: any) => {
+          const isSoldOut = room.total_rooms === 0;
+          
+          return (
+            <div 
+              key={room.id} 
+              className={`${styles.roomCard} ${isSoldOut ? styles.soldOut : ''}`}
+            >
+              <div className={styles.roomImgBox}>
+                <Image src={room.image} fit='cover' className={styles.roomImg} />
+                {isSoldOut && <div className={styles.soldOutMask}>已售罄</div>}
+              </div>
 
             <div className={styles.roomInfo}>
               <div className={styles.roomName}>{room.name}</div>
@@ -227,10 +234,11 @@ const HotelDetail: React.FC = () => {
                   <span className={styles.currency}>¥</span>
                   <span className={styles.price}>{room.price}</span>
                 </div>
-                {/* 预订按钮：当剩余房间数<=2时显示"仅剩X间"并加火焰图标 */}
+                {/* 预订按钮：根据房间数显示不同状态 */}
                 <div
-                  className={styles.bookBtn}
+                  className={`${styles.bookBtn} ${isSoldOut ? styles.disabled : ''}`}
                   onClick={() => {
+                    if (isSoldOut) return; // 无房间时禁止点击
                     navigate(
                       `/order/${room.id}?` +
                       `hotelId=${detail.id}&` +
@@ -243,17 +251,19 @@ const HotelDetail: React.FC = () => {
                     )
                   }}
                 >
-                  {room.total_rooms && room.total_rooms <= 2 ? (
-                    <>
-                      <FireFill style={{ marginRight: '4px', fontSize: '14px' }} />
-                      仅剩{room.total_rooms}间
-                    </>
-                  ) : '预订'}
+                  {isSoldOut ? '无房间' : (
+                    room.total_rooms && room.total_rooms <= 2 ? (
+                      <>
+                        <FireFill style={{ marginRight: '4px', fontSize: '14px' }} />
+                        仅剩{room.total_rooms}间
+                      </>
+                    ) : '预订'
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
       {/* 底部安全区垫高 */}
