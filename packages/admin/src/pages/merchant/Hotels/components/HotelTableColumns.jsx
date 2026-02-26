@@ -192,7 +192,7 @@ export const getHotelTableColumns = (onView, onEdit, onToggleStatus) => [
       const isOnline = record.status === HOTEL_STATUS.ONLINE;
       const isOffline = record.status === HOTEL_STATUS.OFFLINE;
       const isRejected = record.status === HOTEL_STATUS.REJECTED;
-      // 营业中、已下架、已拒绝状态都可以切换上架/下架
+      // 营业中、已下线、已拒绝状态都可以切换发布/下线
       const canToggle = isOnline || isOffline || isRejected;
 
       // 构建下拉菜单项
@@ -211,25 +211,25 @@ export const getHotelTableColumns = (onView, onEdit, onToggleStatus) => [
         },
       ];
 
-      // 添加上架/下架操作
+      // 添加发布/下线操作
       if (canToggle) {
         menuItems.push({
           key: 'toggle',
           icon: isOnline ? <StopOutlined /> : <CheckCircleOutlined />,
           label: isOnline ? (
-            <span style={{ color: '#ff4d4f' }}>下架酒店</span>
+            <span style={{ color: '#ff4d4f' }}>下线酒店</span>
           ) : (
-            <span style={{ color: '#52c41a' }}>上架酒店</span>
+            <span style={{ color: '#52c41a' }}>发布酒店</span>
           ),
           onClick: () => {
             Modal.confirm({
-              title: isOnline ? '确定要下架该酒店吗？' : '确定要上架该酒店吗？',
+              title: isOnline ? '确定要下线该酒店吗？' : '确定要发布该酒店吗？',
               icon: <ExclamationCircleOutlined />,
               content: isOnline 
-                ? '下架后该酒店将不再对外展示' 
+                ? '下线后该酒店将不再对外展示' 
                 : isRejected
-                  ? '上架后该酒店将重新提交审核'
-                  : '上架后该酒店将对外展示',
+                  ? '发布后该酒店将重新提交审核'
+                  : '发布后该酒店将对外展示',
               okText: '确定',
               cancelText: '取消',
               onOk: () => onToggleStatus(record),

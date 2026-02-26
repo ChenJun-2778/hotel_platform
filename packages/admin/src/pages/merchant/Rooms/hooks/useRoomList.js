@@ -3,6 +3,7 @@ import { message } from 'antd';
 import { getHotelList } from '../../../../services/hotelService';
 import { createRoom, getRoomList, updateRoom as updateRoomAPI, deleteRoom as deleteRoomAPI } from '../../../../services/roomService';
 import { useRoomStore } from '../../../../stores/roomStore';
+import { useAuthStore } from '../../../../stores/authStore';
 
 /**
  * 房间列表管理 Hook
@@ -14,6 +15,7 @@ const useRoomList = () => {
   
   // 使用 Zustand Store
   const addHotelRooms = useRoomStore(state => state.addHotelRooms);
+  const user = useAuthStore(state => state.user); // 获取当前用户
 
   /**
    * 同步酒店的房间数（计算属性，不写入数据库）
@@ -50,7 +52,6 @@ const useRoomList = () => {
       };
       
       // 商户用户只能看到自己的酒店
-      const user = useRoomStore.getState().user || JSON.parse(localStorage.getItem('user') || '{}');
       if (user?.role_type === 2 && user?.id) {
         params.user_id = user.id;
         console.log('✅ 商户用户，添加 user_id 过滤:', user.id);
@@ -59,7 +60,7 @@ const useRoomList = () => {
       const response = await getHotelList(params);
       const hotelList = response.data?.list || response.list || [];
       
-      console.log('✅ 加载酒店列表，共', hotelList.length, '条');
+      console.log('✅ 加载酒店列表，共', hotelList.length, '条，用户ID:', user?.id);
       
       // 房间管理页面显示所有酒店（不过滤状态）
       const hotelOptions = hotelList.map(hotel => ({
@@ -73,7 +74,7 @@ const useRoomList = () => {
       console.error('❌ 加载酒店列表失败:', error);
       message.error('加载酒店列表失败');
     }
-  }, []);
+  }, [user]);
 
   /**
    * 加载指定酒店的房间列表

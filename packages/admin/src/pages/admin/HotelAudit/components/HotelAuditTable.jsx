@@ -311,7 +311,7 @@ const HotelAuditTable = ({
     { key: 2, label: '待审批' },
     { key: 1, label: '营业中' },
     { key: 3, label: '已拒绝' },
-    { key: 0, label: '已下架' },
+    { key: 0, label: '已下线' },
   ];
 
   return (
