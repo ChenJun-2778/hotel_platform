@@ -1,7 +1,25 @@
 # 🏨 酒店预订管理系统
 
 一个功能完整的酒店预订管理平台，包含移动端用户预订系统、PC端商家管理后台和平台管理后台。
+## 🔑 测试账号与验证码说明
 
+为了方便测试，系统预设了以下账号：
+
+### 商户端
+- **手机号**：18005552928
+- **密码**：Tc123456
+- **说明**：登录 PC 商家后台使用。
+
+### 管理端（平台管理员）
+- **手机号**：18005552929
+- **密码**：Tc123456
+- **说明**：登录 PC 平台管理后台使用。
+
+### 移动端（用户）
+- **手机号**：18383919236
+- **说明**：只用验证码登录，默认246810
+### 验证码说明
+移动端注册/登录功能中的短信验证码尚未实现真实发送，目前为固定验证码：**246810**。在移动端输入此验证码即可通过验证。
 ## 📋 目录
 
 - [项目简介](#项目简介)
@@ -10,6 +28,7 @@
 - [功能特性](#功能特性)
 - [快速开始](#快速开始)
 - [环境配置](#环境配置)
+- [测试账号与验证码说明](#测试账号与验证码说明)
 - [API 文档](#api-文档)
 - [数据库设计](#数据库设计)
 - [部署说明](#部署说明)
@@ -170,6 +189,7 @@ hotel-booking-system/
 - pnpm (前端依赖，可通过 `npm install -g pnpm` 安装)
 
 ### 1. 克隆项目
+
 ```bash
 git clone <repository-url>
 cd hotel-booking-system
@@ -177,19 +197,19 @@ cd hotel-booking-system
 
 ### 2. 安装依赖
 
-#### 后端 (使用 npm)
+**后端 (使用 npm)**
 ```bash
 cd server
 npm install
 ```
 
-#### 移动端 (使用 pnpm)
+**移动端 (使用 pnpm)**
 ```bash
 cd mobile
 pnpm install
 ```
 
-#### PC 管理端 (使用 pnpm)
+**PC 管理端 (使用 pnpm)**
 ```bash
 cd admin
 pnpm install
@@ -213,31 +233,31 @@ module.exports = {
   // 字符集设置
   charset: 'utf8mb4'
 };
-
 ```
 
 导入数据库表结构：
+
 ```bash
 mysql -u root -p hotel < server/sql/hotel.sql
 ```
 
 ### 4. 启动项目
 
-#### 启动后端服务
+**启动后端服务**
 ```bash
 cd server
 npm run dev
 # 服务运行在 http://localhost:3000
 ```
 
-#### 启动移动端
+**启动移动端**
 ```bash
 cd mobile
 pnpm dev
 # 应用运行在 http://localhost:5173
 ```
 
-#### 启动 PC 管理端
+**启动 PC 管理端**
 ```bash
 cd admin
 pnpm dev
@@ -275,6 +295,7 @@ VITE_API_BASE_URL=http://47.99.56.81:3000
 ### 阿里云 OSS 配置
 
 在 `admin/src/config/oss.js` 中配置：
+
 ```javascript
 export const ossConfig = {
   region: 'oss-cn-beijing',
@@ -284,12 +305,14 @@ export const ossConfig = {
 };
 ```
 
+
+
 ## 📚 API 文档
 
 详细的 API 文档请查看：
-- [Server API 文档](./docs/SERVER_API.md)
-- [Mobile API 文档](./docs/MOBILE_API.md)
-- [Admin API 文档](./docs/ADMIN_API.md)
+- [Server API 文档](#)
+- [Mobile API 文档](#)
+- [Admin API 文档](#)
 
 ### 主要接口概览
 
@@ -354,18 +377,18 @@ export const ossConfig = {
 
 ### 后端部署
 
-1. 安装 PM2（推荐）
+1. **安装 PM2（推荐）**
 ```bash
 npm install -g pm2
 ```
 
-2. 启动服务
+2. **启动服务**
 ```bash
 cd server
 pm2 start index.js --name hotel-api
 ```
 
-3. 配置 Nginx 反向代理
+3. **配置 Nginx 反向代理**
 ```nginx
 server {
     listen 80;
@@ -384,7 +407,7 @@ server {
 
 ### 前端部署
 
-1. 构建项目
+1. **构建项目**
 ```bash
 # 移动端
 cd mobile
@@ -395,7 +418,8 @@ cd admin
 pnpm build
 ```
 
-2. 部署到服务器
+2. **部署到服务器**
+
 将 `dist` 目录上传到服务器，配置 Nginx：
 
 ```nginx
@@ -442,11 +466,11 @@ chore: 构建/工具链相关
 ```
 
 ### 开发流程
-1. 从 `main` 分支创建功能分支
+1. 从 main 分支创建功能分支
 2. 开发并测试功能
 3. 提交 Pull Request
 4. 代码审查
-5. 合并到 `main` 分支
+5. 合并到 main 分支
 
 ## 🤝 贡献指南
 
@@ -461,7 +485,6 @@ chore: 构建/工具链相关
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
 
 ## 🙏 致谢
 
