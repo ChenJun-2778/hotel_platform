@@ -3,6 +3,7 @@ import { Table, Tag, Space, Button } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import { getOrderStatusInfo } from '../utils/orderStatus';
 import { useRoomStore } from '../../../../stores/roomStore';
+import { formatDateTime } from '../../../../utils/dateFormat';
 
 /**
  * 订单表格组件
@@ -68,16 +69,18 @@ const OrderTable = ({ orders, loading, pagination, onPageChange, onViewDetail })
       width: 100,
     },
     {
-      title: '入住日期',
+      title: '入住时间',
       dataIndex: 'checkIn',
       key: 'checkIn',
-      width: 120,
+      width: 150,
+      render: (checkIn) => formatDateTime(checkIn),
     },
     {
-      title: '退房日期',
+      title: '退房时间',
       dataIndex: 'checkOut',
       key: 'checkOut',
-      width: 120,
+      width: 150,
+      render: (checkOut) => formatDateTime(checkOut),
     },
     {
       title: '天数',

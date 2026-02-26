@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tooltip, Tag } from 'antd';
 import { getRoomStatusInfo } from '../../../../constants/roomStatus';
+import { formatDateTime } from '../../../../utils/dateFormat';
 
 /**
  * 房间预订卡片组件（日历视图专用）
@@ -22,8 +23,8 @@ const RoomBookingCard = ({ room }) => {
               <div style={{ marginTop: 8, borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: 8 }}>
                 <div><strong>入住人：</strong>{room.order.customer}</div>
                 <div><strong>联系电话：</strong>{room.order.phone || '-'}</div>
-                <div><strong>入住日期：</strong>{room.order.checkIn}</div>
-                <div><strong>退房日期：</strong>{room.order.checkOut}</div>
+                <div><strong>入住时间：</strong>{formatDateTime(room.order.checkIn)}</div>
+                <div><strong>退房时间：</strong>{formatDateTime(room.order.checkOut)}</div>
                 <div><strong>订单号：</strong>{room.order.orderNo}</div>
                 <div><strong>订单金额：</strong>¥{room.order.amount}</div>
               </div>

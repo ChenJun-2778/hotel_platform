@@ -1,32 +1,87 @@
 import { useState, useEffect } from 'react';
+import { message } from 'antd';
+import { getHotelList } from '../../../../services/hotelService';
+import { getUserList } from '../../../../services/userService';
+import dayjs from 'dayjs';
 
 /**
- * 数据统计 Hook
+ * 数据统计 Hook - 基于可用API的简化实现
+ * 注意：由于订单和房间API需要特定参数，暂时使用模拟数据
  */
 const useStatistics = (dateRange) => {
   const [orderTrendData, setOrderTrendData] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
   const [occupancyData, setOccupancyData] = useState([]);
   const [userGrowthData, setUserGrowthData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // 模拟加载数据
-    loadStatistics();
-  }, [dateRange]);
+  /**
+   * 加载统计数据
+   */
+  const loadStatistics = async () => {
+    if (!dateRange || dateRange.length !== 2) {
+      console.warn('⚠️ dateRange 无效');
+      return;
+    }
 
-  const loadStatistics = () => {
-    // 订单趋势数据
-    setOrderTrendData([
-      { date: '02-05', 订单数: 45, 完成订单: 38, 取消订单: 7 },
-      { date: '02-06', 订单数: 52, 完成订单: 45, 取消订单: 7 },
-      { date: '02-07', 订单数: 61, 完成订单: 55, 取消订单: 6 },
-      { date: '02-08', 订单数: 58, 完成订单: 52, 取消订单: 6 },
-      { date: '02-09', 订单数: 67, 完成订单: 60, 取消订单: 7 },
-      { date: '02-10', 订单数: 72, 完成订单: 65, 取消订单: 7 },
-      { date: '02-11', 订单数: 68, 完成订单: 62, 取消订单: 6 },
-    ]);
+    try {
+      setLoading(true);
+      
+      // 只请求可用的数据
+      const [hotelsRes, usersRes] = await Promise.all([
+        getHotelList({ page: 1, pageSize: 1000 }),
+        getUserList({ page: 1, pageSize: 1000 }),
+      ]);
 
-    // 收入统计数据
+      const hotels = hotelsRes.data?.list || [];
+      const users = usersRes.data?.list || [];
+
+      console.log('✅ 统计数据加载完成:', {
+        酒店数: hotels.length,
+        用户数: users.length,
+      });
+
+      // 处理用户增长数据（真实数据）
+      processUserGrowth(users, hotels, dateRange);
+      
+      // 其他数据使用模拟数据（因为API限制）
+      generateMockData(dateRange);
+      
+    } catch (error) {
+      console.error('❌ 加载统计数据失败:', error);
+      message.warning('部分统计数据加载失败，显示模拟数据');
+      generateMockData(dateRange);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * 生成模拟数据
+   */
+  const generateMockData = (dateRange) => {
+    const [startDate, endDate] = dateRange;
+    const days = endDate.diff(startDate, 'day') + 1;
+    
+    // 订单趋势模拟数据
+    const trendData = [];
+    for (let i = 0; i < days; i++) {
+      const date = startDate.add(i, 'day');
+      const dateStr = date.format('MM-DD');
+      const baseOrders = 45 + Math.floor(Math.random() * 30);
+      const completed = Math.floor(baseOrders * 0.85);
+      const cancelled = baseOrders - completed;
+      
+      trendData.push({
+        date: dateStr,
+        订单数: baseOrders,
+        完成订单: completed,
+        取消订单: cancelled,
+      });
+    }
+    setOrderTrendData(trendData);
+
+    // 收入统计模拟数据
     setRevenueData([
       { name: '豪华大酒店', value: 125000 },
       { name: '舒适商务酒店', value: 89000 },
@@ -35,7 +90,7 @@ const useStatistics = (dateRange) => {
       { name: '其他', value: 38000 },
     ]);
 
-    // 入住率数据
+    // 入住率模拟数据
     setOccupancyData([
       { hotel: '豪华大酒店', 入住率: 85 },
       { hotel: '舒适商务酒店', 入住率: 78 },
@@ -43,24 +98,55 @@ const useStatistics = (dateRange) => {
       { hotel: '度假村酒店', 入住率: 68 },
       { hotel: '快捷酒店', 入住率: 88 },
     ]);
-
-    // 用户增长数据
-    setUserGrowthData([
-      { date: '02-05', 用户数: 1050, 商户数: 85 },
-      { date: '02-06', 用户数: 1068, 商户数: 86 },
-      { date: '02-07', 用户数: 1092, 商户数: 88 },
-      { date: '02-08', 用户数: 1105, 商户数: 90 },
-      { date: '02-09', 用户数: 1128, 商户数: 91 },
-      { date: '02-10', 用户数: 1156, 商户数: 93 },
-      { date: '02-11', 用户数: 1182, 商户数: 95 },
-    ]);
   };
+
+  /**
+   * 处理用户增长数据（真实数据）
+   */
+  const processUserGrowth = (users, hotels, dateRange) => {
+    const [startDate, endDate] = dateRange;
+    const days = endDate.diff(startDate, 'day') + 1;
+    
+    // 生成日期范围内的所有日期
+    const growthData = [];
+    for (let i = 0; i < days; i++) {
+      const date = startDate.add(i, 'day');
+      const dateStr = date.format('MM-DD');
+      
+      // 统计截止到当天的累计用户数和商户数
+      const cumulativeUsers = users.filter(user => {
+        const userDate = dayjs(user.created_at);
+        return userDate.isBefore(date.add(1, 'day')) && user.role_type === 3; // 普通用户
+      }).length;
+      
+      const cumulativeMerchants = hotels.filter(hotel => {
+        const hotelDate = dayjs(hotel.created_at);
+        return hotelDate.isBefore(date.add(1, 'day'));
+      }).length;
+      
+      growthData.push({
+        date: dateStr,
+        用户数: cumulativeUsers,
+        商户数: cumulativeMerchants,
+      });
+    }
+    
+    setUserGrowthData(growthData);
+  };
+
+  useEffect(() => {
+    if (dateRange && dateRange.length === 2) {
+      loadStatistics();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange?.[0]?.valueOf(), dateRange?.[1]?.valueOf()]);
 
   return {
     orderTrendData,
     revenueData,
     occupancyData,
     userGrowthData,
+    loading,
   };
 };
 

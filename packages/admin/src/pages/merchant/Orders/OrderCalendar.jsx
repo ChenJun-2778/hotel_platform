@@ -4,6 +4,7 @@ import PageContainer from '../../../components/common/PageContainer';
 import RoomTypeCard from '../../../components/common/RoomTypeCard';
 import useCalendarData from './hooks/useCalendarData';
 import dayjs from 'dayjs';
+import { formatDateTime } from '../../../utils/dateFormat';
 
 /**
  * 订单日历视图页面
@@ -49,8 +50,8 @@ const OrderCalendar = () => {
           <div><strong>预订人：</strong>{room.order.guest_name || '-'}</div>
           <div><strong>入住天数：</strong>{nights}晚</div>
           <div><strong>联系电话：</strong>{room.order.guest_phone || '-'}</div>
-          <div><strong>入住日期：</strong>{room.order.check_in_date || '-'}</div>
-          <div><strong>退房日期：</strong>{room.order.check_out_date || '-'}</div>
+          <div><strong>入住时间：</strong>{formatDateTime(room.order.check_in_date)}</div>
+          <div><strong>退房时间：</strong>{formatDateTime(room.order.check_out_date)}</div>
           <div><strong>订单号：</strong>{room.order.order_no || '-'}</div>
           <div><strong>订单金额：</strong>¥{room.order.total_price || 0}</div>
         </div>

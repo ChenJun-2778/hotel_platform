@@ -4,6 +4,7 @@ import { CheckCircleOutlined } from '@ant-design/icons';
 import DetailModal from '../../../../components/common/DetailModal';
 import { getOrderStatusInfo, ORDER_STATUS } from '../utils/orderStatus';
 import { useRoomStore } from '../../../../stores/roomStore';
+import { formatDateTime } from '../../../../utils/dateFormat';
 
 /**
  * 订单详情组件
@@ -176,11 +177,11 @@ const OrderDetail = ({ visible, order, onClose, onConfirm, availableRooms = [], 
         {order.phone || '-'}
       </Descriptions.Item>
       
-      <Descriptions.Item label="入住日期">
-        {order.checkIn}
+      <Descriptions.Item label="入住时间">
+        {formatDateTime(order.checkIn)}
       </Descriptions.Item>
-      <Descriptions.Item label="退房日期">
-        {order.checkOut}
+      <Descriptions.Item label="退房时间">
+        {formatDateTime(order.checkOut)}
       </Descriptions.Item>
       
       <Descriptions.Item label="入住天数">
