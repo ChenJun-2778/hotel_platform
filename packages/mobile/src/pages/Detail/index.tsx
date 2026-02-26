@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavBar, Swiper, Image, Toast, Tag, ImageViewer, DotLoading } from 'antd-mobile';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { StarFill, EnvironmentOutline, PictureOutline, CalendarOutline, LocationFill } from 'antd-mobile-icons';
+import { StarFill, EnvironmentOutline, PictureOutline, CalendarOutline, LocationFill, FireFill } from 'antd-mobile-icons';
 import styles from './index.module.css';
 import { apiGetHotelDetail } from '@/api/Hotel'
 import dayjs from 'dayjs';
@@ -227,7 +227,7 @@ const HotelDetail: React.FC = () => {
                   <span className={styles.currency}>¥</span>
                   <span className={styles.price}>{room.price}</span>
                 </div>
-                {/* 预订按钮 */}
+                {/* 预订按钮：当剩余房间数<=2时显示"仅剩X间"并加火焰图标 */}
                 <div
                   className={styles.bookBtn}
                   onClick={() => {
@@ -243,7 +243,12 @@ const HotelDetail: React.FC = () => {
                     )
                   }}
                 >
-                  预订
+                  {room.total_rooms && room.total_rooms <= 2 ? (
+                    <>
+                      <FireFill style={{ marginRight: '4px', fontSize: '14px' }} />
+                      仅剩{room.total_rooms}间
+                    </>
+                  ) : '预订'}
                 </div>
               </div>
             </div>
