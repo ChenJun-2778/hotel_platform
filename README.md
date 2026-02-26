@@ -1,73 +1,464 @@
-# React + TypeScript + Vite
+# 🏨 酒店预订管理系统
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一个功能完整的酒店预订管理平台，包含移动端用户预订系统、PC端商家管理后台和平台管理后台。
 
-Currently, two official plugins are available:
+## 📋 目录
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [项目简介](#项目简介)
+- [技术栈](#技术栈)
+- [项目结构](#项目结构)
+- [功能特性](#功能特性)
+- [快速开始](#快速开始)
+- [环境配置](#环境配置)
+- [API 文档](#api-文档)
+- [数据库设计](#数据库设计)
+- [部署说明](#部署说明)
+- [开发指南](#开发指南)
+- [贡献指南](#贡献指南)
+- [许可证](#许可证)
 
-## React Compiler
+## 🎯 项目简介
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+这是一个全栈酒店预订管理系统，支持三端应用：
 
-## Expanding the ESLint configuration
+- **Mobile 端**：用户移动端，支持酒店搜索、预订、订单管理
+- **Admin 端（商家）**：商家管理后台，管理酒店、房型、订单
+- **Admin 端（平台）**：平台管理后台，审核酒店、用户管理、数据统计
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠 技术栈
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 后端 (Server)
+- **运行环境**: Node.js
+- **框架**: Express 5.x
+- **数据库**: MySQL 8.0
+- **认证**: JWT (jsonwebtoken)
+- **密码加密**: bcryptjs
+- **数据库驱动**: mysql2
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 移动端 (Mobile)
+- **框架**: React 19 + TypeScript
+- **路由**: React Router DOM 7.x
+- **UI 组件**: Ant Design Mobile 5.x
+- **状态管理**: React Hooks
+- **HTTP 客户端**: Axios
+- **日期处理**: Day.js
+- **动画**: Framer Motion
+- **构建工具**: Vite 7.x
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### PC 管理端 (Admin)
+- **框架**: React 19
+- **路由**: React Router DOM 7.x
+- **UI 组件**: Ant Design 6.x
+- **状态管理**: Zustand
+- **图表**: Recharts
+- **文件上传**: Ali-OSS
+- **地区数据**: china-division
+- **构建工具**: Vite 7.x
+
+## 📁 项目结构
+
+```
+hotel-booking-system/
+├── server/                 # 后端服务
+│   ├── config/            # 配置文件
+│   │   ├── database.js    # 数据库连接配置
+│   │   └── db.config.js   # 数据库配置信息
+│   ├── routes/            # 路由模块
+│   │   ├── hotels.js      # 酒店相关接口（PC端）
+│   │   ├── hotelsMobile.js # 酒店相关接口（移动端）
+│   │   ├── hotelsReview.js # 酒店审核接口
+│   │   ├── rooms.js       # 房型管理接口
+│   │   ├── orderPC.js     # 订单管理接口（PC端）
+│   │   ├── orderMobile.js # 订单管理接口（移动端）
+│   │   ├── loginPC.js     # PC端登录接口
+│   │   ├── loginMobile.js # 移动端登录接口
+│   │   ├── userManage.js  # 用户管理接口
+│   │   ├── controlPC.js   # PC端控制接口
+│   │   └── controlManage.js # 管理控制接口
+│   ├── sql/               # 数据库脚本
+│   │   └── hotel.sql      # 数据库表结构
+│   ├── index.js           # 服务入口文件
+│   └── package.json       # 依赖配置
+│
+├── mobile/                # 移动端应用
+│   ├── src/
+│   │   ├── api/          # API 接口封装
+│   │   ├── components/   # 公共组件
+│   │   ├── pages/        # 页面组件
+│   │   │   ├── Home/     # 首页（国内/海外/钟点房/民宿）
+│   │   │   ├── List/     # 酒店列表页
+│   │   │   ├── Detail/   # 酒店详情页
+│   │   │   ├── Search/   # 搜索页
+│   │   │   ├── CitySelect/ # 城市选择页
+│   │   │   ├── OrderFill/ # 订单填写页
+│   │   │   ├── OrderList/ # 订单列表页
+│   │   │   ├── PaymentResult/ # 支付结果页
+│   │   │   ├── Login/    # 登录页
+│   │   │   └── User/     # 个人中心
+│   │   ├── mock/         # Mock 数据
+│   │   ├── utils/        # 工具函数
+│   │   └── router/       # 路由配置
+│   ├── .env.development  # 开发环境配置
+│   ├── .env.production   # 生产环境配置
+│   └── package.json
+│
+└── admin/                # PC 管理端
+    ├── src/
+    │   ├── api/          # API 接口封装
+    │   ├── components/   # 公共组件
+    │   ├── pages/        # 页面组件
+    │   │   ├── admin/    # 平台管理员页面
+    │   │   │   ├── Dashboard.jsx    # 仪表盘
+    │   │   │   ├── HotelAudit/      # 酒店审核
+    │   │   │   ├── Statistics/      # 数据统计
+    │   │   │   └── Users/           # 用户管理
+    │   │   ├── merchant/ # 商家管理页面
+    │   │   │   ├── Dashboard.jsx    # 商家仪表盘
+    │   │   │   ├── Hotels/          # 酒店管理
+    │   │   │   ├── Rooms/           # 房型管理
+    │   │   │   └── Orders/          # 订单管理
+    │   │   ├── common/   # 公共页面
+    │   │   └── Login.jsx # 登录页
+    │   ├── config/       # 配置文件
+    │   ├── constants/    # 常量定义
+    │   ├── hooks/        # 自定义 Hooks
+    │   ├── services/     # 服务层
+    │   └── router/       # 路由配置
+    └── package.json
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## ✨ 功能特性
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 移动端功能
+- ✅ 用户注册/登录
+- ✅ 酒店搜索（国内/海外/钟点房/民宿）
+- ✅ 城市选择（支持拼音搜索）
+- ✅ 酒店列表展示（支持筛选、排序）
+- ✅ 酒店详情查看
+- ✅ 房型选择与预订
+- ✅ 实时库存显示
+- ✅ 订单创建与支付
+- ✅ 订单列表查看
+- ✅ 个人中心管理
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### PC 商家端功能
+- ✅ 商家登录/注册
+- ✅ 酒店信息管理（新增/编辑/删除）
+- ✅ 房型管理（新增/编辑/删除）
+- ✅ 库存管理（批量调整）
+- ✅ 订单管理（确认/完成）
+- ✅ 订单日历视图
+- ✅ 图片上传（阿里云 OSS）
+- ✅ 数据统计
+
+### PC 平台端功能
+- ✅ 平台管理员登录
+- ✅ 酒店审核（通过/拒绝）
+- ✅ 用户管理
+- ✅ 数据统计（订单趋势、入住率、收入分析）
+- ✅ 权限管理
+
+## 🚀 快速开始
+
+### 环境要求
+- Node.js >= 16.x
+- MySQL >= 8.0
+- npm 或 pnpm
+
+### 1. 克隆项目
+```bash
+git clone <repository-url>
+cd hotel-booking-system
 ```
+
+### 2. 安装依赖
+
+#### 后端
+```bash
+cd server
+npm install
+```
+
+#### 移动端
+```bash
+cd mobile
+npm install
+```
+
+#### PC 管理端
+```bash
+cd admin
+npm install
+```
+
+### 3. 配置数据库
+
+创建数据库配置文件 `server/config/db.config.js`：
+
+```javascript
+module.exports = {
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: 'your_password',
+  database: 'hotel',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+};
+```
+
+导入数据库表结构：
+```bash
+mysql -u root -p hotel < server/sql/hotel.sql
+```
+
+### 4. 启动项目
+
+#### 启动后端服务
+```bash
+cd server
+npm run dev
+# 服务运行在 http://localhost:3000
+```
+
+#### 启动移动端
+```bash
+cd mobile
+npm run dev
+# 应用运行在 http://localhost:5173
+```
+
+#### 启动 PC 管理端
+```bash
+cd admin
+npm run dev
+# 应用运行在 http://localhost:5174
+```
+
+## ⚙️ 环境配置
+
+### 移动端环境变量
+
+创建 `mobile/.env.development`：
+```env
+VITE_API_BASE_URL=http://localhost:3000
+VITE_USE_MOCK=false
+```
+
+创建 `mobile/.env.production`：
+```env
+VITE_API_BASE_URL=https://your-api-domain.com
+VITE_USE_MOCK=false
+```
+
+### PC 管理端环境变量
+
+创建 `admin/.env.development`：
+```env
+VITE_API_BASE_URL=http://localhost:3000
+```
+
+创建 `admin/.env.production`：
+```env
+VITE_API_BASE_URL=https://your-api-domain.com
+```
+
+### 阿里云 OSS 配置
+
+在 `admin/src/config/oss.js` 中配置：
+```javascript
+export const ossConfig = {
+  region: 'oss-cn-beijing',
+  accessKeyId: 'your_access_key_id',
+  accessKeySecret: 'your_access_key_secret',
+  bucket: 'your_bucket_name'
+};
+```
+
+## 📚 API 文档
+
+详细的 API 文档请查看：
+- [Server API 文档](./docs/SERVER_API.md)
+- [Mobile API 文档](./docs/MOBILE_API.md)
+- [Admin API 文档](./docs/ADMIN_API.md)
+
+### 主要接口概览
+
+#### 移动端接口
+- `POST /api/loginMobile/register` - 用户注册
+- `POST /api/loginMobile/login` - 用户登录
+- `GET /api/hotelsMobile/search` - 搜索酒店
+- `GET /api/hotelsMobile/:id` - 获取酒店详情
+- `POST /api/orderMobile/create` - 创建订单
+- `PUT /api/orderMobile/pay/:order_no` - 支付订单
+- `GET /api/orderMobile/list` - 获取订单列表
+
+#### PC 商家端接口
+- `POST /api/loginPC/login` - 商家登录
+- `GET /api/hotels/search` - 查询酒店列表
+- `POST /api/hotels` - 新增酒店
+- `PUT /api/hotels/:id` - 更新酒店信息
+- `POST /api/rooms` - 新增房型
+- `PUT /api/rooms/:id` - 更新房型信息
+- `GET /api/orderPC/list` - 获取订单列表
+- `PUT /api/orderPC/confirm/:order_no` - 确认订单
+
+#### 平台管理端接口
+- `GET /api/hotelsReview/list` - 获取待审核酒店列表
+- `PUT /api/hotelsReview/approve/:id` - 审核通过
+- `PUT /api/hotelsReview/reject/:id` - 审核拒绝
+- `GET /api/userManage/list` - 获取用户列表
+- `GET /api/controlManage/statistics` - 获取统计数据
+
+## 🗄️ 数据库设计
+
+### 主要数据表
+
+#### hotels（酒店表）
+- 存储酒店基本信息
+- 支持国内/海外/民宿分类
+- 包含审核状态字段
+
+#### rooms（房型表）
+- 存储房型信息
+- 关联酒店表
+- 包含价格、面积、设施等信息
+
+#### room_inventory（库存表）
+- 存储每日库存信息
+- 支持库存扣减
+- 用于实时库存查询
+
+#### orders（订单表）
+- 存储订单信息
+- 支持订单状态流转
+- 关联用户、酒店、房型
+
+#### users（用户表）
+- 存储用户信息
+- 支持多角色（用户/商家/管理员）
+- 包含认证信息
+
+详细的数据库表结构请查看 `server/sql/hotel.sql`
+
+## 📦 部署说明
+
+### 后端部署
+
+1. 安装 PM2（推荐）
+```bash
+npm install -g pm2
+```
+
+2. 启动服务
+```bash
+cd server
+pm2 start index.js --name hotel-api
+```
+
+3. 配置 Nginx 反向代理
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location /api {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### 前端部署
+
+1. 构建项目
+```bash
+# 移动端
+cd mobile
+npm run build
+
+# PC 管理端
+cd admin
+npm run build
+```
+
+2. 部署到服务器
+将 `dist` 目录上传到服务器，配置 Nginx：
+
+```nginx
+server {
+    listen 80;
+    server_name mobile.your-domain.com;
+    root /var/www/mobile/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+server {
+    listen 80;
+    server_name admin.your-domain.com;
+    root /var/www/admin/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+## 👨‍💻 开发指南
+
+### 代码规范
+- 使用 ESLint 进行代码检查
+- 遵循 React Hooks 最佳实践
+- 组件命名使用 PascalCase
+- 文件命名使用 camelCase
+
+### Git 提交规范
+```
+feat: 新功能
+fix: 修复 bug
+docs: 文档更新
+style: 代码格式调整
+refactor: 代码重构
+test: 测试相关
+chore: 构建/工具链相关
+```
+
+### 开发流程
+1. 从 `main` 分支创建功能分支
+2. 开发并测试功能
+3. 提交 Pull Request
+4. 代码审查
+5. 合并到 `main` 分支
+
+## 🤝 贡献指南
+
+欢迎贡献代码！请遵循以下步骤：
+
+1. Fork 本仓库
+2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交你的改动 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+
+
+## 🙏 致谢
+
+感谢所有为这个项目做出贡献的开发者！
+
+---
+
+⭐ 如果这个项目对你有帮助，请给它一个 Star！
