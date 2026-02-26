@@ -34,6 +34,7 @@
 - **认证**: JWT (jsonwebtoken)
 - **密码加密**: bcryptjs
 - **数据库驱动**: mysql2
+- **包管理工具**: npm
 
 ### 移动端 (Mobile)
 - **框架**: React 19 + TypeScript
@@ -44,6 +45,7 @@
 - **日期处理**: Day.js
 - **动画**: Framer Motion
 - **构建工具**: Vite 7.x
+- **包管理工具**: pnpm
 
 ### PC 管理端 (Admin)
 - **框架**: React 19
@@ -54,10 +56,11 @@
 - **文件上传**: Ali-OSS
 - **地区数据**: china-division
 - **构建工具**: Vite 7.x
+- **包管理工具**: pnpm
 
 ## 📁 项目结构
 
-```
+```text
 hotel-booking-system/
 ├── server/                 # 后端服务
 │   ├── config/            # 配置文件
@@ -163,7 +166,8 @@ hotel-booking-system/
 ### 环境要求
 - Node.js >= 16.x
 - MySQL >= 8.0
-- npm 或 pnpm
+- npm (后端依赖)
+- pnpm (前端依赖，可通过 `npm install -g pnpm` 安装)
 
 ### 1. 克隆项目
 ```bash
@@ -173,22 +177,22 @@ cd hotel-booking-system
 
 ### 2. 安装依赖
 
-#### 后端
+#### 后端 (使用 npm)
 ```bash
 cd server
 npm install
 ```
 
-#### 移动端
+#### 移动端 (使用 pnpm)
 ```bash
 cd mobile
-npm install
+pnpm install
 ```
 
-#### PC 管理端
+#### PC 管理端 (使用 pnpm)
 ```bash
 cd admin
-npm install
+pnpm install
 ```
 
 ### 3. 配置数据库
@@ -225,14 +229,14 @@ npm run dev
 #### 启动移动端
 ```bash
 cd mobile
-npm run dev
+pnpm dev
 # 应用运行在 http://localhost:5173
 ```
 
 #### 启动 PC 管理端
 ```bash
 cd admin
-npm run dev
+pnpm dev
 # 应用运行在 http://localhost:5174
 ```
 
@@ -248,7 +252,7 @@ VITE_USE_MOCK=false
 
 创建 `mobile/.env.production`：
 ```env
-VITE_API_BASE_URL=https://your-api-domain.com
+VITE_API_BASE_URL=[https://your-api-domain.com](https://your-api-domain.com)
 VITE_USE_MOCK=false
 ```
 
@@ -261,7 +265,7 @@ VITE_API_BASE_URL=http://localhost:3000
 
 创建 `admin/.env.production`：
 ```env
-VITE_API_BASE_URL=https://your-api-domain.com
+VITE_API_BASE_URL=[https://your-api-domain.com](https://your-api-domain.com)
 ```
 
 ### 阿里云 OSS 配置
@@ -380,11 +384,11 @@ server {
 ```bash
 # 移动端
 cd mobile
-npm run build
+pnpm build
 
 # PC 管理端
 cd admin
-npm run build
+pnpm build
 ```
 
 2. 部署到服务器
@@ -423,7 +427,7 @@ server {
 - 文件命名使用 camelCase
 
 ### Git 提交规范
-```
+```text
 feat: 新功能
 fix: 修复 bug
 docs: 文档更新
