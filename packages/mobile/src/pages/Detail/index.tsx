@@ -243,6 +243,32 @@ const HotelDetail: React.FC = () => {
                   className={`${styles.bookBtn} ${isSoldOut ? styles.disabled : ''}`}
                   onClick={() => {
                     if (isSoldOut) return; // 无房间时禁止点击
+                    
+                    // ✅ 检查登录状态
+                    const token = localStorage.getItem('TOKEN');
+                    if (!token) {
+                      Toast.show({
+                        icon: 'fail',
+                        content: '请先登录',
+                        afterClose: () => {
+                          navigate('/login', { 
+                            state: { 
+                              from: `/order/${room.id}?` +
+                                `hotelId=${detail.id}&` +
+                                `hotelName=${encodeURIComponent(detail.name)}&` +
+                                `roomName=${encodeURIComponent(room.name)}&` +
+                                `price=${room.price}&` +
+                                `beginDate=${beginDate}&` +
+                                `endDate=${endDate}&` +
+                                `type=${type}`
+                            }
+                          });
+                        }
+                      });
+                      return;
+                    }
+                    
+                    // 已登录，跳转到订单填写页
                     navigate(
                       `/order/${room.id}?` +
                       `hotelId=${detail.id}&` +
