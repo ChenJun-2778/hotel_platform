@@ -34,11 +34,19 @@ const useOrderList = () => {
         params.userId = user.id;
       }
       
+      // 搜索逻辑优化：判断关键词类型
       if (keyword) {
-        // 尝试按订单号搜索
-        params.order_no = keyword;
-        // 同时按客户名称搜索
-        params.guest_name = keyword;
+        const trimmedKeyword = keyword.trim();
+        
+        // 如果关键词以 ORD 开头，认为是订单号搜索
+        if (trimmedKeyword.toUpperCase().startsWith('ORD')) {
+          params.order_no = trimmedKeyword;
+          console.log('🔍 按订单号搜索:', trimmedKeyword);
+        } else {
+          // 否则按客户名称搜索
+          params.guest_name = trimmedKeyword;
+          console.log('🔍 按客户名称搜索:', trimmedKeyword);
+        }
       }
       
       console.log('🔍 请求订单列表参数:', params);
