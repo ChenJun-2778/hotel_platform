@@ -140,9 +140,10 @@ export const overseasCityGroups: OverseasGroupType[] = [
     key: 'recommend',
     title: '推荐',
     hotCities: [
-      { name: '东京', image: 'https://pavo.elongstatic.com/i/Hotel180_120/000083Gl.jpg', pinyin: 'dongjing' },
-      { name: '大阪', image: 'https://pavo.elongstatic.com/i/Hotel180_120/00007I6L.jpg', pinyin: 'daban' },
-      { name: '首尔', image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_000c8v0U.jpg', pinyin: 'shouer' },
+      { name: '东京', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=300&q=80', pinyin: 'dongjing' },
+      // ✅ 修复：更新了大阪的图片链接
+      { name: '大阪', image: 'https://images.unsplash.com/photo-1585554414687-3532ab5dd518?auto=format&fit=crop&w=300&q=80', pinyin: 'daban' },
+      { name: '首尔', image: 'https://images.unsplash.com/photo-1617469165786-8007eda3caa7?auto=format&fit=crop&w=300&q=80', pinyin: 'shouer' },
     ],
     otherCities: ['曼谷', '普吉岛', '新加坡', '吉隆坡', '巴黎', '伦敦']
   },
@@ -150,10 +151,11 @@ export const overseasCityGroups: OverseasGroupType[] = [
     key: 'japan-korea',
     title: '日韩',
     hotCities: [
-      { name: '东京', image: 'https://pavo.elongstatic.com/i/Hotel180_120/000083Gl.jpg', pinyin: 'dongjing' },
-      { name: '首尔', image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_000c8v0U.jpg', pinyin: 'shouer' },
-      { name: '大阪', image: 'https://pavo.elongstatic.com/i/Hotel180_120/00007I6L.jpg', pinyin: 'daban' },
-      { name: '京都', image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_IGXm6.jpg', pinyin: 'jingdu' },
+      { name: '东京', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=300&q=80', pinyin: 'dongjing' },
+      { name: '首尔', image: 'https://images.unsplash.com/photo-1617469165786-8007eda3caa7?auto=format&fit=crop&w=300&q=80', pinyin: 'shouer' },
+      // ✅ 修复：更新了大阪的图片链接
+      { name: '大阪', image: 'https://images.unsplash.com/photo-1585554414687-3532ab5dd518?auto=format&fit=crop&w=300&q=80', pinyin: 'daban' },
+      { name: '京都', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=300&q=80', pinyin: 'jingdu' },
     ],
     otherCities: ['济州岛', '名古屋', '福冈', '奈良', '静冈', '那霸']
   },
@@ -161,8 +163,9 @@ export const overseasCityGroups: OverseasGroupType[] = [
     key: 'southeast-asia',
     title: '新马泰',
     hotCities: [
-      { name: '曼谷', image: 'https://pavo.elongstatic.com/i/Hotel180_120/nw_000c8v0f.jpg', pinyin: 'mangu' },
-      { name: '新加坡', image: 'https://pavo.elongstatic.com/i/Hotel180_120/00006v9A.jpg', pinyin: 'xinjiapo' },
+      // ✅ 修复：更新了曼谷的图片链接
+      { name: '曼谷', image: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=300&q=80', pinyin: 'mangu' },
+      { name: '新加坡', image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=300&q=80', pinyin: 'xinjiapo' },
     ],
     otherCities: ['清迈', '芭提雅', '沙巴', '巴厘岛']
   }
