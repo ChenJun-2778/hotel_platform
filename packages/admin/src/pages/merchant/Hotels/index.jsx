@@ -57,7 +57,7 @@ const Hotels = () => {
   const statusOptions = [
     { label: '全部状态', value: null },
     { label: '营业中', value: HOTEL_STATUS.ONLINE },
-    { label: '已下架', value: HOTEL_STATUS.OFFLINE },
+    { label: '已下线', value: HOTEL_STATUS.OFFLINE },
     { label: '待审批', value: HOTEL_STATUS.PENDING },
     { label: '审批拒绝', value: HOTEL_STATUS.REJECTED },
   ];
@@ -291,7 +291,7 @@ const Hotels = () => {
     setCurrentHotel(null);
   };
 
-  // 切换酒店状态（上架/下架）
+  // 切换酒店状态（发布/下线）
   const handleToggleStatus = async (record) => {
     await toggleHotelStatus(record.id, record.status);
   };

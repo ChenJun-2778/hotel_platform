@@ -277,24 +277,24 @@ const useHotelList = () => {
     }
   };
 
-  // 更新酒店状态（上架/下架）
+  // 更新酒店状态（发布/下线）
   const toggleHotelStatus = async (id, currentStatus) => {
     try {
-      // 营业中(1)可以下架，已下架(0)和已拒绝(3)可以上架
+      // 营业中(1)可以下线，已下线(0)和已拒绝(3)可以发布
       if (currentStatus === HOTEL_STATUS.ONLINE) {
-        // 下架
+        // 下线
         await takeDownHotel(id);
-        message.success('酒店已下架');
+        message.success('酒店已下线');
       } else if (currentStatus === HOTEL_STATUS.OFFLINE || currentStatus === HOTEL_STATUS.REJECTED) {
-        // 上架（已下架或已拒绝状态都可以上架）
+        // 发布（已下线或已拒绝状态都可以发布）
         await putUpHotel(id);
         if (currentStatus === HOTEL_STATUS.REJECTED) {
           message.success('酒店已重新提交审核');
         } else {
-          message.success('酒店已上架');
+          message.success('酒店已发布');
         }
       } else {
-        message.warning('当前状态不允许上架/下架操作');
+        message.warning('当前状态不允许发布/下线操作');
         return false;
       }
       

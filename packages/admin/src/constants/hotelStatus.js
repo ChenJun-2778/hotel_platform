@@ -9,7 +9,7 @@ export const HOTEL_STATUS = {
 // 状态映射配置
 export const HOTEL_STATUS_MAP = {
   [HOTEL_STATUS.ONLINE]: { color: 'green', text: '营业中' },
-  [HOTEL_STATUS.OFFLINE]: { color: 'default', text: '已下架' },
+  [HOTEL_STATUS.OFFLINE]: { color: 'default', text: '已下线' },
   [HOTEL_STATUS.PENDING]: { color: 'orange', text: '待审批' },
   [HOTEL_STATUS.REJECTED]: { color: 'red', text: '审批拒绝' },
 };

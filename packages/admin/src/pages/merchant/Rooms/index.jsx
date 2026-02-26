@@ -26,12 +26,24 @@ const Rooms = () => {
 
   const { hotels, getRoomsByHotel, addRoom, updateRoom, deleteRoom, loading, loadRoomsByHotel } = useRoomList();
 
-  // 当酒店列表加载完成且还没有选中酒店时，自动选中第一个
+  // 当酒店列表加载完成或变化时，自动选中第一个
   useEffect(() => {
-    if (!selectedHotel && hotels.length > 0) {
-      setSelectedHotel(hotels[0].value);
+    if (hotels.length > 0) {
+      // 如果当前选中的酒店不在新列表中，重置为第一个
+      const currentHotelExists = hotels.some(h => h.value === selectedHotel);
+      if (!currentHotelExists) {
+        console.log('🔄 当前酒店不在列表中，重置为第一个酒店');
+        setSelectedHotel(hotels[0].value);
+      } else if (!selectedHotel) {
+        // 如果还没有选中酒店，选中第一个
+        setSelectedHotel(hotels[0].value);
+      }
+    } else {
+      // 如果酒店列表为空，清空选中
+      setSelectedHotel(null);
     }
-  }, [hotels, selectedHotel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hotels]);
 
   // 当选中的酒店变化时，加载该酒店的房间列表
   useEffect(() => {

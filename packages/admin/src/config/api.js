@@ -18,8 +18,8 @@ export const HOTEL_API = {
   DETAIL: (id) => `${API_BASE_URL}/hotels/${id}`, // GET - 获取酒店详情
   UPDATE: (id) => `${API_BASE_URL}/hotels/${id}`, // PUT - 更新酒店信息
   UPDATE_STATUS: (id) => `${API_BASE_URL}/hotels/${id}/status`, // PUT - 更新酒店状态（已废弃）
-  PUT_UP: (id) => `${API_BASE_URL}/hotels/${id}/putup`, // PUT - 上架酒店
-  TAKE_DOWN: (id) => `${API_BASE_URL}/hotels/${id}/takedown`, // PUT - 下架酒店
+  PUT_UP: (id) => `${API_BASE_URL}/hotels/${id}/putup`, // PUT - 发布酒店
+  TAKE_DOWN: (id) => `${API_BASE_URL}/hotels/${id}/takedown`, // PUT - 下线酒店
   APPROVE: (id) => `${API_BASE_URL}/hotelsReview/approve/${id}`, // PUT - 审核通过
   REJECT: (id) => `${API_BASE_URL}/hotelsReview/reject/${id}`,   // PUT - 审核拒绝
   AUDIT_LIST: `${API_BASE_URL}/hotelsReview/list`, // GET - 获取审核列表

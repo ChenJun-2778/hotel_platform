@@ -14,11 +14,12 @@ const useHotelAudit = () => {
     total: 0,
   });
   const [statusFilter, setStatusFilter] = useState(null); // 状态筛选
+  const [searchKeyword, setSearchKeyword] = useState(''); // 搜索关键词
 
   /**
    * 加载酒店列表
    */
-  const loadHotels = useCallback(async (page = 1, pageSize = 10, status = null) => {
+  const loadHotels = useCallback(async (page = 1, pageSize = 10, status = null, keyword = '') => {
     try {
       setLoading(true);
       
@@ -30,6 +31,11 @@ const useHotelAudit = () => {
       // 如果有状态筛选，添加到参数中
       if (status !== null && status !== undefined) {
         params.status = status;
+      }
+      
+      // 如果有搜索关键词，添加到参数中
+      if (keyword && keyword.trim()) {
+        params.keyword = keyword.trim();
       }
       
       console.log('🔍 请求参数:', params);
@@ -92,12 +98,12 @@ const useHotelAudit = () => {
 
   /**
    * 转换后端状态值到前端状态key
-   * 后端：0-已下架，1-营业中，2-待审批，3-审批拒绝
+   * 后端：0-已下线，1-营业中，2-待审批，3-审批拒绝
    * 前端：pending, approved, rejected
    */
   const getStatusKey = (status) => {
     const statusMap = {
-      0: 'offline',    // 已下架
+      0: 'offline',    // 已下线
       1: 'approved',   // 营业中（已通过）
       2: 'pending',    // 待审批
       3: 'rejected',   // 审批拒绝
@@ -122,7 +128,7 @@ const useHotelAudit = () => {
    * 初始化加载
    */
   useEffect(() => {
-    loadHotels(1, 10, null);
+    loadHotels(1, 10, null, '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -130,25 +136,25 @@ const useHotelAudit = () => {
    * 搜索酒店
    */
   const searchHotels = useCallback((keyword) => {
-    console.log('搜索酒店:', keyword);
-    // TODO: 后端需要支持关键词搜索
-    message.info('搜索功能待后端支持');
-  }, []);
+    console.log('🔍 搜索酒店:', keyword);
+    setSearchKeyword(keyword);
+    loadHotels(1, pagination.pageSize, statusFilter, keyword);
+  }, [pagination.pageSize, statusFilter, loadHotels]);
 
   /**
    * 切换状态筛选
    */
   const filterByStatus = useCallback((status) => {
     setStatusFilter(status);
-    loadHotels(1, pagination.pageSize, status);
-  }, [pagination.pageSize, loadHotels]);
+    loadHotels(1, pagination.pageSize, status, searchKeyword);
+  }, [pagination.pageSize, searchKeyword, loadHotels]);
 
   /**
    * 分页变化
    */
   const handlePageChange = useCallback((page, pageSize) => {
-    loadHotels(page, pageSize, statusFilter);
-  }, [statusFilter, loadHotels]);
+    loadHotels(page, pageSize, statusFilter, searchKeyword);
+  }, [statusFilter, searchKeyword, loadHotels]);
 
   /**
    * 审核通过
@@ -163,14 +169,14 @@ const useHotelAudit = () => {
       message.success('审核通过！');
       
       // 重新加载列表
-      await loadHotels(pagination.current, pagination.pageSize, statusFilter);
+      await loadHotels(pagination.current, pagination.pageSize, statusFilter, searchKeyword);
     } catch (error) {
       console.error('❌ 审核失败:', error.message);
       message.error(error.message || '审核失败，请重试');
     } finally {
       setLoading(false);
     }
-  }, [pagination, statusFilter, loadHotels]);
+  }, [pagination, statusFilter, searchKeyword, loadHotels]);
 
   /**
    * 审核拒绝
@@ -185,14 +191,14 @@ const useHotelAudit = () => {
       message.success('已拒绝该酒店');
       
       // 重新加载列表
-      await loadHotels(pagination.current, pagination.pageSize, statusFilter);
+      await loadHotels(pagination.current, pagination.pageSize, statusFilter, searchKeyword);
     } catch (error) {
       console.error('❌ 拒绝失败:', error.message);
       message.error(error.message || '操作失败，请重试');
     } finally {
       setLoading(false);
     }
-  }, [pagination, statusFilter, loadHotels]);
+  }, [pagination, statusFilter, searchKeyword, loadHotels]);
 
   return {
     hotels,
@@ -203,7 +209,7 @@ const useHotelAudit = () => {
     handlePageChange,
     approveHotel,
     rejectHotel,
-    refreshHotels: () => loadHotels(pagination.current, pagination.pageSize, statusFilter),
+    refreshHotels: () => loadHotels(pagination.current, pagination.pageSize, statusFilter, searchKeyword),
   };
 };
 
