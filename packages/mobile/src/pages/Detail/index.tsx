@@ -47,7 +47,8 @@ const HotelDetail: React.FC = () => {
       if (!id) return
       setLoading(true)
       try {
-        const res = await apiGetHotelDetail(id)
+        // ✅ 传递日期参数到后端，获取指定日期范围内的可用房间数
+        const res = await apiGetHotelDetail(id, beginDate, endDate)
         if (res?.success) {
           const hotelData = res.data;
           
@@ -92,7 +93,7 @@ const HotelDetail: React.FC = () => {
       }
     }
     getHotelDetail()
-  }, [id])
+  }, [id, beginDate, endDate]) // ✅ 添加日期依赖，日期变化时重新加载
   // 处理日期更新
   const handleDateConfirm = (start: Date, end: Date) => {
     const newBegin = dayjs(start).format('YYYY-MM-DD');
@@ -207,7 +208,10 @@ const HotelDetail: React.FC = () => {
 
         {/* 这里用 detail.rooms.map，因为 Mock 数据里 rooms 在 detail 内部 */}
         {detail.rooms && detail.rooms.map((room: any) => {
-          const isSoldOut = room.total_rooms === 0;
+          // ✅ 使用 available_rooms（后端返回的可用房间数）而不是 total_rooms
+          const availableRooms = room.available_rooms ?? room.total_rooms ?? 0;
+          const isSoldOut = availableRooms === 0;
+          const isLowStock = availableRooms > 0 && availableRooms <= 2;
           
           return (
             <div 
@@ -252,10 +256,10 @@ const HotelDetail: React.FC = () => {
                   }}
                 >
                   {isSoldOut ? '无房间' : (
-                    room.total_rooms && room.total_rooms <= 2 ? (
+                    isLowStock ? (
                       <>
                         <FireFill style={{ marginRight: '4px', fontSize: '14px' }} />
-                        仅剩{room.total_rooms}间
+                        仅剩{availableRooms}间
                       </>
                     ) : '预订'
                   )}

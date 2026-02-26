@@ -95,14 +95,24 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
  * 获取酒店详情
  * GET /api/hotelsMobile/:id
  * @param id 酒店ID
- * @returns 返回酒店详情数据，包含房间列表
+ * @param check_in_date 入住日期（可选）
+ * @param check_out_date 离店日期（可选）
+ * @returns 返回酒店详情数据，包含房间列表及可用房间数
  */
-export const apiGetHotelDetail = async (id: string | number): Promise<ApiResponse<HotelDetail>> => {
+export const apiGetHotelDetail = async (
+  id: string | number, 
+  check_in_date?: string, 
+  check_out_date?: string
+): Promise<ApiResponse<HotelDetail>> => {
   // Mock 模式
   // if (USE_MOCK) {
   //   return mockRequest(MOCK_HOTEL_DETAIL, 500);
   // }
 
   // 真实接口
-  return request.get<any, ApiResponse<HotelDetail>>(`${HotelApi.DETAIL}/${id}`);
+  const params: any = {};
+  if (check_in_date) params.check_in_date = check_in_date;
+  if (check_out_date) params.check_out_date = check_out_date;
+
+  return request.get<any, ApiResponse<HotelDetail>>(`${HotelApi.DETAIL}/${id}`, { params });
 };

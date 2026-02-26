@@ -327,13 +327,18 @@ router.get('/search', async (req, res) => {
  * 路径参数：
  * - id: 酒店ID
  *
+ * 查询参数（可选）：
+ * - check_in_date: 入住日期（YYYY-MM-DD）
+ * - check_out_date: 离店日期（YYYY-MM-DD）
+ *
  * 返回：
  * - 酒店基本信息（名称、星级、描述、设施、地点、地址等）
- * - 该酒店下所有未删除的房间列表（排除 created_at、updated_at、is_deleted）
+ * - 该酒店下所有未删除的房间列表，包含指定日期范围内的最小可用房间数
  */
 router.get('/:id', async (req, res) => {
   try {
     const hotelId = parseInt(req.params.id);
+    const { check_in_date, check_out_date } = req.query;
 
     if (!hotelId || hotelId <= 0) {
       return res.status(400).json({
@@ -371,27 +376,64 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // 查询该酒店下所有未删除的房间（排除 created_at、updated_at、is_deleted）
-    const roomsSql = `
-      SELECT
-        id,
-        hotel_id,
-        room_type,
-        room_type_en,
-        bed_type,
-        area,
-        floor,
-        max_occupancy,
-        base_price,
-        total_rooms,
-        facilities,
-        description,
-        images
-      FROM rooms
-      WHERE hotel_id = ? AND is_deleted = 0
-      ORDER BY base_price ASC
-    `;
-    const rooms = await query(roomsSql, [hotelId]);
+    // 查询该酒店下所有未删除的房间
+    let roomsSql;
+    let roomsParams;
+
+    // 如果提供了日期范围，查询该时间段内的最小可用房间数
+    if (check_in_date && check_out_date) {
+      roomsSql = `
+        SELECT
+          r.id,
+          r.hotel_id,
+          r.room_type,
+          r.room_type_en,
+          r.bed_type,
+          r.area,
+          r.floor,
+          r.max_occupancy,
+          r.base_price,
+          r.total_rooms,
+          r.facilities,
+          r.description,
+          r.images,
+          COALESCE(MIN(ri.available_rooms), r.total_rooms) AS available_rooms
+        FROM rooms r
+        LEFT JOIN room_inventory ri
+          ON ri.room_id = r.id
+          AND ri.date >= ?
+          AND ri.date < ?
+        WHERE r.hotel_id = ? AND r.is_deleted = 0
+        GROUP BY r.id
+        ORDER BY r.base_price ASC
+      `;
+      roomsParams = [check_in_date, check_out_date, hotelId];
+    } else {
+      // 没有日期范围，返回总房间数作为可用房间数
+      roomsSql = `
+        SELECT
+          id,
+          hotel_id,
+          room_type,
+          room_type_en,
+          bed_type,
+          area,
+          floor,
+          max_occupancy,
+          base_price,
+          total_rooms,
+          facilities,
+          description,
+          images,
+          total_rooms AS available_rooms
+        FROM rooms
+        WHERE hotel_id = ? AND is_deleted = 0
+        ORDER BY base_price ASC
+      `;
+      roomsParams = [hotelId];
+    }
+
+    const rooms = await query(roomsSql, roomsParams);
 
     res.status(200).json({
       success: true,

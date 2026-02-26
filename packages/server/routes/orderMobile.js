@@ -177,6 +177,18 @@ router.put('/pay/:order_no', async (req, res) => {
     // 将 status 改为 2（待确定），updated_at 由数据库 ON UPDATE CURRENT_TIMESTAMP 自动更新
     await query('UPDATE orders SET status = 2 WHERE order_no = ?', [order_no]);
 
+    // ── 扣减 room_inventory 库存 ────────────────────────────────
+    // 从入住日期到退房日期前一天（酒店惯例：退房当天不占用库存）
+    // ───────────────────────────────────────────────────────────
+    await query(
+      `UPDATE room_inventory
+       SET available_rooms = GREATEST(available_rooms - 1, 0)
+       WHERE room_id = ?
+         AND date >= ?
+         AND date < ?`,
+      [order.room_id, order.check_in_date, order.check_out_date]
+    );
+
     // 返回更新后的订单
     const updatedRows = await query('SELECT * FROM orders WHERE order_no = ?', [order_no]);
 
