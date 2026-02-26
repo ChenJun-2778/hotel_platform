@@ -280,16 +280,43 @@ const useCalendarData = (selectedDate, selectedHotel) => {
   }, [groupedByRoomType, selectedHotel]);
 
   /**
-   * 统计信息
+   * 统计信息 - 基于实际房间数据计算
    */
   const stats = useMemo(() => {
+    // 统计所有房间的实际数量
+    let totalCount = 0;
+    let availableCount = 0;
+    let bookedCount = 0;
+    
+    groupedByRoomType.forEach(roomType => {
+      roomType.room_numbers.forEach(room => {
+        totalCount++;
+        if (room.available) {
+          availableCount++;
+        } else {
+          bookedCount++;
+        }
+      });
+    });
+    
+    const occupancyRate = totalCount > 0 
+      ? Number(((bookedCount / totalCount) * 100).toFixed(1))
+      : 0;
+    
+    console.log('✅ 统计数据计算:', {
+      总房间: totalCount,
+      空闲: availableCount,
+      已预订: bookedCount,
+      入住率: occupancyRate + '%',
+    });
+    
     return {
-      total: calendarData.totalRooms,
-      available: calendarData.freeRooms,
-      booked: calendarData.occupiedRooms,
-      occupancyRate: calendarData.occupancyRate,
+      total: totalCount,
+      available: availableCount,
+      booked: bookedCount,
+      occupancyRate: occupancyRate,
     };
-  }, [calendarData]);
+  }, [groupedByRoomType]);
 
   return {
     hotels,

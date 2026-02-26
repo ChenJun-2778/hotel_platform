@@ -23,7 +23,8 @@ const Statistics = () => {
     orderTrendData, 
     revenueData, 
     occupancyData, 
-    userGrowthData 
+    userGrowthData,
+    loading 
   } = useStatistics(dateRange);
 
   /**
@@ -55,6 +56,7 @@ const Statistics = () => {
       <Card 
         title="订单趋势" 
         style={{ marginBottom: 24 }}
+        loading={loading}
       >
         <OrderTrendChart data={orderTrendData} />
       </Card>
@@ -62,19 +64,19 @@ const Statistics = () => {
       {/* 收入统计和入住率 */}
       <Row gutter={24} style={{ marginBottom: 24 }}>
         <Col xs={24} lg={12}>
-          <Card title="收入统计" style={{ height: '100%' }}>
+          <Card title="收入统计" style={{ height: '100%' }} loading={loading}>
             <RevenuePieChart data={revenueData} />
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card title="房间入住率" style={{ height: '100%' }}>
+          <Card title="房间入住率" style={{ height: '100%' }} loading={loading}>
             <OccupancyRateChart data={occupancyData} />
           </Card>
         </Col>
       </Row>
 
       {/* 用户增长 */}
-      <Card title="用户增长趋势">
+      <Card title="用户增长趋势" loading={loading}>
         <UserGrowthChart data={userGrowthData} />
       </Card>
     </PageContainer>

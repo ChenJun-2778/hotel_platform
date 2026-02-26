@@ -33,6 +33,7 @@ router.get('/dashboard', async (req, res) => {
     const hotelCount = hotelCountRows[0].hotelCount;
 
     // ── 2. 今日订单数量 & 今日收入 & 累计客户数（通过 hotels.user_id 关联） ──
+    // 只统计已确认的订单（status = 3: 待入住）
     const statsRows = await query(
       `SELECT
         COUNT(*)                                         AS todayOrderCount,
@@ -40,7 +41,8 @@ router.get('/dashboard', async (req, res) => {
        FROM orders o
        INNER JOIN hotels h ON o.hotel_id = h.id
        WHERE h.user_id = ?
-         AND DATE(o.created_at) = CURDATE()`,
+         AND DATE(o.created_at) = CURDATE()
+         AND o.status = 3`,
       [userId]
     );
 
