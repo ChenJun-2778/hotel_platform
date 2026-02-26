@@ -23,6 +23,8 @@
 ### 在线地址
 移动端：http://47.99.56.81:81
 PC端：http://47.99.56.81 
+### 测试说明
+由于数据有限，国内城市请优先测试重庆，海外优先测试东京
 ## 📋 目录
 
 - [项目简介](#项目简介)
@@ -302,9 +304,9 @@ VITE_API_BASE_URL=http://47.99.56.81:3000
 ```javascript
 export const ossConfig = {
   region: 'oss-cn-beijing',
-  accessKeyId: 'your_access_key_id',
-  accessKeySecret: 'your_access_key_secret',
-  bucket: 'your_bucket_name'
+  accessKeyId: 'x'x'x'x'x'x',
+  accessKeySecret: 'x'x'x'x'x'x',
+  bucket: 'x'x'x'x'x'x'
 };
 ```
 
