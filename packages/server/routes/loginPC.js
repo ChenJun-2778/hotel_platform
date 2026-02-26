@@ -152,7 +152,7 @@ router.post('/register', async (req, res) => {
  * 支持两种登录方式：
  * 1. 账号+密码登录
  *    - login_type: 'account'
- *    - account: 用户账号
+ *    - account: 登录凭证（账号 / 用户名 / 手机号 / 邮箱 均可）
  *    - password: 密码
  * 
  * 2. 手机号+验证码登录
@@ -185,25 +185,49 @@ router.post('/login', async (req, res) => {
     let user = null;
 
     // ========== 账号密码登录 ==========
+    // 登录凭证支持：系统账号 / 用户名 / 手机号 / 邮箱
     
     if (login_type === 'account') {
 
-      // 查询用户
+      if (!account || account.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: '登录凭证不能为空'
+        });
+      }
+
+      if (!password || password.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: '密码不能为空'
+        });
+      }
+
+      const credential = account.trim();
+
+      // 用 OR 匹配四个字段：account / username / phone / email
       const userSql = `
         SELECT 
           id, account, username, email, phone, password,
           role_type, avatar_url, created_at, last_login_at,
           updated_at, status, is_deleted
         FROM users 
-        WHERE account = ? AND is_deleted = 0
+        WHERE is_deleted = 0
+          AND (
+            account  = ? OR
+            username = ? OR
+            phone    = ? OR
+            email    = ?
+          )
+        LIMIT 1
       `;
       
-      const users = await query(userSql, [account.trim()]);
+      const users = await query(userSql, [credential, credential, credential, credential]);
 
       if (users.length === 0) {
         return res.status(401).json({
           success: false,
-          message: '账号不存在'
+          message: '用户不存在，请检查账号/用户名/手机号/邮箱是否正确'
         });
       }
 
