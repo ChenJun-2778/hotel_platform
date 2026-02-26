@@ -200,16 +200,20 @@ pnpm install
 创建数据库配置文件 `server/config/db.config.js`：
 
 ```javascript
+// 数据库配置
 module.exports = {
-  host: 'localhost',
+  host: '47.99.56.81',
   port: 3306,
   user: 'root',
-  password: 'your_password',
+  password: '1234',
   database: 'hotel',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  // 字符集设置
+  charset: 'utf8mb4'
 };
+
 ```
 
 导入数据库表结构：
@@ -252,7 +256,7 @@ VITE_USE_MOCK=false
 
 创建 `mobile/.env.production`：
 ```env
-VITE_API_BASE_URL=[https://your-api-domain.com](https://your-api-domain.com)
+VITE_API_BASE_URL=http://47.99.56.81:3000
 VITE_USE_MOCK=false
 ```
 
@@ -265,7 +269,7 @@ VITE_API_BASE_URL=http://localhost:3000
 
 创建 `admin/.env.production`：
 ```env
-VITE_API_BASE_URL=[https://your-api-domain.com](https://your-api-domain.com)
+VITE_API_BASE_URL=http://47.99.56.81:3000
 ```
 
 ### 阿里云 OSS 配置
