@@ -63,6 +63,9 @@ export interface ApiResponse<T> {
       nights: number;
     };
     total: number;            // 保留旧字段，兼容性
+    page?: number;            // 当前页码
+    pageSize?: number;        // 每页条数
+    totalPages?: number;      // 总页数（直接在顶层，方便访问）
   }
   
   // 5. 酒店详情中的房型结构

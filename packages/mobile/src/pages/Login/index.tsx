@@ -63,7 +63,7 @@ const Login: React.FC = () => {
 
       setLoading(true);
       try {
-        const res = await apiRegister({
+        await apiRegister({
           username: values.username,
           phone: values.phone,
           password: values.password
@@ -117,8 +117,8 @@ const Login: React.FC = () => {
       Toast.show({ content: '登录成功', icon: 'success' });
 
       // ✅ 严格按照你后端返回的格式，分别存入 Token 和 UserInfo
-      localStorage.setItem('TOKEN', res.data.token);
-      localStorage.setItem('USER_INFO', JSON.stringify(res.data.userInfo));
+      localStorage.setItem('TOKEN', (res.data as any).token);
+      localStorage.setItem('USER_INFO', JSON.stringify((res.data as any).user || res.data));
 
       // 5. 跳转回之前的页面，或者首页
       // 返回当前页

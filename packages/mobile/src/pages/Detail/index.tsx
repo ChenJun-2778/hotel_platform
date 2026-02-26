@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { NavBar, Swiper, Image, Toast, Tag, ImageViewer, DotLoading } from 'antd-mobile';
+import { Swiper, Image, Toast, ImageViewer, DotLoading } from 'antd-mobile';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { StarFill, EnvironmentOutline, PictureOutline, CalendarOutline, LocationFill, FireFill } from 'antd-mobile-icons';
+import { EnvironmentOutline, PictureOutline, CalendarOutline, LocationFill, FireFill } from 'antd-mobile-icons';
 import styles from './index.module.css';
 import { apiGetHotelDetail } from '@/api/Hotel'
 import dayjs from 'dayjs';

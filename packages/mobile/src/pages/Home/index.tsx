@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CapsuleTabs, NavBar, TabBar, InfiniteScroll, DotLoading, Toast } from 'antd-mobile';
+import { CapsuleTabs, NavBar, InfiniteScroll, DotLoading, Toast } from 'antd-mobile';
 import { FireFill, HeartFill, StarFill } from 'antd-mobile-icons'; // 需要安装图标库
 import styles from './index.module.css';
 // 引入跳转钩子

@@ -79,7 +79,7 @@ const OrderFill: React.FC = () => {
   // 初始化时选择第一个可用的时间段
   useEffect(() => {
     if (isHourly) {
-      const availableSlots = hourlyTimeSlots[0].filter(slot => !slot.disabled);
+      const availableSlots = hourlyTimeSlots[0].filter((slot: any) => !slot.disabled);
       if (availableSlots.length > 0) {
         setSelectedTimeSlot([availableSlots[0].value]);
       }

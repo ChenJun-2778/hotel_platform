@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavBar, CapsuleTabs, DotLoading, Toast, Dropdown, Button, Input, InfiniteScroll } from 'antd-mobile';
+import { NavBar, CapsuleTabs, DotLoading, Toast, Dropdown, InfiniteScroll } from 'antd-mobile';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { EnvironmentOutline, SearchOutline, CloseCircleFill } from 'antd-mobile-icons';
@@ -274,7 +274,8 @@ const List: React.FC = () => {
         // 处理返回的数据
         if (res && res.success) {
           setHotelList(res.data.list || []); 
-          setHasMore(res.data.pagination?.hasMore ?? false);
+          const totalPages = res.data.totalPages || 1;
+          setHasMore(totalPages > 1);
           setPage(2); // 下次加载第2页
         } else {
            Toast.show({ icon: 'fail', content: res.message || '查询失败' });
@@ -328,7 +329,8 @@ const List: React.FC = () => {
       if (res && res.success) {
         // 追加数据到列表末尾
         setHotelList(prev => [...prev, ...(res.data.list || [])]);
-        setHasMore(res.data.pagination?.hasMore ?? false);
+        const totalPages = res.data.totalPages || 1;
+        setHasMore(page < totalPages);
         setPage(prev => prev + 1);
       }
     } catch (error) {

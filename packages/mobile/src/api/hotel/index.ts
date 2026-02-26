@@ -6,7 +6,7 @@ import type {
   HotelDetail,
   FrontendSearchParams
 } from './type';
-import { MOCK_HOTEL_LIST, MOCK_HOTEL_DETAIL } from '@/mock/data';
+import { MOCK_HOTEL_LIST } from '@/mock/data';
 import { mockRequest } from '@/utils/mockRequest';
 
 // 读取环境变量
@@ -31,15 +31,15 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
     if (frontendParams.keyword) {
       filteredList = filteredList.filter(hotel => 
         hotel.name.includes(frontendParams.keyword || '') ||
-        hotel.position?.includes(frontendParams.keyword || '')
+        hotel.location?.includes(frontendParams.keyword || '')
       );
     }
     
     // 模拟排序
     if (frontendParams.sortType === 'price_asc') {
-      filteredList.sort((a, b) => a.price - b.price);
+      filteredList.sort((a, b) => a.min_price - b.min_price);
     } else if (frontendParams.sortType === 'star_desc') {
-      filteredList.sort((a, b) => b.star - a.star);
+      filteredList.sort((a, b) => b.star_rating - a.star_rating);
     }
     
     return mockRequest({
@@ -52,7 +52,10 @@ export const apiGetHotelList = async (frontendParams: FrontendSearchParams) => {
           ? Math.round((new Date(frontendParams.endDate).getTime() - new Date(frontendParams.beginDate).getTime()) / (1000 * 60 * 60 * 24))
           : null
       },
-      total: filteredList.length
+      total: filteredList.length,
+      totalPages: 1,
+      page: 1,
+      pageSize: filteredList.length
     }, 800);
   }
 
