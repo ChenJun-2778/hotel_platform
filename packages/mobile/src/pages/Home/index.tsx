@@ -117,8 +117,8 @@ const Home = () => {
 
   // 快捷入口点击处理
   const handleQuickEntry = (entry: typeof quickEntries[0]) => {
-    // 获取当前城市（从 localStorage 读取，默认上海）
-    const city = localStorage.getItem('HOME_CITY') || '上海';
+    // 获取当前城市（从 localStorage 读取，默认重庆）
+    const city = localStorage.getItem('HOME_CITY') || '重庆';
     // 使用当前类型对应的日期
     let beginDate = dayjs(currentDateRange[0]).format('YYYY-MM-DD');
     let endDate = dayjs(currentDateRange[1]).format('YYYY-MM-DD');
@@ -186,7 +186,7 @@ const Home = () => {
         if (res && res.success) {
           const newList = res.data.list || [];
           setRecommendList(newList);
-          // ✅ 修复爆红：通过判断返回的数组长度是否等于请求的 pageSize 来决定是否有下一页
+          // 通过判断返回的数组长度是否等于请求的 pageSize 来决定是否有下一页
           setHasMore(newList.length === 20); 
           setPage(2);
         }
@@ -256,7 +256,7 @@ const Home = () => {
             className={styles.gridItem}
             onClick={() => handleQuickEntry(entry)}
           >
-            {/* ✅ 核心修改：注入渐变背景色和居中显示的白色图标 */}
+            {/* 注入渐变背景色和居中显示的白色图标 */}
             <div 
               className={styles.gridIcon}
               style={{ 
@@ -276,7 +276,7 @@ const Home = () => {
         ))}
       </div>
 
-      {/* ✅ 3. 新增：猜你喜欢 / 推荐列表 */}
+      {/* 猜你喜欢 / 推荐列表 */}
       <div className={styles.recommendSection}>
         <div className={styles.sectionTitle}>
            <FireFill color='#ff3141' /> 猜你喜欢
@@ -294,7 +294,7 @@ const Home = () => {
                 className={styles.cardWrapper}
                 onClick={() => {
                   // 使用酒店自己的城市信息，而不是首页选择的城市
-                  const hotelCity = item.location || '上海';
+                  const hotelCity = item.location || '重庆';
                   
                   // 1. 格式化日期（使用当前类型对应的日期）
                   let beginStr = dayjs(currentDateRange[0]).format('YYYY-MM-DD');

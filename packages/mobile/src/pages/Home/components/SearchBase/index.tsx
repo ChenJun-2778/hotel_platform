@@ -54,7 +54,7 @@ const SearchBase: React.FC<SearchBaseProps> = ({ type, showNightCount = true, da
     if (type === 'overseas') {
       return localStorage.getItem('HOME_CITY_OVERSEAS') || '东京';
     }
-    return localStorage.getItem('HOME_CITY') || '上海';
+    return localStorage.getItem('HOME_CITY') || '重庆';
   };
 
   const [city, setCity] = useState(getDefaultCity);
