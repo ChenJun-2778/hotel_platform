@@ -53,6 +53,9 @@ const OrderList: React.FC = () => {
         }
 
         const userInfo = JSON.parse(userInfoStr);
+        // console.log('用户信息:', userInfo);
+        // console.log('订单列表 - user_id:', userInfo.id);
+        
         setLoading(true);
 
         // 根据 activeTab 决定是否传 status 参数
@@ -66,6 +69,8 @@ const OrderList: React.FC = () => {
           };
           params.status = statusMap[activeTab];
         }
+        
+        // console.log('订单列表 - 请求参数:', params);
 
         const res = await apiGetOrderList(params);
 
