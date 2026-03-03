@@ -56,9 +56,9 @@ const Users = () => {
     setCurrentUser(user);
     setIsEditModalOpen(true);
     form.setFieldsValue({
-      username: user.username,
-      email: user.email,
-      role: user.role,
+      email: user.email || '',
+      phone: user.phone || '',
+      role_type: user.role_type || user.role,
       status: user.status,
     });
   };
