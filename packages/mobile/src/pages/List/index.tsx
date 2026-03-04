@@ -14,11 +14,11 @@ import HotelCard from '@/components/HotelCard';
 import SearchPanel from './components/SearchPanel';
 // 日历组件
 import DateRangePicker from '@/components/DateRangePicker';
-// ✅ 1. 引入新抽离的智能排序组件
+//  1. 引入新抽离的智能排序组件
 import SmartSortPanel from './components/SmartSortPanel';
 // 引入价格组件
 import PricePanel from './components/PricePanel';
-// ✅ 引入评分组件
+// 引入评分组件
 import ScoreStarPanel from './components/ScoreStarPanel';
 // 引入api
 import { apiGetHotelList } from '@/api/Hotel/index';
@@ -31,7 +31,7 @@ import FilterPanel from './components/FilterPanel';
 //   'inn': 4
 // };
 const List: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams(); // ✅ 这里需要 setSearchParams
+  const [searchParams, setSearchParams] = useSearchParams(); // 这里需要 setSearchParams
   const navigate = useNavigate();
   // 搜索时的关键字
   const keyword = searchParams.get('keyword') || '';
@@ -93,7 +93,7 @@ const List: React.FC = () => {
   const [showSearchPanel, setShowSearchPanel] = useState(false);
   // 城市跳转方法
   const handleCityClick = () => {
-    // ✅ 修复：直接把 URL 里的 type 字符串转成数字，兜底为 1
+    // 直接把 URL 里的 type 字符串转成数字，兜底为 1
     const targetTypeId = Number(type) || 1;
 
     setShowSearchPanel(false);

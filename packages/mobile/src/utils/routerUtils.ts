@@ -35,12 +35,11 @@ export const useGoCities = () => {
       current: city
     });
 
-    // ✅ 核心逻辑：根据传进来的 type，直接精准拼出完整的子路由路径
+    // 核心逻辑：根据传进来的 type，直接精准拼出完整的子路由路径
     // 如果是海外 (type === 2)，直接跳 /city-select/overseas
     // 其他情况默认跳 /city-select/domestic
     const targetPath = type === 2 ? '/city-select/overseas' : '/city-select/domestic';
 
-    // 一步到位，直接起飞
     navigate(`${targetPath}?${searchParams.toString()}`);
   }
   
