@@ -382,8 +382,8 @@ router.delete('/delete', async (req, res) => {
       });
     }
 
-    // 检查房间是否存在
-    const checkSql = 'SELECT id, room_type_code, room_type FROM rooms WHERE id = ? AND is_deleted = 0';
+    // 检查房间是否存在（同时取 hotel_id、total_rooms，用于删除后更新酒店总房间数）
+    const checkSql = 'SELECT id, hotel_id, total_rooms, room_type_code, room_type FROM rooms WHERE id = ? AND is_deleted = 0';
     const existingRooms = await query(checkSql, [id]);
 
     if (existingRooms.length === 0) {
@@ -401,6 +401,31 @@ router.delete('/delete', async (req, res) => {
     `;
 
     await query(deleteSql, [id]);
+
+    // ── 回写 hotels.room_number ──────────────────────────────────
+    // 逻辑删除完成后，重新汇总该酒店下所有未删除房型的 total_rooms 之和写回
+    const hotelId = existingRooms[0].hotel_id;
+    await query(
+      `UPDATE hotels
+       SET room_number = (
+         SELECT COALESCE(SUM(total_rooms), 0)
+         FROM rooms
+         WHERE hotel_id = ? AND is_deleted = 0
+       )
+       WHERE id = ? AND is_deleted = 0`,
+      [hotelId, hotelId]
+    );
+    // ────────────────────────────────────────────────────────────
+
+    // ── 清零 room_inventory 库存 ─────────────────────────────────
+    // 房型已逻辑删除，将该房型所有日期的库存清零，防止继续被预订
+    await query(
+      `UPDATE room_inventory
+       SET total_rooms = 0, available_rooms = 0
+       WHERE room_id = ?`,
+      [id]
+    );
+    // ────────────────────────────────────────────────────────────
 
     res.status(200).json({
       success: true,
@@ -471,8 +496,8 @@ router.put('/update', async (req, res) => {
       });
     }
 
-    // 检查房间是否存在
-    const checkSql = 'SELECT id FROM rooms WHERE id = ? AND is_deleted = 0';
+    // 检查房间是否存在（同时取 hotel_id、total_rooms，用于后续同步酒店总数和库存）
+    const checkSql = 'SELECT id, hotel_id, total_rooms AS old_total_rooms FROM rooms WHERE id = ? AND is_deleted = 0';
     const existingRooms = await query(checkSql, [id]);
 
     if (existingRooms.length === 0) {
@@ -576,6 +601,42 @@ router.put('/update', async (req, res) => {
     updateValues.push(id);
 
     await query(updateSql, updateValues);
+
+    // ── 回写 hotels.room_number ──────────────────────────────────
+    // 以该房型所属酒店为准（hotel_id 可能由请求体传入，也可能保持原值）
+    // 重新汇总该酒店下所有未删除房型的 total_rooms 之和，一次性写回
+    // 这样无论编辑几次都不会累计误差
+    const targetHotelId = hotel_id !== undefined ? hotel_id : existingRooms[0].hotel_id;
+    await query(
+      `UPDATE hotels
+       SET room_number = (
+         SELECT COALESCE(SUM(total_rooms), 0)
+         FROM rooms
+         WHERE hotel_id = ? AND is_deleted = 0
+       )
+       WHERE id = ? AND is_deleted = 0`,
+      [targetHotelId, targetHotelId]
+    );
+    // ────────────────────────────────────────────────────────────
+
+    // ── 同步 room_inventory 库存 ─────────────────────────────────
+    // 只有请求体传入了 total_rooms（房间总数发生变化）时才需要同步
+    if (total_rooms !== undefined) {
+      const oldTotal = existingRooms[0].old_total_rooms;
+      const newTotal = Number(total_rooms);
+      const diff = newTotal - oldTotal; // 正数=增加，负数=减少
+
+      // total_rooms：直接设为新值
+      // available_rooms：按差值调整，最低不低于 0（不能把已扣减的订单量反超）
+      await query(
+        `UPDATE room_inventory
+         SET total_rooms     = ?,
+             available_rooms = GREATEST(available_rooms + ?, 0)
+         WHERE room_id = ?`,
+        [newTotal, diff, id]
+      );
+    }
+    // ────────────────────────────────────────────────────────────
 
     // 查询更新后的房间信息
     const getRoomSql = 'SELECT * FROM rooms WHERE id = ?';

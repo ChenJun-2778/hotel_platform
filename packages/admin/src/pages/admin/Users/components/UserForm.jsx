@@ -13,35 +13,35 @@ const UserForm = ({ form, onFinish, onCancel, isEdit = false }) => {
       layout="vertical"
       onFinish={onFinish}
     >
-      <Form.Item
-        label="用户名"
-        name="username"
-        rules={[
-          { required: true, message: '请输入用户名' },
-          { min: 3, message: '用户名至少3个字符' },
-        ]}
-      >
-        <Input placeholder="请输入用户名" disabled={isEdit} />
-      </Form.Item>
-
       {!isEdit && (
-        <Form.Item
-          label="密码"
-          name="password"
-          rules={[
-            { required: true, message: '请输入密码' },
-            { min: 6, message: '密码至少6个字符' },
-          ]}
-        >
-          <Input.Password placeholder="请输入密码" />
-        </Form.Item>
+        <>
+          <Form.Item
+            label="用户名"
+            name="username"
+            rules={[
+              { required: true, message: '请输入用户名' },
+            ]}
+          >
+            <Input placeholder="请输入用户名" />
+          </Form.Item>
+
+          <Form.Item
+            label="密码"
+            name="password"
+            rules={[
+              { required: true, message: '请输入密码' },
+              { min: 6, message: '密码至少6个字符' },
+            ]}
+          >
+            <Input.Password placeholder="请输入密码" />
+          </Form.Item>
+        </>
       )}
 
       <Form.Item
         label="邮箱"
         name="email"
         rules={[
-          { required: true, message: '请输入邮箱' },
           { type: 'email', message: '请输入有效的邮箱地址' },
         ]}
       >
@@ -60,12 +60,12 @@ const UserForm = ({ form, onFinish, onCancel, isEdit = false }) => {
 
       <Form.Item
         label="角色"
-        name="role"
+        name="role_type"
         rules={[{ required: true, message: '请选择角色' }]}
       >
         <Select placeholder="请选择角色">
-          <Option value="merchant">商户</Option>
-          <Option value="admin">管理员</Option>
+          <Option value={2}>商户</Option>
+          <Option value={1}>管理员</Option>
         </Select>
       </Form.Item>
 
@@ -75,8 +75,8 @@ const UserForm = ({ form, onFinish, onCancel, isEdit = false }) => {
         rules={[{ required: true, message: '请选择状态' }]}
       >
         <Select placeholder="请选择状态">
-          <Option value="active">正常</Option>
-          <Option value="inactive">禁用</Option>
+          <Option value={1}>正常</Option>
+          <Option value={0}>禁用</Option>
         </Select>
       </Form.Item>
 

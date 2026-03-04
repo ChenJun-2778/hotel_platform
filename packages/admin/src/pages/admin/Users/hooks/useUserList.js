@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
-import { getUserList } from '../../../../services/userService';
+import { getUserList, updateUser as updateUserAPI, createUser as createUserAPI, deleteUser as deleteUserAPI } from '../../../../services/userService';
 
 /**
  * 用户列表管理 Hook
@@ -84,15 +84,16 @@ const useUserList = () => {
   const addUser = useCallback(async (userData) => {
     try {
       setLoading(true);
-      // TODO: 调用后端 API
-      // await createUserAPI(userData);
+      
+      console.log('➕ 添加用户 - 数据:', userData);
+      await createUserAPI(userData);
       
       message.success('用户添加成功！');
       await loadUserList(); // 重新加载列表
       return true;
     } catch (error) {
-      console.error('❌ 添加用户失败:', error.message);
-      message.error('添加用户失败，请重试');
+      console.error('❌ 添加用户失败:', error);
+      message.error(error.message || '添加用户失败，请重试');
       return false;
     } finally {
       setLoading(false);
@@ -105,15 +106,24 @@ const useUserList = () => {
   const updateUser = useCallback(async (userId, userData) => {
     try {
       setLoading(true);
-      // TODO: 调用后端 API
-      // await updateUserAPI(userId, userData);
+      
+      // 只提交允许修改的字段
+      const submitData = {
+        email: userData.email || '',
+        phone: userData.phone || '',
+        role_type: userData.role_type,
+        status: userData.status,
+      };
+      
+      console.log('✏️ 更新用户 - ID:', userId, '数据:', submitData);
+      await updateUserAPI(userId, submitData);
       
       message.success('用户更新成功！');
       await loadUserList(); // 重新加载列表
       return true;
     } catch (error) {
-      console.error('❌ 更新用户失败:', error.message);
-      message.error('更新用户失败，请重试');
+      console.error('❌ 更新用户失败:', error);
+      message.error(error.message || '更新用户失败，请重试');
       return false;
     } finally {
       setLoading(false);
@@ -126,15 +136,16 @@ const useUserList = () => {
   const deleteUser = useCallback(async (userId) => {
     try {
       setLoading(true);
-      // TODO: 调用后端 API
-      // await deleteUserAPI(userId);
+      
+      console.log('🗑️ 删除用户 - ID:', userId);
+      await deleteUserAPI(userId);
       
       message.success('用户删除成功！');
       await loadUserList(); // 重新加载列表
       return true;
     } catch (error) {
-      console.error('❌ 删除用户失败:', error.message);
-      message.error('删除用户失败，请重试');
+      console.error('❌ 删除用户失败:', error);
+      message.error(error.message || '删除用户失败，请重试');
       return false;
     } finally {
       setLoading(false);

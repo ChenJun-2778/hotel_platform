@@ -20,6 +20,11 @@
 - **说明**：只用验证码登录，默认246810
 ### 验证码说明
 移动端注册/登录功能中的短信验证码尚未实现真实发送，目前为固定验证码：**246810**。在移动端输入此验证码即可通过验证。
+### 在线地址
+移动端：http://47.99.56.81:81
+PC端：http://47.99.56.81 
+### 测试说明
+由于数据有限，国内城市请优先测试重庆，海外优先测试东京
 ## 📋 目录
 
 - [项目简介](#项目简介)
@@ -299,9 +304,9 @@ VITE_API_BASE_URL=http://47.99.56.81:3000
 ```javascript
 export const ossConfig = {
   region: 'oss-cn-beijing',
-  accessKeyId: 'your_access_key_id',
-  accessKeySecret: 'your_access_key_secret',
-  bucket: 'your_bucket_name'
+  accessKeyId: 'x'x'x'x'x'x',
+  accessKeySecret: 'x'x'x'x'x'x',
+  bucket: 'x'x'x'x'x'x'
 };
 ```
 
